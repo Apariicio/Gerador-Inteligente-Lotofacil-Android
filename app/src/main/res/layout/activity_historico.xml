@@ -1,0 +1,51 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:orientation="vertical"
+    android:background="@drawable/background_inicial"
+    android:padding="20dp">
+
+    <TextView
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginBottom="20dp"
+        android:background="#36B3D4F8"
+        android:gravity="center"
+        android:padding="10dp"
+        android:text="Histórico de Jogos"
+        android:textColor="#333333"
+        android:textSize="28sp"
+        android:textStyle="bold" />
+
+    <TextView
+        android:id="@+id/txtContadorHistorico"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginBottom="30dp"
+        android:background="#70E2A2A2"
+        android:gravity="center"
+        android:text="Total de Jogos Gerados: 0"
+        android:textColor="#BF1344"
+        android:textSize="18sp"
+        android:textStyle="bold|italic" />
+
+    <TextView
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginBottom="12dp"
+        android:background="#7AB3D4F8"
+        android:gravity="center"
+        android:text="Clique em um jogo para compartilhar"
+        android:textAlignment="center"
+        android:textColor="#141414"
+        android:textSize="16sp"
+        android:textStyle="bold|italic" />
+
+    <ListView
+        android:id="@+id/listaHistorico"
+        android:layout_width="match_parent"
+        android:layout_height="483dp"
+        android:background="#3BB3D4F8" />
+
+</LinearLayout>

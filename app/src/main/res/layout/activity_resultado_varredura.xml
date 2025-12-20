@@ -1,0 +1,38 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:orientation="vertical"
+    android:background="@drawable/background_inicial"
+    android:padding="20dp">
+
+    <TextView
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginBottom="10dp"
+        android:background="#92C8E6C9"
+        android:gravity="center"
+        android:padding="15dp"
+        android:text="🎯 JOGOS QUE SE REPETEM COM O OFICIAL"
+        android:textColor="#1B5E20"
+        android:textSize="22sp"
+        android:textStyle="bold" />
+
+    <TextView
+        android:id="@+id/txtResumo"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginBottom="15dp"
+        android:background="#78DE9B9B"
+        android:gravity="center"
+        android:text="Foram encontrados X jogos repetidos."
+        android:textColor="#000000"
+        android:textStyle="bold" />
+
+    <ListView
+        android:id="@+id/listaConflitos"
+        android:layout_width="match_parent"
+        android:layout_height="550dp"
+        android:background="#5CFFFFFF" />
+
+</LinearLayout>

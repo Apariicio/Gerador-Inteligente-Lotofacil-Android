@@ -1,0 +1,38 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:orientation="vertical"
+    android:background="@drawable/background_inicial"
+    android:padding="20dp">
+
+    <TextView
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginBottom="10dp"
+        android:background="#7AB3D4F8"
+        android:gravity="center"
+        android:padding="15dp"
+        android:text="Gerenciar Cadastros Manuais"
+        android:textColor="#009688"
+        android:textSize="22sp"
+        android:textStyle="bold" />
+
+    <TextView
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginBottom="15dp"
+        android:background="#36FD0936"
+        android:gravity="center"
+        android:text="Toque e segure para DELETAR"
+        android:textColor="#090909"
+        android:textColorLink="#070707"
+        android:textStyle="bold|italic" />
+
+    <ListView
+        android:id="@+id/listaManuais"
+        android:layout_width="match_parent"
+        android:layout_height="567dp"
+        android:background="#7AB3D4F8" />
+
+</LinearLayout>
