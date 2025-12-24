@@ -207,14 +207,14 @@ public class MainActivity extends AppCompatActivity {
 
         String textoRepetidos = "N/A";
         if (maiorNumeroConcurso > 0) {
-            textoRepetidos = String.valueOf(repetidosFinal);
+            textoRepetidos = " (Conc. " + maiorNumeroConcurso + "): " + repetidosFinal;
         }
-        lblFibRepetidos.setText("Fibonacci: " + fibonacciFinal + " / Repetidos: " + textoRepetidos);
+        lblFibRepetidos.setText("Fibonacci: " + fibonacciFinal + " / Repetidos" + textoRepetidos);
 
         atualizarContadorTela();
 
         int novoTotal = meusJogosSalvos.size() + 1;
-        Toast.makeText(this, "Jogo Inteligente nº " + novoTotal + " Gerado!", Toast.LENGTH_LONG).show();
+        Toast.makeText(this, "Jogo de nº " + novoTotal + " Salvo no Histórico!", Toast.LENGTH_LONG).show();
     }
 
     private void salvarJogo(String historicoAntigo, String novoJogo) {
