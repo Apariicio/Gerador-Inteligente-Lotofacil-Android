@@ -10,8 +10,6 @@ import android.widget.Toast;
 import androidx.appcompat.app.AlertDialog;
 import androidx.appcompat.app.AppCompatActivity;
 
-import com.aparicioamaral.quinzenumerosaleatorios.R;
-
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Comparator;
@@ -29,12 +27,35 @@ public class HistoricoManualActivity extends AppCompatActivity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_historico_manual);
 
+        // --- ATIVA O MODO TELA CHEIA ---
+        ocultarBarrasDeNavegacao();
+
         listaManuais = findViewById(R.id.listaManuais);
         carregarLista();
     }
 
+    // --- MÉTODOS PARA TELA CHEIA (NOVO) ---
+    private void ocultarBarrasDeNavegacao() {
+        View decorView = getWindow().getDecorView();
+        decorView.setSystemUiVisibility(
+                View.SYSTEM_UI_FLAG_IMMERSIVE_STICKY
+                        | View.SYSTEM_UI_FLAG_LAYOUT_STABLE
+                        | View.SYSTEM_UI_FLAG_LAYOUT_HIDE_NAVIGATION
+                        | View.SYSTEM_UI_FLAG_LAYOUT_FULLSCREEN
+                        | View.SYSTEM_UI_FLAG_HIDE_NAVIGATION
+                        | View.SYSTEM_UI_FLAG_FULLSCREEN);
+    }
+
+    @Override
+    public void onWindowFocusChanged(boolean hasFocus) {
+        super.onWindowFocusChanged(hasFocus);
+        if (hasFocus) {
+            ocultarBarrasDeNavegacao();
+        }
+    }
+    // ---------------------------------------
+
     // --- CLASSE AUXILIAR PARA AJUDAR NA ORDENAÇÃO ---
-    // Ela serve apenas para guardarmos o número do concurso e podermos ordenar depois
     private class ItemJogo {
         int numeroConcurso;
         String textoParaTela;
@@ -63,20 +84,18 @@ public class HistoricoManualActivity extends AppCompatActivity {
         List<ItemJogo> listaTemporaria = new ArrayList<>();
 
         for (Map.Entry<String, ?> entry : todosManuais.entrySet()) {
-            String jogoNumeros = entry.getKey(); // A chave (os números)
-            String infoConcurso = entry.getValue().toString(); // O valor (Ex: "Concurso 3550 (data)")
+            String jogoNumeros = entry.getKey();
+            String infoConcurso = entry.getValue().toString();
 
             // Tenta extrair o número do concurso do texto para poder ordenar
             int numConcurso = 0;
             try {
-                // O texto é padrão: "Concurso 3550 (..."
-                // Vamos quebrar o texto nos espaços e tentar pegar o segundo item (o número)
                 String[] partes = infoConcurso.split(" ");
                 if (partes.length > 1) {
                     numConcurso = Integer.parseInt(partes[1]);
                 }
             } catch (Exception e) {
-                numConcurso = 0; // Se der erro, fica como 0
+                numConcurso = 0;
             }
 
             // Adiciona na lista temporária
@@ -85,7 +104,6 @@ public class HistoricoManualActivity extends AppCompatActivity {
         }
 
         // 2. AGORA FAZEMOS A MÁGICA DA ORDENAÇÃO
-        // Ordena do MAIOR para o MENOR (Decrescente)
         Collections.sort(listaTemporaria, new Comparator<ItemJogo>() {
             @Override
             public int compare(ItemJogo jogo1, ItemJogo jogo2) {

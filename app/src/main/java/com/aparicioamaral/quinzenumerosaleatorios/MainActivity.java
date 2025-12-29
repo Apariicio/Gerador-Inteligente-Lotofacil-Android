@@ -16,17 +16,16 @@ import androidx.appcompat.app.AppCompatActivity;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Random;
+import java.util.Set;
 
 public class MainActivity extends AppCompatActivity {
 
     TextView txtResultado, txtContador;
-
-    // MUDANÇA: USANDO 3 TEXTVIEWS COMBINADOS
     TextView lblSomaPrimos, lblParesImpares, lblFibRepetidos, txtAssinatura;
-
     Button btnSortear, btnCompartilhar, btnHistorico, btnConferir, btnVarredura, btnCadastrarOficial, btnGerenciarManuais;
     SharedPreferences bancoDeDados;
 
@@ -37,7 +36,6 @@ public class MainActivity extends AppCompatActivity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
 
-        // MODO TELA CHEIA
         ocultarBarrasDeNavegacao();
 
         txtResultado = findViewById(R.id.txtResultado);
@@ -49,7 +47,6 @@ public class MainActivity extends AppCompatActivity {
         btnCadastrarOficial = findViewById(R.id.btnCadastrarOficial);
         btnGerenciarManuais = findViewById(R.id.btnGerenciarManuais);
 
-        // LIGANDO OS NOVOS COMPONENTES
         lblSomaPrimos = findViewById(R.id.lblSomaPrimos);
         lblParesImpares = findViewById(R.id.lblParesImpares);
         lblFibRepetidos = findViewById(R.id.lblFibRepetidos);
@@ -62,8 +59,6 @@ public class MainActivity extends AppCompatActivity {
         bancoDeDados = getSharedPreferences("HistoricoJogos", MODE_PRIVATE);
 
         txtResultado.setText("Clique para buscar...");
-
-        // TEXTOS INICIAIS
         lblSomaPrimos.setText("Soma: -- / Primos: --");
         lblParesImpares.setText("Pares: -- / Ímpares: --");
         lblFibRepetidos.setText("Fibonacci: -- / Repetidos: --");
@@ -108,6 +103,169 @@ public class MainActivity extends AppCompatActivity {
         }
     }
 
+    // --- VARREDURA ULTRA-RÁPIDA COM CACHE DE MEMÓRIA (SÓ ESTATÍSTICAS) ---
+    public void fazerVarreduraGeral() {
+        // Roda em uma Thread separada para não travar a tela (Opcional, mas recomendado se quiser fluidez total)
+        new Thread(() -> {
+            try {
+                final String historico = bancoDeDados.getString("historico_ordenado", "");
+                if (historico.isEmpty()) {
+                    runOnUiThread(() -> Toast.makeText(this, "Histórico vazio.", Toast.LENGTH_SHORT).show());
+                    return;
+                }
+
+                String[] meusJogosStr = historico.split(SEPARADOR);
+                Map<String, String> oficiaisMap = DadosOficiais.carregarResultadosOficiais(this);
+
+                if (oficiaisMap == null || oficiaisMap.isEmpty()) {
+                    runOnUiThread(() -> Toast.makeText(this, "Sem resultados oficiais.", Toast.LENGTH_SHORT).show());
+                    return;
+                }
+
+                // --- PASSO 1: OTIMIZAÇÃO (CACHE) ---
+                // Convertemos todos os resultados oficiais para Sets de Inteiros UMA ÚNICA VEZ.
+                // HashSet é infinitamente mais rápido para verificar se um número existe (contém).
+                List<Set<Integer>> listaOficiaisCache = new ArrayList<>();
+
+                for (String chaveNumeros : oficiaisMap.keySet()) {
+                    ArrayList<Integer> nums = converterStringParaLista(chaveNumeros);
+                    if (nums != null && !nums.isEmpty()) {
+                        listaOficiaisCache.add(new HashSet<>(nums));
+                    }
+                }
+
+                // Variáveis atômicas ou simples para contagem
+                int qtd13 = 0;
+                int qtd14 = 0;
+                int qtd15 = 0;
+                int totalJogosAnalisados = 0;
+
+                // --- PASSO 2: COMPARAÇÃO RELÂMPAGO ---
+                for (String meuJogoStr : meusJogosStr) {
+                    if (meuJogoStr.trim().isEmpty()) continue;
+
+                    // Converte o SEU jogo apenas uma vez
+                    ArrayList<Integer> meuJogoLista = converterStringParaLista(meuJogoStr);
+                    if (meuJogoLista.size() < 15) continue;
+
+                    totalJogosAnalisados++;
+                    int recordeDesteJogo = 0;
+
+                    // Compara contra a lista já processada (Muito rápido)
+                    for (Set<Integer> oficialSet : listaOficiaisCache) {
+                        int acertos = 0;
+                        // Verifica quantos números do meu jogo estão no oficial
+                        for (Integer n : meuJogoLista) {
+                            if (oficialSet.contains(n)) {
+                                acertos++;
+                            }
+                        }
+
+                        if (acertos > recordeDesteJogo) {
+                            recordeDesteJogo = acertos;
+                        }
+                        // Se já achou 15, para de procurar para este jogo específico
+                        if (recordeDesteJogo == 15) break;
+                    }
+
+                    if (recordeDesteJogo == 13) qtd13++;
+                    else if (recordeDesteJogo == 14) qtd14++;
+                    else if (recordeDesteJogo == 15) qtd15++;
+                }
+
+                // Prepara os dados finais para enviar para a tela (precisa ser final ou effectively final)
+                final int t = totalJogosAnalisados;
+                final int q13 = qtd13;
+                final int q14 = qtd14;
+                final int q15 = qtd15;
+
+                // --- PASSO 3: VOLTA PARA A TELA DO USUÁRIO ---
+                runOnUiThread(() -> {
+                    Intent intent = new Intent(MainActivity.this, ResultadoVarreduraActivity.class);
+                    intent.putExtra("total", t);
+                    intent.putExtra("q13", q13);
+                    intent.putExtra("q14", q14);
+                    intent.putExtra("q15", q15);
+                    startActivity(intent);
+                });
+
+            } catch (Exception e) {
+                e.printStackTrace();
+                runOnUiThread(() -> Toast.makeText(this, "Erro: " + e.getMessage(), Toast.LENGTH_LONG).show());
+            }
+        }).start(); // Inicia o processamento em segundo plano
+    }
+
+    // CLASSE AUXILIAR PARA AJUDAR NA ORDENAÇÃO (Necessária para a função acima)
+    private static class ItemVarredura {
+        int numConcurso;
+        int pontos;
+        int numJogo;
+        String textoConcurso;
+        String sequenciaJogo;
+
+        public ItemVarredura(int numConcurso, int pontos, int numJogo, String textoConcurso, String sequenciaJogo) {
+            this.numConcurso = numConcurso;
+            this.pontos = pontos;
+            this.numJogo = numJogo;
+            this.textoConcurso = textoConcurso;
+            this.sequenciaJogo = sequenciaJogo;
+        }
+    }
+
+    private List<Integer> calcularDezenasFrias(Map<String, String> jogosOficiais) {
+        List<PacoteJogo> listaOrdenada = new ArrayList<>();
+
+        for (Map.Entry<String, String> entry : jogosOficiais.entrySet()) {
+            String info = entry.getValue();
+            try {
+                String[] partes = info.split(" ");
+                if (partes.length > 1) {
+                    int numConcurso = Integer.parseInt(partes[1]);
+                    ArrayList<Integer> numeros = converterStringParaLista(entry.getKey());
+                    listaOrdenada.add(new PacoteJogo(numConcurso, numeros));
+                }
+            } catch (Exception e) { }
+        }
+
+        Collections.sort(listaOrdenada, (p1, p2) -> Integer.compare(p2.concurso, p1.concurso));
+
+        int limite = Math.min(listaOrdenada.size(), 10);
+        int[] frequencia = new int[26];
+
+        for (int i = 0; i < limite; i++) {
+            for (int num : listaOrdenada.get(i).numeros) {
+                if (num >= 1 && num <= 25) frequencia[num]++;
+            }
+        }
+
+        List<Integer> dezenasFrias = new ArrayList<>();
+        for (int i = 1; i <= 25; i++) {
+            if (frequencia[i] <= 3) {
+                dezenasFrias.add(i);
+            }
+        }
+        return dezenasFrias;
+    }
+
+    private static class PacoteJogo {
+        int concurso;
+        ArrayList<Integer> numeros;
+        public PacoteJogo(int c, ArrayList<Integer> n) { this.concurso = c; this.numeros = n; }
+    }
+
+    private ArrayList<Integer> converterStringParaLista(String numerosStr) {
+        ArrayList<Integer> lista = new ArrayList<>();
+        try {
+            String limpa = numerosStr.replace("[", "").replace("]", "").replace(" ", "");
+            String[] partes = limpa.split(",");
+            for (String p : partes) {
+                if (!p.isEmpty()) lista.add(Integer.parseInt(p.trim()));
+            }
+        } catch (Exception e) {}
+        return lista;
+    }
+
     public void buscarJogoEquilibrado() {
         Random gerador = new Random();
         ArrayList<Integer> listaDefinitiva = new ArrayList<>();
@@ -120,8 +278,10 @@ public class MainActivity extends AppCompatActivity {
         }
 
         Map<String, String> jogosOficiais = DadosOficiais.carregarResultadosOficiais(this);
+
         ArrayList<Integer> numerosDoUltimoConcurso = new ArrayList<>();
         int maiorNumeroConcurso = 0;
+        List<Integer> dezenasFrias = calcularDezenasFrias(jogosOficiais);
 
         for (Map.Entry<String, String> entry : jogosOficiais.entrySet()) {
             String info = entry.getValue();
@@ -131,10 +291,7 @@ public class MainActivity extends AppCompatActivity {
                     int numConcurso = Integer.parseInt(partes[1]);
                     if (numConcurso > maiorNumeroConcurso) {
                         maiorNumeroConcurso = numConcurso;
-                        String numerosStr = entry.getKey().replace("[", "").replace("]", "").replace(" ", "");
-                        String[] numsArr = numerosStr.split(",");
-                        numerosDoUltimoConcurso.clear();
-                        for (String n : numsArr) numerosDoUltimoConcurso.add(Integer.parseInt(n.trim()));
+                        numerosDoUltimoConcurso = converterStringParaLista(entry.getKey());
                     }
                 }
             } catch (Exception e) { }
@@ -158,6 +315,7 @@ public class MainActivity extends AppCompatActivity {
             Collections.sort(tentativa);
 
             int pares = 0, somaTotal = 0, naMoldura = 0, nosPrimos = 0, nosFibonacci = 0, repetidosDoUltimo = 0;
+            int quantidadeFriasNoJogo = 0;
 
             for (Integer numero : tentativa) {
                 if (numero % 2 == 0) pares++;
@@ -165,9 +323,8 @@ public class MainActivity extends AppCompatActivity {
                 if (numerosDaMoldura.contains(numero)) naMoldura++;
                 if (numerosPrimos.contains(numero)) nosPrimos++;
                 if (numerosFibonacci.contains(numero)) nosFibonacci++;
-                if (!numerosDoUltimoConcurso.isEmpty() && numerosDoUltimoConcurso.contains(numero)) {
-                    repetidosDoUltimo++;
-                }
+                if (!numerosDoUltimoConcurso.isEmpty() && numerosDoUltimoConcurso.contains(numero)) repetidosDoUltimo++;
+                if (dezenasFrias.contains(numero)) quantidadeFriasNoJogo++;
             }
 
             boolean paresOk = (pares >= 6 && pares <= 8);
@@ -179,8 +336,12 @@ public class MainActivity extends AppCompatActivity {
             if (!numerosDoUltimoConcurso.isEmpty()) {
                 repetidosOk = (repetidosDoUltimo >= 8 && repetidosDoUltimo <= 10);
             }
+            boolean friasOk = true;
+            if (!dezenasFrias.isEmpty()) {
+                friasOk = (quantidadeFriasNoJogo >= 2 && quantidadeFriasNoJogo <= 6);
+            }
 
-            if (paresOk && somaOk && molduraOk && primosOk && fibonacciOk && repetidosOk) {
+            if (paresOk && somaOk && molduraOk && primosOk && fibonacciOk && repetidosOk && friasOk) {
                 String assinaturaDoJogo = tentativa.toString();
 
                 if (meusJogosSalvos.contains(assinaturaDoJogo)) continue;
@@ -201,20 +362,20 @@ public class MainActivity extends AppCompatActivity {
         String resultadoLimpo = listaDefinitiva.toString().replace("[", "").replace("]", "");
         txtResultado.setText(resultadoLimpo);
 
-        // --- ATUALIZAÇÃO NO NOVO FORMATO AGRUPADO ---
         lblSomaPrimos.setText("Soma: " + somaFinal + " / Primos: " + primosFinal);
         lblParesImpares.setText("Pares: " + paresFinal + " / Ímpares: " + (15 - paresFinal));
 
         String textoRepetidos = "N/A";
         if (maiorNumeroConcurso > 0) {
-            textoRepetidos = " (Conc. " + maiorNumeroConcurso + "): " + repetidosFinal;
+            textoRepetidos = repetidosFinal + " (Conc. " + maiorNumeroConcurso + ")";
         }
-        lblFibRepetidos.setText("Fibonacci: " + fibonacciFinal + " / Repetidos" + textoRepetidos);
+        lblFibRepetidos.setText("Fibonacci: " + fibonacciFinal + " / Repetidos: " + textoRepetidos);
 
         atualizarContadorTela();
 
         int novoTotal = meusJogosSalvos.size() + 1;
-        Toast.makeText(this, "Jogo de nº " + novoTotal + " Salvo no Histórico!", Toast.LENGTH_LONG).show();
+        String msgExtra = (!dezenasFrias.isEmpty()) ? "\n(Usando análise dos últimos 10 jogos)" : "";
+        Toast.makeText(this, "Jogo Inteligente nº " + novoTotal + " Gerado!" + msgExtra, Toast.LENGTH_LONG).show();
     }
 
     private void salvarJogo(String historicoAntigo, String novoJogo) {
@@ -289,12 +450,10 @@ public class MainActivity extends AppCompatActivity {
     public void processarECadastrar(String concurso, String data, String numerosBrutos) {
         try {
             if (concurso.isEmpty() || data.isEmpty() || numerosBrutos.isEmpty()) return;
-
             if (DadosOficiais.verificarSeConcursoJaExiste(this, concurso)) {
                 new AlertDialog.Builder(this).setTitle("Duplicidade!").setMessage("Concurso " + concurso + " já existe.").setPositiveButton("OK", null).show();
                 return;
             }
-
             String[] partes = numerosBrutos.replace(",", " ").replace("-", " ").trim().split("\\s+");
             if (partes.length != 15) {
                 Toast.makeText(this, "Erro: Digite exatamente 15 números.", Toast.LENGTH_LONG).show();
@@ -303,36 +462,10 @@ public class MainActivity extends AppCompatActivity {
             ArrayList<Integer> lista = new ArrayList<>();
             for (String p : partes) lista.add(Integer.parseInt(p));
             Collections.sort(lista);
-
             DadosOficiais.salvarNovoResultado(this, lista.toString(), concurso, data);
             Toast.makeText(this, "Salvo com sucesso!", Toast.LENGTH_SHORT).show();
         } catch (Exception e) {
             Toast.makeText(this, "Erro nos dados.", Toast.LENGTH_SHORT).show();
-        }
-    }
-
-    public void fazerVarreduraGeral() {
-        String historico = bancoDeDados.getString("historico_ordenado", "");
-        if (historico.isEmpty()) {
-            Toast.makeText(this, "Histórico vazio.", Toast.LENGTH_SHORT).show();
-            return;
-        }
-        String[] meusJogos = historico.split(SEPARADOR);
-        Map<String, String> oficiais = DadosOficiais.carregarResultadosOficiais(this);
-        ArrayList<String> conflitos = new ArrayList<>();
-
-        for (int i = 0; i < meusJogos.length; i++) {
-            if (oficiais.containsKey(meusJogos[i])) {
-                conflitos.add("JOGO Nº " + (i + 1) + "\nSaiu no: " + oficiais.get(meusJogos[i]) + "\nSeq: " + meusJogos[i]);
-            }
-        }
-
-        if (!conflitos.isEmpty()) {
-            Intent intent = new Intent(this, ResultadoVarreduraActivity.class);
-            intent.putStringArrayListExtra("lista_erros", conflitos);
-            startActivity(intent);
-        } else {
-            new AlertDialog.Builder(this).setTitle("Tudo Limpo!").setMessage("Nenhum jogo seu já foi sorteado.").setPositiveButton("OK", null).show();
         }
     }
 

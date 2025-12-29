@@ -32,12 +32,37 @@ public class HistoricoActivity extends AppCompatActivity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_historico);
 
+        // --- ATIVA O MODO TELA CHEIA ---
+        ocultarBarrasDeNavegacao();
+
         listView = findViewById(R.id.listaHistorico);
         txtContadorHistorico = findViewById(R.id.txtContadorHistorico);
         bancoDeDados = getSharedPreferences("HistoricoJogos", MODE_PRIVATE);
 
         carregarListaInvertida();
     }
+
+    // --- MÉTODOS PARA TELA CHEIA (NOVO) ---
+    private void ocultarBarrasDeNavegacao() {
+        View decorView = getWindow().getDecorView();
+        decorView.setSystemUiVisibility(
+                View.SYSTEM_UI_FLAG_IMMERSIVE_STICKY
+                        | View.SYSTEM_UI_FLAG_LAYOUT_STABLE
+                        | View.SYSTEM_UI_FLAG_LAYOUT_HIDE_NAVIGATION
+                        | View.SYSTEM_UI_FLAG_LAYOUT_FULLSCREEN
+                        | View.SYSTEM_UI_FLAG_HIDE_NAVIGATION
+                        | View.SYSTEM_UI_FLAG_FULLSCREEN);
+    }
+
+    @Override
+    public void onWindowFocusChanged(boolean hasFocus) {
+        super.onWindowFocusChanged(hasFocus);
+        if (hasFocus) {
+            ocultarBarrasDeNavegacao();
+        }
+    }
+    // ---------------------------------------
+
     public void carregarListaInvertida() {
         String historicoGeral = bancoDeDados.getString("historico_ordenado", "");
 
@@ -53,8 +78,8 @@ public class HistoricoActivity extends AppCompatActivity {
         String[] jogosArray = historicoGeral.split(SEPARADOR);
         listaOriginalDeJogos = new ArrayList<>(Arrays.asList(jogosArray));
         txtContadorHistorico.setText("Total de jogos gerados: " + listaOriginalDeJogos.size());
+
         // 2. LOOP INVERTIDO (Do último para o primeiro)
-        // Isso faz o jogo mais recente aparecer no topo
         for (int i = listaOriginalDeJogos.size() - 1; i >= 0; i--) {
             String jogo = listaOriginalDeJogos.get(i);
 
@@ -71,18 +96,19 @@ public class HistoricoActivity extends AppCompatActivity {
                 listaVisual
         );
         listView.setAdapter(adapter);
+
         // --- CLIQUE SIMPLES: COMPARTILHAR ---
         listView.setOnItemClickListener(new AdapterView.OnItemClickListener() {
             @Override
             public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
                 // Matemática para achar o jogo certo na lista original (que não está invertida)
-                // Se a lista tem 10 itens e cliquei na posição 0 (topo), quero o índice 9.
                 int indiceReal = (listaOriginalDeJogos.size() - 1) - position;
 
                 String jogoParaCompartilhar = listaOriginalDeJogos.get(indiceReal);
                 compartilharJogo(jogoParaCompartilhar);
             }
         });
+
         // --- CLIQUE LONGO: DELETAR ---
         listView.setOnItemLongClickListener(new AdapterView.OnItemLongClickListener() {
             @Override
@@ -91,10 +117,11 @@ public class HistoricoActivity extends AppCompatActivity {
                 int indiceReal = (listaOriginalDeJogos.size() - 1) - position;
 
                 confirmarExclusao(indiceReal);
-                return true; // Retorna true para não ativar o clique simples logo depois
+                return true;
             }
         });
     }
+
     // Pergunta se quer mesmo apagar
     public void confirmarExclusao(int indexNoBanco) {
         AlertDialog.Builder alerta = new AlertDialog.Builder(this);
@@ -111,10 +138,12 @@ public class HistoricoActivity extends AppCompatActivity {
         alerta.setNegativeButton("Cancelar", null);
         alerta.show();
     }
+
     // Remove do banco e atualiza a tela
     public void deletarJogo(int index) {
         // Remove da memória RAM
         listaOriginalDeJogos.remove(index);
+
         // Reconstrói a string com #### para salvar no banco
         StringBuilder novoHistorico = new StringBuilder();
         for (int i = 0; i < listaOriginalDeJogos.size(); i++) {
@@ -123,6 +152,7 @@ public class HistoricoActivity extends AppCompatActivity {
                 novoHistorico.append(SEPARADOR);
             }
         }
+
         // Salva nas SharedPreferences
         SharedPreferences.Editor editor = bancoDeDados.edit();
         if (listaOriginalDeJogos.isEmpty()) {
@@ -137,6 +167,7 @@ public class HistoricoActivity extends AppCompatActivity {
         // Recarrega a tela para atualizar a lista
         carregarListaInvertida();
     }
+
     public void compartilharJogo(String jogo) {
         Intent intent = new Intent(Intent.ACTION_SEND);
         intent.setType("text/plain");
