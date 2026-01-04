@@ -7,23 +7,26 @@ import android.os.Bundle;
 import android.view.View;
 import android.widget.AdapterView;
 import android.widget.ArrayAdapter;
+import android.widget.Button;
+import android.widget.EditText;
 import android.widget.ListView;
 import android.widget.TextView;
 import android.widget.Toast;
 import androidx.appcompat.app.AlertDialog;
 import androidx.appcompat.app.AppCompatActivity;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.List;
 
 public class HistoricoActivity extends AppCompatActivity {
 
     ListView listView;
     TextView txtContadorHistorico;
+    EditText inputBuscaJogo;
+    Button btnBuscarJogo;
     SharedPreferences bancoDeDados;
 
-    // Lista principal que segura os dados reais para podermos deletar
     List<String> listaOriginalDeJogos;
+    List<String> listaExibida;
 
     private static final String SEPARADOR = "####";
 
@@ -32,17 +35,106 @@ public class HistoricoActivity extends AppCompatActivity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_historico);
 
-        // --- ATIVA O MODO TELA CHEIA ---
         ocultarBarrasDeNavegacao();
 
         listView = findViewById(R.id.listaHistorico);
         txtContadorHistorico = findViewById(R.id.txtContadorHistorico);
+        inputBuscaJogo = findViewById(R.id.inputBuscaJogo);
+        btnBuscarJogo = findViewById(R.id.btnBuscarJogo);
+
         bancoDeDados = getSharedPreferences("HistoricoJogos", MODE_PRIVATE);
 
         carregarListaInvertida();
+
+        // Configura o botão de busca (AGORA ROLA A TELA EM VEZ DE FILTRAR)
+        btnBuscarJogo.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                irParaJogoEspecifico();
+            }
+        });
+
+        listView.setOnItemClickListener(new AdapterView.OnItemClickListener() {
+            @Override
+            public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
+                String itemTexto = listaExibida.get(position);
+                compartilharJogo(itemTexto);
+            }
+        });
+
+        listView.setOnItemLongClickListener(new AdapterView.OnItemLongClickListener() {
+            @Override
+            public boolean onItemLongClick(AdapterView<?> parent, View view, int position, long id) {
+                String itemExibido = listaExibida.get(position);
+                int indexReal = descobrirIndexPeloTexto(itemExibido);
+
+                if (indexReal != -1) {
+                    confirmarDelecao(indexReal);
+                }
+                return true;
+            }
+        });
     }
 
-    // --- MÉTODOS PARA TELA CHEIA (NOVO) ---
+    // --- NOVA LÓGICA: ROLAR A TELA ATÉ O JOGO ---
+    private void irParaJogoEspecifico() {
+        String busca = inputBuscaJogo.getText().toString().trim();
+
+        if (busca.isEmpty()) {
+            Toast.makeText(this, "Digite o número do jogo", Toast.LENGTH_SHORT).show();
+            return;
+        }
+
+        try {
+            int numeroJogo = Integer.parseInt(busca);
+            int totalJogos = listaOriginalDeJogos.size();
+
+            if (numeroJogo < 1 || numeroJogo > totalJogos) {
+                Toast.makeText(this, "Jogo não encontrado! (Total: " + totalJogos + ")", Toast.LENGTH_SHORT).show();
+                return;
+            }
+
+            // A MÁGICA DA MATEMÁTICA:
+            // Como a lista está invertida (o jogo 1000 está no topo/índice 0),
+            // A posição na lista visual é: TOTAL - NÚMERO DO JOGO.
+            // Exemplo: Tenho 10 jogos. Quero o jogo 10. (10 - 10) = Posição 0 (Topo).
+            // Exemplo: Tenho 10 jogos. Quero o jogo 1. (10 - 1) = Posição 9 (Fundo).
+
+            int posicaoVisual = totalJogos - numeroJogo;
+
+            // Comando que faz a lista rolar até a posição
+            listView.setSelection(posicaoVisual);
+
+            Toast.makeText(this, "Indo para o Jogo " + numeroJogo, Toast.LENGTH_SHORT).show();
+
+            // Limpa o teclado para não atrapalhar a visão
+            inputBuscaJogo.clearFocus();
+            ocultarTeclado();
+
+        } catch (Exception e) {
+            Toast.makeText(this, "Digite apenas números válidos", Toast.LENGTH_SHORT).show();
+        }
+    }
+
+    private void ocultarTeclado() {
+        try {
+            android.view.inputmethod.InputMethodManager imm = (android.view.inputmethod.InputMethodManager) getSystemService(INPUT_METHOD_SERVICE);
+            imm.hideSoftInputFromWindow(getCurrentFocus().getWindowToken(), 0);
+        } catch (Exception e) {}
+    }
+    // ---------------------------------------------
+
+    private int descobrirIndexPeloTexto(String textoVisivel) {
+        try {
+            String[] partes = textoVisivel.split(":");
+            String parteNumero = partes[0].replace("Jogo", "").trim();
+            int numeroJogo = Integer.parseInt(parteNumero);
+            return numeroJogo - 1;
+        } catch (Exception e) {
+            return -1;
+        }
+    }
+
     private void ocultarBarrasDeNavegacao() {
         View decorView = getWindow().getDecorView();
         decorView.setSystemUiVisibility(
@@ -54,82 +146,41 @@ public class HistoricoActivity extends AppCompatActivity {
                         | View.SYSTEM_UI_FLAG_FULLSCREEN);
     }
 
-    @Override
-    public void onWindowFocusChanged(boolean hasFocus) {
-        super.onWindowFocusChanged(hasFocus);
-        if (hasFocus) {
-            ocultarBarrasDeNavegacao();
-        }
-    }
-    // ---------------------------------------
-
     public void carregarListaInvertida() {
+        listaOriginalDeJogos = new ArrayList<>();
+        listaExibida = new ArrayList<>();
+
         String historicoGeral = bancoDeDados.getString("historico_ordenado", "");
 
-        // Lista visual (O que aparece na tela: "Jogo 50: [1, 2...]")
-        ArrayList<String> listaVisual = new ArrayList<>();
-        if (historicoGeral.isEmpty()) {
-            txtContadorHistorico.setText("Total de jogos gerados: 0");
-            Toast.makeText(this, "Nenhum jogo salvo ainda!", Toast.LENGTH_SHORT).show();
-            listView.setAdapter(null);
-            return;
+        if (!historicoGeral.isEmpty()) {
+            String[] jogos = historicoGeral.split(SEPARADOR);
+            for (String j : jogos) {
+                if (!j.trim().isEmpty()) {
+                    listaOriginalDeJogos.add(j);
+                }
+            }
+            // Cria a lista visual invertida (do mais novo para o mais velho)
+            for (int i = listaOriginalDeJogos.size() - 1; i >= 0; i--) {
+                String linha = "Jogo " + (i + 1) + " : " + listaOriginalDeJogos.get(i);
+                listaExibida.add(linha);
+            }
         }
-        // 1. Converte a string do banco em uma Lista Editável
-        String[] jogosArray = historicoGeral.split(SEPARADOR);
-        listaOriginalDeJogos = new ArrayList<>(Arrays.asList(jogosArray));
-        txtContadorHistorico.setText("Total de jogos gerados: " + listaOriginalDeJogos.size());
 
-        // 2. LOOP INVERTIDO (Do último para o primeiro)
-        for (int i = listaOriginalDeJogos.size() - 1; i >= 0; i--) {
-            String jogo = listaOriginalDeJogos.get(i);
+        txtContadorHistorico.setText("Total de Jogos Gerados: " + listaOriginalDeJogos.size());
 
-            // O número do jogo é o índice + 1 (ex: índice 49 vira "Jogo 50")
-            int numeroDoJogo = i + 1;
-
-            // Monta o texto
-            listaVisual.add(numeroDoJogo + ": " + jogo);
-        }
-        // 3. Exibe na tela
         ArrayAdapter<String> adapter = new ArrayAdapter<>(
                 this,
                 R.layout.item_historico,
-                listaVisual
+                listaExibida
         );
         listView.setAdapter(adapter);
-
-        // --- CLIQUE SIMPLES: COMPARTILHAR ---
-        listView.setOnItemClickListener(new AdapterView.OnItemClickListener() {
-            @Override
-            public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
-                // Matemática para achar o jogo certo na lista original (que não está invertida)
-                int indiceReal = (listaOriginalDeJogos.size() - 1) - position;
-
-                String jogoParaCompartilhar = listaOriginalDeJogos.get(indiceReal);
-                compartilharJogo(jogoParaCompartilhar);
-            }
-        });
-
-        // --- CLIQUE LONGO: DELETAR ---
-        listView.setOnItemLongClickListener(new AdapterView.OnItemLongClickListener() {
-            @Override
-            public boolean onItemLongClick(AdapterView<?> parent, View view, int position, long id) {
-                // Mesma matemática para saber qual deletar
-                int indiceReal = (listaOriginalDeJogos.size() - 1) - position;
-
-                confirmarExclusao(indiceReal);
-                return true;
-            }
-        });
     }
 
-    // Pergunta se quer mesmo apagar
-    public void confirmarExclusao(int indexNoBanco) {
+    public void confirmarDelecao(final int indexNoBanco) {
         AlertDialog.Builder alerta = new AlertDialog.Builder(this);
-        alerta.setTitle("Excluir Jogo?");
-        alerta.setMessage("Deseja apagar este jogo do histórico permanentemente?");
-        alerta.setIcon(android.R.drawable.ic_menu_delete);
-
-        alerta.setPositiveButton("Sim, Apagar", new DialogInterface.OnClickListener() {
+        alerta.setTitle("Apagar Jogo?");
+        alerta.setMessage("Tem certeza que deseja excluir este jogo do histórico?");
+        alerta.setPositiveButton("SIM", new DialogInterface.OnClickListener() {
             @Override
             public void onClick(DialogInterface dialog, int which) {
                 deletarJogo(indexNoBanco);
@@ -139,12 +190,9 @@ public class HistoricoActivity extends AppCompatActivity {
         alerta.show();
     }
 
-    // Remove do banco e atualiza a tela
     public void deletarJogo(int index) {
-        // Remove da memória RAM
         listaOriginalDeJogos.remove(index);
 
-        // Reconstrói a string com #### para salvar no banco
         StringBuilder novoHistorico = new StringBuilder();
         for (int i = 0; i < listaOriginalDeJogos.size(); i++) {
             novoHistorico.append(listaOriginalDeJogos.get(i));
@@ -153,7 +201,6 @@ public class HistoricoActivity extends AppCompatActivity {
             }
         }
 
-        // Salva nas SharedPreferences
         SharedPreferences.Editor editor = bancoDeDados.edit();
         if (listaOriginalDeJogos.isEmpty()) {
             editor.remove("historico_ordenado");
@@ -164,7 +211,7 @@ public class HistoricoActivity extends AppCompatActivity {
 
         Toast.makeText(this, "Jogo apagado!", Toast.LENGTH_SHORT).show();
 
-        // Recarrega a tela para atualizar a lista
+        inputBuscaJogo.setText("");
         carregarListaInvertida();
     }
 
@@ -172,6 +219,6 @@ public class HistoricoActivity extends AppCompatActivity {
         Intent intent = new Intent(Intent.ACTION_SEND);
         intent.setType("text/plain");
         intent.putExtra(Intent.EXTRA_TEXT, "Jogo do Histórico Lotofácil: \n" + jogo);
-        startActivity(Intent.createChooser(intent, "Compartilhar via"));
+        startActivity(Intent.createChooser(intent, "Compartilhar"));
     }
 }

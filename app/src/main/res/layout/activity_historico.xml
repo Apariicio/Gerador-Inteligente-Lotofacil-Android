@@ -9,7 +9,7 @@
     <TextView
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:layout_marginBottom="20dp"
+        android:layout_marginBottom="10dp"
         android:background="#36B3D4F8"
         android:gravity="center"
         android:padding="10dp"
@@ -22,7 +22,7 @@
         android:id="@+id/txtContadorHistorico"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:layout_marginBottom="30dp"
+        android:layout_marginBottom="15dp"
         android:background="#70E2A2A2"
         android:gravity="center"
         android:text="Total de Jogos Gerados: 0"
@@ -30,22 +30,48 @@
         android:textSize="18sp"
         android:textStyle="bold|italic" />
 
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginBottom="10dp"
+        android:gravity="center"
+        android:orientation="horizontal">
+
+        <EditText
+            android:id="@+id/inputBuscaJogo"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:layout_marginEnd="5dp"
+            android:background="#90FFFFFF"
+            android:hint="Buscar Jogo nº (ex: 557)"
+            android:inputType="number"
+            android:padding="10dp"
+            android:textColor="#000000" />
+
+        <Button
+            android:id="@+id/btnBuscarJogo"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Ir" />
+    </LinearLayout>
+
     <TextView
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:layout_marginBottom="12dp"
+        android:layout_marginBottom="5dp"
         android:background="#7AB3D4F8"
         android:gravity="center"
-        android:text="Clique em um jogo para compartilhar"
+        android:text="Clique para compartilhar / Segure para apagar"
         android:textAlignment="center"
         android:textColor="#141414"
-        android:textSize="16sp"
+        android:textSize="14sp"
         android:textStyle="bold|italic" />
 
     <ListView
         android:id="@+id/listaHistorico"
         android:layout_width="match_parent"
-        android:layout_height="483dp"
-        android:background="#3BB3D4F8" />
+        android:layout_height="450dp"
+        android:background="#7AB3D4F8" />
 
 </LinearLayout>

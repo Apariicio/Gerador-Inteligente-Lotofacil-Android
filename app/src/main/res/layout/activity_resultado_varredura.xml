@@ -32,7 +32,7 @@
     <ListView
         android:id="@+id/listaConflitos"
         android:layout_width="match_parent"
-        android:layout_height="550dp"
+        android:layout_height="505dp"
         android:background="#5CFFFFFF" />
 
 </LinearLayout>

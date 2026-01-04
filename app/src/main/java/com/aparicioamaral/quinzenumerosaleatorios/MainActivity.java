@@ -16,6 +16,7 @@ import androidx.appcompat.app.AppCompatActivity;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
+import java.util.Comparator;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
@@ -25,245 +26,202 @@ import java.util.Set;
 public class MainActivity extends AppCompatActivity {
 
     TextView txtResultado, txtContador;
-    TextView lblSomaPrimos, lblParesImpares, lblFibRepetidos, txtAssinatura;
+    TextView lblSomaPrimos, lblParesImpares, lblFibRepetidos, txtAssinatura, lblCiclo;
+    EditText inputFixas;
     Button btnSortear, btnCompartilhar, btnHistorico, btnConferir, btnVarredura, btnCadastrarOficial, btnGerenciarManuais;
     SharedPreferences bancoDeDados;
 
     private static final String SEPARADOR = "####";
+
+    private List<int[]> cacheMeusJogos = new ArrayList<>();
+    private List<DadosConcurso> cacheOficiais = new ArrayList<>();
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
 
-        ocultarBarrasDeNavegacao();
+        try {
+            ocultarBarrasDeNavegacao();
 
-        txtResultado = findViewById(R.id.txtResultado);
-        btnSortear = findViewById(R.id.btnSortear);
-        btnCompartilhar = findViewById(R.id.btnCompartilhar);
-        btnHistorico = findViewById(R.id.btnHistorico);
-        btnConferir = findViewById(R.id.btnConferir);
-        btnVarredura = findViewById(R.id.btnVarredura);
-        btnCadastrarOficial = findViewById(R.id.btnCadastrarOficial);
-        btnGerenciarManuais = findViewById(R.id.btnGerenciarManuais);
+            txtResultado = findViewById(R.id.txtResultado);
+            inputFixas = findViewById(R.id.inputFixas);
+            btnSortear = findViewById(R.id.btnSortear);
+            btnCompartilhar = findViewById(R.id.btnCompartilhar);
+            btnHistorico = findViewById(R.id.btnHistorico);
+            btnConferir = findViewById(R.id.btnConferir);
+            btnVarredura = findViewById(R.id.btnVarredura);
+            btnCadastrarOficial = findViewById(R.id.btnCadastrarOficial);
+            btnGerenciarManuais = findViewById(R.id.btnGerenciarManuais);
 
-        lblSomaPrimos = findViewById(R.id.lblSomaPrimos);
-        lblParesImpares = findViewById(R.id.lblParesImpares);
-        lblFibRepetidos = findViewById(R.id.lblFibRepetidos);
+            lblSomaPrimos = findViewById(R.id.lblSomaPrimos);
+            lblParesImpares = findViewById(R.id.lblParesImpares);
+            lblFibRepetidos = findViewById(R.id.lblFibRepetidos);
+            lblCiclo = findViewById(R.id.lblCiclo);
 
-        txtContador = findViewById(R.id.txtContador);
-        txtAssinatura = findViewById(R.id.txtAssinatura);
+            txtContador = findViewById(R.id.txtContador);
+            txtAssinatura = findViewById(R.id.txtAssinatura);
 
-        txtAssinatura.setPaintFlags(txtAssinatura.getPaintFlags() | android.graphics.Paint.UNDERLINE_TEXT_FLAG);
+            if (txtAssinatura != null) {
+                txtAssinatura.setPaintFlags(txtAssinatura.getPaintFlags() | android.graphics.Paint.UNDERLINE_TEXT_FLAG);
+                txtAssinatura.setOnClickListener(v -> mostrarRedesSociais());
+            }
 
-        bancoDeDados = getSharedPreferences("HistoricoJogos", MODE_PRIVATE);
+            bancoDeDados = getSharedPreferences("HistoricoJogos", MODE_PRIVATE);
 
-        txtResultado.setText("Clique para buscar...");
-        lblSomaPrimos.setText("Soma: -- / Primos: --");
-        lblParesImpares.setText("Pares: -- / Ímpares: --");
-        lblFibRepetidos.setText("Fibonacci: -- / Repetidos: --");
+            if (txtResultado != null) txtResultado.setText("Clique no botão 'Buscar Jogo Ideal'");
+            if (lblSomaPrimos != null) lblSomaPrimos.setText("Soma: -- / Primos: --");
+            if (lblParesImpares != null) lblParesImpares.setText("Pares: -- / Ímpares: --");
+            if (lblFibRepetidos != null) lblFibRepetidos.setText("Fibonacci: -- / Repetidos: --");
+            if (lblCiclo != null) lblCiclo.setText("Faltam para fechar o Ciclo: Carregando...");
 
-        atualizarContadorTela();
+            if (btnSortear != null) btnSortear.setOnClickListener(v -> buscarJogoEquilibrado());
+            if (btnCompartilhar != null) btnCompartilhar.setOnClickListener(v -> compartilharJogo());
+            if (btnHistorico != null) btnHistorico.setOnClickListener(v -> startActivity(new Intent(MainActivity.this, HistoricoActivity.class)));
+            if (btnConferir != null) btnConferir.setOnClickListener(v -> abrirConferidor());
+            if (btnVarredura != null) btnVarredura.setOnClickListener(v -> fazerVarreduraRelampago());
+            if (btnCadastrarOficial != null) btnCadastrarOficial.setOnClickListener(v -> abrirCadastroOficial());
+            if (btnGerenciarManuais != null) btnGerenciarManuais.setOnClickListener(v -> startActivity(new Intent(MainActivity.this, HistoricoManualActivity.class)));
 
-        btnSortear.setOnClickListener(v -> buscarJogoEquilibrado());
-        btnCompartilhar.setOnClickListener(v -> compartilharJogo());
-        btnHistorico.setOnClickListener(v -> startActivity(new Intent(MainActivity.this, HistoricoActivity.class)));
-        btnConferir.setOnClickListener(v -> abrirConferidor());
-        btnVarredura.setOnClickListener(v -> fazerVarreduraGeral());
-        btnCadastrarOficial.setOnClickListener(v -> abrirCadastroOficial());
-        txtAssinatura.setOnClickListener(v -> mostrarRedesSociais());
-        btnGerenciarManuais.setOnClickListener(v -> startActivity(new Intent(MainActivity.this, HistoricoManualActivity.class)));
+            atualizarContadorTela();
+            carregarDadosParaMemoria();
+
+        } catch (Exception e) {
+            e.printStackTrace();
+            Toast.makeText(this, "Erro ao iniciar: " + e.getMessage(), Toast.LENGTH_LONG).show();
+        }
     }
 
     private void ocultarBarrasDeNavegacao() {
-        View decorView = getWindow().getDecorView();
-        decorView.setSystemUiVisibility(
-                View.SYSTEM_UI_FLAG_IMMERSIVE_STICKY
-                        | View.SYSTEM_UI_FLAG_LAYOUT_STABLE
-                        | View.SYSTEM_UI_FLAG_LAYOUT_HIDE_NAVIGATION
-                        | View.SYSTEM_UI_FLAG_LAYOUT_FULLSCREEN
-                        | View.SYSTEM_UI_FLAG_HIDE_NAVIGATION
-                        | View.SYSTEM_UI_FLAG_FULLSCREEN);
+        try {
+            View decorView = getWindow().getDecorView();
+            decorView.setSystemUiVisibility(
+                    View.SYSTEM_UI_FLAG_IMMERSIVE_STICKY
+                            | View.SYSTEM_UI_FLAG_LAYOUT_STABLE
+                            | View.SYSTEM_UI_FLAG_LAYOUT_HIDE_NAVIGATION
+                            | View.SYSTEM_UI_FLAG_LAYOUT_FULLSCREEN
+                            | View.SYSTEM_UI_FLAG_HIDE_NAVIGATION
+                            | View.SYSTEM_UI_FLAG_FULLSCREEN);
+        } catch (Exception e) {}
     }
 
     @Override
     public void onWindowFocusChanged(boolean hasFocus) {
         super.onWindowFocusChanged(hasFocus);
-        if (hasFocus) {
-            ocultarBarrasDeNavegacao();
+        if (hasFocus) { ocultarBarrasDeNavegacao(); }
+    }
+
+    @Override
+    protected void onResume() {
+        super.onResume();
+        try {
+            atualizarContadorTela();
+            carregarDadosParaMemoria();
+        } catch (Exception e) {}
+    }
+
+    private static class DadosConcurso {
+        int[] numeros;
+        String nomeConcurso;
+        public DadosConcurso(int[] n, String nome) {
+            this.numeros = n;
+            this.nomeConcurso = nome;
         }
     }
 
-    public void compartilharJogo() {
-        String textoJogo = txtResultado.getText().toString();
-        if (textoJogo.contains("Clique") || textoJogo.isEmpty()) {
-            Toast.makeText(MainActivity.this, "Gere um jogo primeiro!", Toast.LENGTH_SHORT).show();
-        } else {
-            compartilharTexto("Olha esse jogo da Lotofácil: \n" + textoJogo);
-        }
-    }
-
-    // --- VARREDURA ULTRA-RÁPIDA COM CACHE DE MEMÓRIA (SÓ ESTATÍSTICAS) ---
-    public void fazerVarreduraGeral() {
-        // Roda em uma Thread separada para não travar a tela (Opcional, mas recomendado se quiser fluidez total)
+    private void carregarDadosParaMemoria() {
         new Thread(() -> {
             try {
-                final String historico = bancoDeDados.getString("historico_ordenado", "");
-                if (historico.isEmpty()) {
-                    runOnUiThread(() -> Toast.makeText(this, "Histórico vazio.", Toast.LENGTH_SHORT).show());
-                    return;
+                cacheMeusJogos.clear();
+                String historico = bancoDeDados.getString("historico_ordenado", "");
+                if (!historico.isEmpty()) {
+                    String[] jogos = historico.split(SEPARADOR);
+                    for (String j : jogos) {
+                        if (!j.trim().isEmpty()) {
+                            cacheMeusJogos.add(converterStringParaArrayInt(j));
+                        }
+                    }
                 }
 
-                String[] meusJogosStr = historico.split(SEPARADOR);
+                cacheOficiais.clear();
                 Map<String, String> oficiaisMap = DadosOficiais.carregarResultadosOficiais(this);
-
-                if (oficiaisMap == null || oficiaisMap.isEmpty()) {
-                    runOnUiThread(() -> Toast.makeText(this, "Sem resultados oficiais.", Toast.LENGTH_SHORT).show());
-                    return;
-                }
-
-                // --- PASSO 1: OTIMIZAÇÃO (CACHE) ---
-                // Convertemos todos os resultados oficiais para Sets de Inteiros UMA ÚNICA VEZ.
-                // HashSet é infinitamente mais rápido para verificar se um número existe (contém).
-                List<Set<Integer>> listaOficiaisCache = new ArrayList<>();
-
-                for (String chaveNumeros : oficiaisMap.keySet()) {
-                    ArrayList<Integer> nums = converterStringParaLista(chaveNumeros);
-                    if (nums != null && !nums.isEmpty()) {
-                        listaOficiaisCache.add(new HashSet<>(nums));
+                if (oficiaisMap != null) {
+                    for (Map.Entry<String, String> entry : oficiaisMap.entrySet()) {
+                        int[] nums = converterStringParaArrayInt(entry.getKey());
+                        if (nums.length == 15) {
+                            cacheOficiais.add(new DadosConcurso(nums, entry.getValue()));
+                        }
                     }
                 }
 
-                // Variáveis atômicas ou simples para contagem
-                int qtd13 = 0;
-                int qtd14 = 0;
-                int qtd15 = 0;
-                int totalJogosAnalisados = 0;
-
-                // --- PASSO 2: COMPARAÇÃO RELÂMPAGO ---
-                for (String meuJogoStr : meusJogosStr) {
-                    if (meuJogoStr.trim().isEmpty()) continue;
-
-                    // Converte o SEU jogo apenas uma vez
-                    ArrayList<Integer> meuJogoLista = converterStringParaLista(meuJogoStr);
-                    if (meuJogoLista.size() < 15) continue;
-
-                    totalJogosAnalisados++;
-                    int recordeDesteJogo = 0;
-
-                    // Compara contra a lista já processada (Muito rápido)
-                    for (Set<Integer> oficialSet : listaOficiaisCache) {
-                        int acertos = 0;
-                        // Verifica quantos números do meu jogo estão no oficial
-                        for (Integer n : meuJogoLista) {
-                            if (oficialSet.contains(n)) {
-                                acertos++;
-                            }
-                        }
-
-                        if (acertos > recordeDesteJogo) {
-                            recordeDesteJogo = acertos;
-                        }
-                        // Se já achou 15, para de procurar para este jogo específico
-                        if (recordeDesteJogo == 15) break;
+                Collections.sort(cacheOficiais, new Comparator<DadosConcurso>() {
+                    @Override
+                    public int compare(DadosConcurso o1, DadosConcurso o2) {
+                        int n1 = 0, n2 = 0;
+                        try { n1 = Integer.parseInt(o1.nomeConcurso.split(" ")[1]); } catch(Exception e){}
+                        try { n2 = Integer.parseInt(o2.nomeConcurso.split(" ")[1]); } catch(Exception e){}
+                        return Integer.compare(n1, n2);
                     }
-
-                    if (recordeDesteJogo == 13) qtd13++;
-                    else if (recordeDesteJogo == 14) qtd14++;
-                    else if (recordeDesteJogo == 15) qtd15++;
-                }
-
-                // Prepara os dados finais para enviar para a tela (precisa ser final ou effectively final)
-                final int t = totalJogosAnalisados;
-                final int q13 = qtd13;
-                final int q14 = qtd14;
-                final int q15 = qtd15;
-
-                // --- PASSO 3: VOLTA PARA A TELA DO USUÁRIO ---
-                runOnUiThread(() -> {
-                    Intent intent = new Intent(MainActivity.this, ResultadoVarreduraActivity.class);
-                    intent.putExtra("total", t);
-                    intent.putExtra("q13", q13);
-                    intent.putExtra("q14", q14);
-                    intent.putExtra("q15", q15);
-                    startActivity(intent);
                 });
 
-            } catch (Exception e) {
-                e.printStackTrace();
-                runOnUiThread(() -> Toast.makeText(this, "Erro: " + e.getMessage(), Toast.LENGTH_LONG).show());
-            }
-        }).start(); // Inicia o processamento em segundo plano
+                runOnUiThread(() -> {
+                    try {
+                        List<Integer> faltantes = calcularDezenasDoCiclo();
+                        if (lblCiclo != null) {
+                            if (faltantes.isEmpty()) lblCiclo.setText("Ciclo: Fechado (Todas saíram recentemente)");
+                            else lblCiclo.setText("Faltam no Ciclo: " + faltantes.toString());
+                        }
+                    } catch (Exception e) {}
+                });
+            } catch (Exception e) { e.printStackTrace(); }
+        }).start();
     }
 
-    // CLASSE AUXILIAR PARA AJUDAR NA ORDENAÇÃO (Necessária para a função acima)
-    private static class ItemVarredura {
-        int numConcurso;
-        int pontos;
-        int numJogo;
-        String textoConcurso;
-        String sequenciaJogo;
-
-        public ItemVarredura(int numConcurso, int pontos, int numJogo, String textoConcurso, String sequenciaJogo) {
-            this.numConcurso = numConcurso;
-            this.pontos = pontos;
-            this.numJogo = numJogo;
-            this.textoConcurso = textoConcurso;
-            this.sequenciaJogo = sequenciaJogo;
-        }
-    }
-
-    private List<Integer> calcularDezenasFrias(Map<String, String> jogosOficiais) {
-        List<PacoteJogo> listaOrdenada = new ArrayList<>();
-
-        for (Map.Entry<String, String> entry : jogosOficiais.entrySet()) {
-            String info = entry.getValue();
-            try {
-                String[] partes = info.split(" ");
-                if (partes.length > 1) {
-                    int numConcurso = Integer.parseInt(partes[1]);
-                    ArrayList<Integer> numeros = converterStringParaLista(entry.getKey());
-                    listaOrdenada.add(new PacoteJogo(numConcurso, numeros));
-                }
-            } catch (Exception e) { }
-        }
-
-        Collections.sort(listaOrdenada, (p1, p2) -> Integer.compare(p2.concurso, p1.concurso));
-
-        int limite = Math.min(listaOrdenada.size(), 10);
-        int[] frequencia = new int[26];
-
-        for (int i = 0; i < limite; i++) {
-            for (int num : listaOrdenada.get(i).numeros) {
-                if (num >= 1 && num <= 25) frequencia[num]++;
-            }
-        }
-
-        List<Integer> dezenasFrias = new ArrayList<>();
-        for (int i = 1; i <= 25; i++) {
-            if (frequencia[i] <= 3) {
-                dezenasFrias.add(i);
-            }
-        }
-        return dezenasFrias;
-    }
-
-    private static class PacoteJogo {
-        int concurso;
-        ArrayList<Integer> numeros;
-        public PacoteJogo(int c, ArrayList<Integer> n) { this.concurso = c; this.numeros = n; }
-    }
-
-    private ArrayList<Integer> converterStringParaLista(String numerosStr) {
-        ArrayList<Integer> lista = new ArrayList<>();
+    private int[] converterStringParaArrayInt(String str) {
         try {
-            String limpa = numerosStr.replace("[", "").replace("]", "").replace(" ", "");
-            String[] partes = limpa.split(",");
-            for (String p : partes) {
-                if (!p.isEmpty()) lista.add(Integer.parseInt(p.trim()));
+            String limpa = str.replace("[", "").replace("]", "").replace(",", " ");
+            String[] partes = limpa.trim().split("\\s+");
+            int[] nums = new int[partes.length];
+            for (int i = 0; i < partes.length; i++) {
+                nums[i] = Integer.parseInt(partes[i].trim());
             }
-        } catch (Exception e) {}
-        return lista;
+            return nums;
+        } catch (Exception e) { return new int[0]; }
+    }
+
+    private List<Integer> calcularDezenasDoCiclo() {
+        Set<Integer> saiuRecentemente = new HashSet<>();
+        for (int i = cacheOficiais.size() - 1; i >= 0; i--) {
+            int[] nums = cacheOficiais.get(i).numeros;
+            for (int n : nums) saiuRecentemente.add(n);
+            if (saiuRecentemente.size() == 25) {
+                break;
+            }
+        }
+        List<Integer> faltantes = new ArrayList<>();
+        if (saiuRecentemente.size() < 25 && !saiuRecentemente.isEmpty()) {
+            for (int i = 1; i <= 25; i++) {
+                if (!saiuRecentemente.contains(i)) {
+                    faltantes.add(i);
+                }
+            }
+        }
+        return faltantes;
+    }
+
+    private boolean validarEquilibrioGrade(List<Integer> numeros) {
+        int[] linhas = new int[5];
+        int[] colunas = new int[5];
+        for (int n : numeros) {
+            int num = n - 1;
+            linhas[num / 5]++;
+            colunas[num % 5]++;
+        }
+        for (int i = 0; i < 5; i++) {
+            if (linhas[i] == 0 || linhas[i] == 5) return false;
+            if (colunas[i] == 0 || colunas[i] == 5) return false;
+        }
+        return true;
     }
 
     public void buscarJogoEquilibrado() {
@@ -277,24 +235,32 @@ public class MainActivity extends AppCompatActivity {
             meusJogosSalvos = Arrays.asList(historicoGeral.split(SEPARADOR));
         }
 
-        Map<String, String> jogosOficiais = DadosOficiais.carregarResultadosOficiais(this);
+        Map<String, String> oficiaisMap = DadosOficiais.carregarResultadosOficiais(this);
 
         ArrayList<Integer> numerosDoUltimoConcurso = new ArrayList<>();
-        int maiorNumeroConcurso = 0;
-        List<Integer> dezenasFrias = calcularDezenasFrias(jogosOficiais);
+        if (!cacheOficiais.isEmpty()) {
+            int[] ultimoArr = cacheOficiais.get(cacheOficiais.size() - 1).numeros;
+            for(int i : ultimoArr) numerosDoUltimoConcurso.add(i);
+        }
 
-        for (Map.Entry<String, String> entry : jogosOficiais.entrySet()) {
-            String info = entry.getValue();
-            try {
-                String[] partes = info.split(" ");
-                if (partes.length > 1) {
-                    int numConcurso = Integer.parseInt(partes[1]);
-                    if (numConcurso > maiorNumeroConcurso) {
-                        maiorNumeroConcurso = numConcurso;
-                        numerosDoUltimoConcurso = converterStringParaLista(entry.getKey());
+        List<Integer> dezenasFrias = calcularDezenasFrias(oficiaisMap);
+        List<Integer> dezenasCiclo = calcularDezenasDoCiclo();
+
+        ArrayList<Integer> numerosFixosUsuario = new ArrayList<>();
+        if (inputFixas != null) {
+            String textoFixos = inputFixas.getText().toString();
+            if (!textoFixos.isEmpty()) {
+                try {
+                    ArrayList<Integer> temp = converterStringParaLista(textoFixos);
+                    for (int n : temp) {
+                        if (n >= 1 && n <= 25 && !numerosFixosUsuario.contains(n)) {
+                            numerosFixosUsuario.add(n);
+                        }
                     }
+                } catch (Exception e) {
+                    Toast.makeText(this, "Erro nos números fixos. Use espaço ou vírgula.", Toast.LENGTH_SHORT).show();
                 }
-            } catch (Exception e) { }
+            }
         }
 
         ArrayList<Integer> numerosDaMoldura = new ArrayList<>();
@@ -304,8 +270,26 @@ public class MainActivity extends AppCompatActivity {
         ArrayList<Integer> numerosFibonacci = new ArrayList<>();
         Collections.addAll(numerosFibonacci, 1, 2, 3, 5, 8, 13, 21);
 
+        int tentativasLoop = 0;
+
         while (true) {
+            tentativasLoop++;
+            if (tentativasLoop > 50000) {
+                Toast.makeText(this, "Não foi possível combinar as Fixas com os Filtros!", Toast.LENGTH_LONG).show();
+                return;
+            }
+
             ArrayList<Integer> tentativa = new ArrayList<>();
+            tentativa.addAll(numerosFixosUsuario);
+
+            for (int dCiclo : dezenasCiclo) {
+                if (!tentativa.contains(dCiclo) && tentativa.size() < 15) {
+                    if (gerador.nextInt(100) < 70) {
+                        tentativa.add(dCiclo);
+                    }
+                }
+            }
+
             while (tentativa.size() < 15) {
                 int num = gerador.nextInt(25) + 1;
                 if (!tentativa.contains(num)) {
@@ -327,25 +311,21 @@ public class MainActivity extends AppCompatActivity {
                 if (dezenasFrias.contains(numero)) quantidadeFriasNoJogo++;
             }
 
-            boolean paresOk = (pares >= 6 && pares <= 8);
-            boolean somaOk = (somaTotal >= 175 && somaTotal <= 225);
+            boolean paresOk = (pares >= 6 && pares <= 9);
+            boolean somaOk = (somaTotal >= 165 && somaTotal <= 235);
             boolean molduraOk = (naMoldura >= 8 && naMoldura <= 11);
-            boolean primosOk = (nosPrimos >= 4 && nosPrimos <= 6);
-            boolean fibonacciOk = (nosFibonacci >= 3 && nosFibonacci <= 5);
+            boolean primosOk = (nosPrimos >= 4 && nosPrimos <= 7);
+            boolean fibonacciOk = (nosFibonacci >= 3 && nosFibonacci <= 6);
             boolean repetidosOk = true;
             if (!numerosDoUltimoConcurso.isEmpty()) {
-                repetidosOk = (repetidosDoUltimo >= 8 && repetidosDoUltimo <= 10);
+                repetidosOk = (repetidosDoUltimo >= 7 && repetidosDoUltimo <= 10);
             }
-            boolean friasOk = true;
-            if (!dezenasFrias.isEmpty()) {
-                friasOk = (quantidadeFriasNoJogo >= 2 && quantidadeFriasNoJogo <= 6);
-            }
+            boolean gradeOk = validarEquilibrioGrade(tentativa);
 
-            if (paresOk && somaOk && molduraOk && primosOk && fibonacciOk && repetidosOk && friasOk) {
+            if (paresOk && somaOk && molduraOk && primosOk && fibonacciOk && repetidosOk && gradeOk) {
                 String assinaturaDoJogo = tentativa.toString();
-
                 if (meusJogosSalvos.contains(assinaturaDoJogo)) continue;
-                if (jogosOficiais.containsKey(assinaturaDoJogo)) continue;
+                if (oficiaisMap != null && oficiaisMap.containsKey(assinaturaDoJogo)) continue;
 
                 salvarJogo(historicoGeral, assinaturaDoJogo);
 
@@ -365,17 +345,28 @@ public class MainActivity extends AppCompatActivity {
         lblSomaPrimos.setText("Soma: " + somaFinal + " / Primos: " + primosFinal);
         lblParesImpares.setText("Pares: " + paresFinal + " / Ímpares: " + (15 - paresFinal));
 
-        String textoRepetidos = "N/A";
-        if (maiorNumeroConcurso > 0) {
-            textoRepetidos = repetidosFinal + " (Conc. " + maiorNumeroConcurso + ")";
+        String textoConcurso = "N/A";
+        if (!cacheOficiais.isEmpty()) {
+            String nome = cacheOficiais.get(cacheOficiais.size()-1).nomeConcurso;
+            try {
+                String[] partes = nome.split(" ");
+                if (partes.length > 1) textoConcurso = partes[1];
+                else textoConcurso = nome.replaceAll("[^0-9]", "");
+            } catch (Exception e){}
         }
-        lblFibRepetidos.setText("Fibonacci: " + fibonacciFinal + " / Repetidos: " + textoRepetidos);
+
+        lblFibRepetidos.setText("Fib: " + fibonacciFinal + " / Repetidos: " + repetidosFinal + " (Conc. " + textoConcurso + ")");
 
         atualizarContadorTela();
 
         int novoTotal = meusJogosSalvos.size() + 1;
-        String msgExtra = (!dezenasFrias.isEmpty()) ? "\n(Usando análise dos últimos 10 jogos)" : "";
-        Toast.makeText(this, "Jogo Inteligente nº " + novoTotal + " Gerado!" + msgExtra, Toast.LENGTH_LONG).show();
+        StringBuilder msg = new StringBuilder();
+        msg.append("Jogo Inteligente nº ").append(novoTotal).append(" Gerado!");
+
+        if (!numerosFixosUsuario.isEmpty()) msg.append("\n\uD83D\uDCCC Com ").append(numerosFixosUsuario.size()).append(" Fixas");
+        if (!dezenasCiclo.isEmpty()) msg.append("\n\uD83D\uDD04 Priorizando Ciclo");
+
+        Toast.makeText(this, msg.toString(), Toast.LENGTH_LONG).show();
     }
 
     private void salvarJogo(String historicoAntigo, String novoJogo) {
@@ -386,12 +377,23 @@ public class MainActivity extends AppCompatActivity {
             editor.putString("historico_ordenado", historicoAntigo + SEPARADOR + novoJogo);
         }
         editor.apply();
+        cacheMeusJogos.add(converterStringParaArrayInt(novoJogo));
     }
 
     public void atualizarContadorTela() {
+        if (txtContador == null) return;
         String historicoGeral = bancoDeDados.getString("historico_ordenado", "");
         int total = historicoGeral.isEmpty() ? 0 : historicoGeral.split(SEPARADOR).length;
         txtContador.setText("Jogos gerados até agora: " + total);
+    }
+
+    public void compartilharJogo() {
+        String textoJogo = txtResultado.getText().toString();
+        if (textoJogo.contains("Clique") || textoJogo.isEmpty()) {
+            Toast.makeText(MainActivity.this, "Gere um jogo primeiro!", Toast.LENGTH_SHORT).show();
+        } else {
+            compartilharTexto("Olha esse jogo da Lotofácil: \n" + textoJogo);
+        }
     }
 
     public void compartilharTexto(String msg) {
@@ -414,7 +416,9 @@ public class MainActivity extends AppCompatActivity {
     }
 
     public void abrirLink(String url) {
-        startActivity(new Intent(Intent.ACTION_VIEW, Uri.parse(url)));
+        try {
+            startActivity(new Intent(Intent.ACTION_VIEW, Uri.parse(url)));
+        } catch (Exception e) {}
     }
 
     public void abrirCadastroOficial() {
@@ -464,6 +468,7 @@ public class MainActivity extends AppCompatActivity {
             Collections.sort(lista);
             DadosOficiais.salvarNovoResultado(this, lista.toString(), concurso, data);
             Toast.makeText(this, "Salvo com sucesso!", Toast.LENGTH_SHORT).show();
+            carregarDadosParaMemoria();
         } catch (Exception e) {
             Toast.makeText(this, "Erro nos dados.", Toast.LENGTH_SHORT).show();
         }
@@ -500,9 +505,134 @@ public class MainActivity extends AppCompatActivity {
         } catch (Exception e) {}
     }
 
-    @Override
-    protected void onResume() {
-        super.onResume();
-        atualizarContadorTela();
+    public void fazerVarreduraRelampago() {
+        if (cacheMeusJogos.isEmpty()) {
+            Toast.makeText(this, "Carregando dados... Tente em 2 segundos.", Toast.LENGTH_SHORT).show();
+            carregarDadosParaMemoria();
+            return;
+        }
+
+        int qtd11 = 0, qtd12 = 0, qtd13 = 0, qtd14 = 0, qtd15 = 0;
+        int totalJogos = cacheMeusJogos.size();
+        List<ItemCampeao> listaParaOrdenar = new ArrayList<>();
+
+        for (int i = 0; i < cacheMeusJogos.size(); i++) {
+            int[] meuJogo = cacheMeusJogos.get(i);
+            int melhorPontuacao = 0;
+            String concursoDoRecorde = "";
+            int numeroDoConcursoRecorde = 0;
+
+            for (DadosConcurso oficial : cacheOficiais) {
+                int acertos = 0;
+                for (int m : meuJogo) {
+                    for (int o : oficial.numeros) {
+                        if (m == o) { acertos++; break; }
+                    }
+                }
+                if (acertos > melhorPontuacao) {
+                    melhorPontuacao = acertos;
+                    concursoDoRecorde = oficial.nomeConcurso;
+                    try {
+                        String[] parts = concursoDoRecorde.split(" ");
+                        if (parts.length > 1) {
+                            numeroDoConcursoRecorde = Integer.parseInt(parts[1]);
+                        }
+                    } catch (Exception e) { numeroDoConcursoRecorde = 0; }
+                }
+                if (melhorPontuacao == 15) break;
+            }
+
+            if (melhorPontuacao == 11) qtd11++;
+            else if (melhorPontuacao == 12) qtd12++;
+            else if (melhorPontuacao == 13) qtd13++;
+            else if (melhorPontuacao == 14) qtd14++;
+            else if (melhorPontuacao == 15) qtd15++;
+
+            if (melhorPontuacao >= 14) {
+                // AQUI FOI ALTERADO: REMOVI A LISTA DE NÚMEROS (CLEAN)
+                String emojiTrofeu = new String(Character.toChars(0x1F3C6));
+
+                String msgFinal = emojiTrofeu + " " + melhorPontuacao + " PONTOS! (Seu Jogo " + (i + 1) + ")\n" +
+                        "No " + concursoDoRecorde;
+
+                listaParaOrdenar.add(new ItemCampeao(numeroDoConcursoRecorde, msgFinal));
+            }
+        }
+
+        Collections.sort(listaParaOrdenar, (item1, item2) -> Integer.compare(item2.concurso, item1.concurso));
+
+        ArrayList<String> detalhesFinais = new ArrayList<>();
+        for (ItemCampeao item : listaParaOrdenar) {
+            detalhesFinais.add(item.textoFormatado);
+        }
+
+        Intent intent = new Intent(this, ResultadoVarreduraActivity.class);
+        intent.putExtra("total", totalJogos);
+        intent.putExtra("q11", qtd11);
+        intent.putExtra("q12", qtd12);
+        intent.putExtra("q13", qtd13);
+        intent.putExtra("q14", qtd14);
+        intent.putExtra("q15", qtd15);
+        intent.putStringArrayListExtra("detalhes_campeoes", detalhesFinais);
+        startActivity(intent);
+    }
+
+    private static class ItemCampeao {
+        int concurso;
+        String textoFormatado;
+        public ItemCampeao(int c, String t) {
+            this.concurso = c;
+            this.textoFormatado = t;
+        }
+    }
+
+    private List<Integer> calcularDezenasFrias(Map<String, String> jogosOficiais) {
+        List<PacoteJogo> listaOrdenada = new ArrayList<>();
+        if (jogosOficiais == null) return new ArrayList<>();
+
+        for (Map.Entry<String, String> entry : jogosOficiais.entrySet()) {
+            String info = entry.getValue();
+            try {
+                String[] partes = info.split(" ");
+                if (partes.length > 1) {
+                    int numConcurso = Integer.parseInt(partes[1]);
+                    ArrayList<Integer> numeros = converterStringParaLista(entry.getKey());
+                    listaOrdenada.add(new PacoteJogo(numConcurso, numeros));
+                }
+            } catch (Exception e) { }
+        }
+        Collections.sort(listaOrdenada, (p1, p2) -> Integer.compare(p2.concurso, p1.concurso));
+        int limite = Math.min(listaOrdenada.size(), 10);
+        int[] frequencia = new int[26];
+        for (int i = 0; i < limite; i++) {
+            for (int num : listaOrdenada.get(i).numeros) {
+                if (num >= 1 && num <= 25) frequencia[num]++;
+            }
+        }
+        List<Integer> dezenasFrias = new ArrayList<>();
+        for (int i = 1; i <= 25; i++) {
+            if (frequencia[i] <= 3) {
+                dezenasFrias.add(i);
+            }
+        }
+        return dezenasFrias;
+    }
+
+    private static class PacoteJogo {
+        int concurso;
+        ArrayList<Integer> numeros;
+        public PacoteJogo(int c, ArrayList<Integer> n) { this.concurso = c; this.numeros = n; }
+    }
+
+    private ArrayList<Integer> converterStringParaLista(String numerosStr) {
+        ArrayList<Integer> lista = new ArrayList<>();
+        try {
+            String limpa = numerosStr.replace("[", "").replace("]", "").replace(",", " ");
+            String[] partes = limpa.trim().split("\\s+");
+            for (String p : partes) {
+                if (!p.isEmpty()) lista.add(Integer.parseInt(p.trim()));
+            }
+        } catch (Exception e) {}
+        return lista;
     }
 }

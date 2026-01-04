@@ -13,9 +13,6 @@ public class ResultadoVarreduraActivity extends AppCompatActivity {
     ListView listaConflitos;
     TextView txtResumo;
 
-    // Não precisamos mais da lista estática pesada, pois passamos só números
-    public static ArrayList<String> listaTemporaria = null;
-
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -26,41 +23,56 @@ public class ResultadoVarreduraActivity extends AppCompatActivity {
         listaConflitos = findViewById(R.id.listaConflitos);
         txtResumo = findViewById(R.id.txtResumo);
 
-        // Recebe os contadores
+        // Recebe os contadores e a lista de detalhes
         int total = getIntent().getIntExtra("total", 0);
+        int q11 = getIntent().getIntExtra("q11", 0);
+        int q12 = getIntent().getIntExtra("q12", 0);
         int q13 = getIntent().getIntExtra("q13", 0);
         int q14 = getIntent().getIntExtra("q14", 0);
         int q15 = getIntent().getIntExtra("q15", 0);
 
-        // Esconde a lista (pois não vamos usar)
-        listaConflitos.setVisibility(View.GONE); // ou View.INVISIBLE
+        ArrayList<String> detalhes = getIntent().getStringArrayListExtra("detalhes_campeoes");
 
-        // Aumenta o tamanho do texto para ficar bonito
-        txtResumo.setTextSize(18);
+        txtResumo.setTextSize(16);
 
-        // Monta o Relatório de Eficiência
         if (total > 0) {
             StringBuilder relatorio = new StringBuilder();
-            relatorio.append("� RELATÓRIO DE EFICIÊNCIA �\n\n");
-            relatorio.append("Jogos Analisados: ").append(total).append("\n");
+
+            // \uD83D\uDCCA é o Gráfico
+            relatorio.append("\uD83D\uDCCA ESTATÍSTICAS RÁPIDAS \uD83D\uDCCA\n");
+            relatorio.append("Total Analisado: ").append(total).append(" jogos\n\n");
+
+            // \uD83D\uDCB0 é o Saco de Dinheiro
+            relatorio.append("\uD83D\uDCB0 15 Pontos: ").append(q15).append("\n");
+            relatorio.append("\uD83D\uDCB0 14 Pontos: ").append(q14).append("\n");
+
+            // \uD83D\uDD35 é a Bola Azul
+            relatorio.append("\uD83D\uDD35 13 Pontos: ").append(q13).append("\n");
+
+            // \u26AA é a Bola Branca
+            relatorio.append("\u26AA 12 Pontos: ").append(q12).append("\n");
+            relatorio.append("\u26AA 11 Pontos: ").append(q11).append("\n");
+
             relatorio.append("----------------------------------\n");
-            relatorio.append("� 15 Pontos: ").append(q15).append(" jogos\n");
-            relatorio.append("� 14 Pontos: ").append(q14).append(" jogos\n");
-            relatorio.append("� 13 Pontos: ").append(q13).append(" jogos\n");
-            relatorio.append("----------------------------------\n\n");
 
-            // Cálculo simples de % de "quase lá" (13, 14 ou 15)
-            int totalPremiados = q13 + q14 + q15;
-            double porcentagem = (double) totalPremiados / total * 100.0;
-            String percFormatado = String.format(java.util.Locale.US, "%.1f", porcentagem);
+            if (detalhes != null && !detalhes.isEmpty()) {
+                // Troféu de novo
+                relatorio.append("\uD83C\uDFC6 GALERIA DE CAMPEÕES (14/15) ABAIXO:");
+                listaConflitos.setVisibility(View.VISIBLE);
 
-            relatorio.append("TAXA DE SUCESSO (13+): ").append(percFormatado).append("%\n");
-            relatorio.append("\nIsso significa que ").append(percFormatado);
-            relatorio.append("% dos seus jogos já teriam dado lucro ou prêmio máximo na história!");
+                ArrayAdapter<String> adapter = new ArrayAdapter<>(
+                        this,
+                        R.layout.item_historico,
+                        detalhes
+                );
+                listaConflitos.setAdapter(adapter);
+
+            } else {
+                relatorio.append("Nenhum jogo com 14 ou 15 pontos encontrado no histórico.");
+                listaConflitos.setVisibility(View.GONE);
+            }
 
             txtResumo.setText(relatorio.toString());
-        } else {
-            txtResumo.setText("Nenhum dado para analisar.");
         }
     }
 
@@ -78,8 +90,6 @@ public class ResultadoVarreduraActivity extends AppCompatActivity {
     @Override
     public void onWindowFocusChanged(boolean hasFocus) {
         super.onWindowFocusChanged(hasFocus);
-        if (hasFocus) {
-            ocultarBarrasDeNavegacao();
-        }
+        if (hasFocus) { ocultarBarrasDeNavegacao(); }
     }
 }

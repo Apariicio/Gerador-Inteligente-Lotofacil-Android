@@ -11,7 +11,7 @@
         android:layout_height="46dp"
         android:layout_alignParentTop="true"
         android:layout_centerHorizontal="true"
-        android:layout_marginTop="106dp"
+        android:layout_marginTop="80dp"
         android:format12Hour="HH:mm:ss"
         android:format24Hour="HH:mm:ss"
         android:textAlignment="center"
@@ -23,36 +23,16 @@
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:layout_below="@+id/relogioDigital"
-        android:layout_marginTop="10dp"
+        android:layout_marginTop="20dp"
         android:gravity="center"
         android:orientation="vertical">
-
-        <TextView
-            android:id="@+id/txtTitulo"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:background="#7884B9C7"
-            android:text="Gerador Inteligente"
-            android:textColor="#000000"
-            android:textSize="24sp"
-            android:textStyle="bold" />
-
-        <TextView
-            android:id="@+id/txtSubtitulo"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:layout_marginBottom="20dp"
-            android:text="(Filtros: Pares + Soma + Moldura + Primos + Fibonacci + Repetidos)"
-            android:textColor="#0B0A0A"
-            android:textSize="12sp"
-            android:textStyle="bold|italic" />
 
         <TextView
             android:id="@+id/txtResultado"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:layout_marginTop="10dp"
-            android:layout_marginBottom="20dp"
+            android:layout_marginTop="5dp"
+            android:layout_marginBottom="10dp"
             android:background="#83B3D4F8"
             android:gravity="center"
             android:text="Clique abaixo para gerar"
@@ -60,6 +40,19 @@
             android:textColor="#000000"
             android:textSize="22sp"
             android:textStyle="bold|italic" />
+
+        <EditText
+            android:id="@+id/inputFixas"
+            android:layout_width="300dp"
+            android:layout_height="35dp"
+            android:layout_marginBottom="10dp"
+            android:background="#90FFFFFF"
+            android:gravity="center"
+            android:hint="Digite seus números da sorte aqui (ex.: 06 10 22)"
+            android:inputType="text"
+            android:textColor="#000000"
+            android:textColorHint="#444444"
+            android:textSize="14sp" />
 
         <Button
             android:id="@+id/btnSortear"
@@ -72,7 +65,7 @@
         <LinearLayout
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:layout_marginTop="20dp"
+            android:layout_marginTop="15dp"
             android:gravity="center"
             android:orientation="horizontal">
 
@@ -86,7 +79,7 @@
                 android:padding="8dp"
                 android:text="Soma: -- / Primos: --"
                 android:textColor="#1B5E20"
-                android:textSize="12sp"
+                android:textSize="11sp"
                 android:textStyle="bold" />
 
             <TextView
@@ -95,12 +88,12 @@
                 android:layout_height="wrap_content"
                 android:layout_marginLeft="5dp"
                 android:layout_weight="1"
-                android:background="#7CC8E6C9"
+                android:background="#7CCADAE7"
                 android:gravity="center"
                 android:padding="8dp"
                 android:text="Pares: -- / Ímpares: --"
-                android:textColor="#1B5E20"
-                android:textSize="12sp"
+                android:textColor="#062573"
+                android:textSize="11sp"
                 android:textStyle="bold" />
         </LinearLayout>
 
@@ -109,18 +102,31 @@
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:layout_marginTop="5dp"
-            android:background="#89E8F5E9"
+            android:background="#89C8E9ED"
             android:gravity="center"
             android:padding="8dp"
             android:text="Fibonacci: -- / Repetidos: --"
-            android:textColor="#2E7D32"
-            android:textSize="14sp"
+            android:textColor="#2B715E"
+            android:textSize="13sp"
+            android:textStyle="bold" />
+
+        <TextView
+            android:id="@+id/lblCiclo"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="5dp"
+            android:background="#A6FFEB3B"
+            android:gravity="center"
+            android:padding="5dp"
+            android:text="Status do Ciclo: --"
+            android:textColor="#F57F17"
+            android:textSize="12sp"
             android:textStyle="bold" />
 
         <LinearLayout
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:layout_marginTop="20dp"
+            android:layout_marginTop="15dp"
             android:gravity="center"
             android:orientation="horizontal">
 
@@ -146,7 +152,7 @@
             android:id="@+id/txtContador"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:layout_marginTop="15dp"
+            android:layout_marginTop="10dp"
             android:background="#80DED6D6"
             android:backgroundTint="#FFFFFF"
             android:gravity="center"
@@ -159,7 +165,7 @@
         <LinearLayout
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:layout_marginTop="15dp"
+            android:layout_marginTop="10dp"
             android:layout_marginLeft="30dp"
             android:layout_marginRight="30dp"
             android:gravity="center"
@@ -171,7 +177,7 @@
                 android:layout_height="wrap_content"
                 android:layout_marginEnd="5dp"
                 android:backgroundTint="#6A9C27B0"
-                android:text="Conferir Resultado"
+                android:text="Conferir"
                 android:textColor="#FFFFFF" />
 
             <Button
@@ -180,14 +186,14 @@
                 android:layout_height="wrap_content"
                 android:layout_marginStart="5dp"
                 android:backgroundTint="#59FF5722"
-                android:text="Fazer Varredura"
+                android:text="Varredura"
                 android:textColor="#FFFFFF" />
         </LinearLayout>
 
         <LinearLayout
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:layout_marginTop="10dp"
+            android:layout_marginTop="5dp"
             android:layout_marginLeft="30dp"
             android:layout_marginRight="30dp"
             android:gravity="center"
@@ -199,7 +205,7 @@
                 android:layout_height="wrap_content"
                 android:layout_marginEnd="5dp"
                 android:backgroundTint="#84009688"
-                android:text="Cadastrar (Manual)"
+                android:text="Cadastrar"
                 android:textColor="#FFFFFF" />
 
             <Button
@@ -208,7 +214,7 @@
                 android:layout_height="wrap_content"
                 android:layout_marginStart="5dp"
                 android:backgroundTint="#AB607D8B"
-                android:text="Editar Manual"
+                android:text="Editar"
                 android:textColor="#FFFFFF" />
         </LinearLayout>
 
