@@ -2,12 +2,14 @@ package com.aparicioamaral.quinzenumerosaleatorios;
 
 import android.content.Intent;
 import android.content.SharedPreferences;
+import android.graphics.Color;
 import android.net.Uri;
 import android.os.Bundle;
 import android.text.InputType;
 import android.view.View;
 import android.widget.Button;
 import android.widget.EditText;
+import android.widget.GridLayout;
 import android.widget.LinearLayout;
 import android.widget.TextView;
 import android.widget.Toast;
@@ -25,16 +27,22 @@ import java.util.Set;
 
 public class MainActivity extends AppCompatActivity {
 
-    TextView txtResultado, txtContador;
+    // Removemos txtResultado
+    TextView txtContador;
     TextView lblSomaPrimos, lblParesImpares, lblFibRepetidos, txtAssinatura, lblCiclo;
     EditText inputFixas;
-    Button btnSortear, btnCompartilhar, btnHistorico, btnConferir, btnVarredura, btnCadastrarOficial, btnGerenciarManuais;
+    Button btnSortear, btnHistorico, btnConferir, btnVarredura, btnCadastrarOficial, btnGerenciarManuais;
+    // Layout do Tabuleiro
+    GridLayout gridTabuleiro;
+    TextView[] bolasTabuleiro = new TextView[26]; // Indices 1 a 25
+
     SharedPreferences bancoDeDados;
-
     private static final String SEPARADOR = "####";
-
     private List<int[]> cacheMeusJogos = new ArrayList<>();
     private List<DadosConcurso> cacheOficiais = new ArrayList<>();
+
+    // Variável para guardar o jogo atual para compartilhamento
+    private String jogoAtualParaCompartilhar = "";
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -44,10 +52,12 @@ public class MainActivity extends AppCompatActivity {
         try {
             ocultarBarrasDeNavegacao();
 
-            txtResultado = findViewById(R.id.txtResultado);
+            // Mapeando componentes novos
+            gridTabuleiro = findViewById(R.id.gridTabuleiro);
+            inicializarBolasDoTabuleiro(); // Conecta os IDs num01, num02...
+
             inputFixas = findViewById(R.id.inputFixas);
             btnSortear = findViewById(R.id.btnSortear);
-            btnCompartilhar = findViewById(R.id.btnCompartilhar);
             btnHistorico = findViewById(R.id.btnHistorico);
             btnConferir = findViewById(R.id.btnConferir);
             btnVarredura = findViewById(R.id.btnVarredura);
@@ -67,28 +77,75 @@ public class MainActivity extends AppCompatActivity {
                 txtAssinatura.setOnClickListener(v -> mostrarRedesSociais());
             }
 
+            // Clique no Tabuleiro para Compartilhar
+            gridTabuleiro.setOnClickListener(v -> compartilharJogo());
+
             bancoDeDados = getSharedPreferences("HistoricoJogos", MODE_PRIVATE);
 
-            if (txtResultado != null) txtResultado.setText("Clique no botão 'Buscar Jogo Ideal'");
-            if (lblSomaPrimos != null) lblSomaPrimos.setText("Soma: -- / Primos: --");
-            if (lblParesImpares != null) lblParesImpares.setText("Pares: -- / Ímpares: --");
-            if (lblFibRepetidos != null) lblFibRepetidos.setText("Fibonacci: -- / Repetidos: --");
-            if (lblCiclo != null) lblCiclo.setText("Faltam para fechar o Ciclo: Carregando...");
+            // Textos Iniciais
+            lblSomaPrimos.setText("Soma: -- / Primos: --");
+            lblParesImpares.setText("Pares: -- / Ímpares: --");
+            lblFibRepetidos.setText("Fib: -- / Rep: --");
+            lblCiclo.setText("Ciclo: Carregando...");
 
-            if (btnSortear != null) btnSortear.setOnClickListener(v -> buscarJogoEquilibrado());
-            if (btnCompartilhar != null) btnCompartilhar.setOnClickListener(v -> compartilharJogo());
-            if (btnHistorico != null) btnHistorico.setOnClickListener(v -> startActivity(new Intent(MainActivity.this, HistoricoActivity.class)));
-            if (btnConferir != null) btnConferir.setOnClickListener(v -> abrirConferidor());
-            if (btnVarredura != null) btnVarredura.setOnClickListener(v -> fazerVarreduraRelampago());
-            if (btnCadastrarOficial != null) btnCadastrarOficial.setOnClickListener(v -> abrirCadastroOficial());
-            if (btnGerenciarManuais != null) btnGerenciarManuais.setOnClickListener(v -> startActivity(new Intent(MainActivity.this, HistoricoManualActivity.class)));
+            btnSortear.setOnClickListener(v -> buscarJogoEquilibrado());
+            btnHistorico.setOnClickListener(v -> startActivity(new Intent(MainActivity.this, HistoricoActivity.class)));
+            btnConferir.setOnClickListener(v -> abrirConferidor());
+            btnVarredura.setOnClickListener(v -> fazerVarreduraRelampago());
+            btnCadastrarOficial.setOnClickListener(v -> abrirCadastroOficial());
+            btnGerenciarManuais.setOnClickListener(v -> startActivity(new Intent(MainActivity.this, HistoricoManualActivity.class)));
 
             atualizarContadorTela();
             carregarDadosParaMemoria();
 
+            // Mostra o tabuleiro vazio (tudo invisivel ou cinza)
+            limparTabuleiro();
+
         } catch (Exception e) {
             e.printStackTrace();
-            Toast.makeText(this, "Erro ao iniciar: " + e.getMessage(), Toast.LENGTH_LONG).show();
+            Toast.makeText(this, "Erro: " + e.getMessage(), Toast.LENGTH_LONG).show();
+        }
+    }
+
+    private void inicializarBolasDoTabuleiro() {
+        // Mapeia os IDs do XML para o Array Java para facilitar o acesso
+        for (int i = 1; i <= 25; i++) {
+            String idName = "num" + (i < 10 ? "0" + i : i);
+            int resID = getResources().getIdentifier(idName, "id", getPackageName());
+            bolasTabuleiro[i] = findViewById(resID);
+            // Torna o texto clicável para passar o clique para o pai (grid)
+            bolasTabuleiro[i].setOnClickListener(v -> compartilharJogo());
+        }
+    }
+
+    private void limparTabuleiro() {
+        for (int i = 1; i <= 25; i++) {
+            if (bolasTabuleiro[i] != null) {
+                // AGORA NÃO FICA MAIS INVISÍVEL
+                bolasTabuleiro[i].setVisibility(View.VISIBLE);
+
+                // Fica com visual de "Hint" (apagado)
+                bolasTabuleiro[i].setBackgroundResource(R.drawable.bola_apagada);
+                bolasTabuleiro[i].setTextColor(Color.parseColor("#999999")); // Cinza escuro para o número
+            }
+        }
+    }
+
+    private void atualizarTabuleiro(List<Integer> numerosSorteados) {
+        // Primeiro limpa tudo para o estado "apagado"
+        limparTabuleiro();
+
+        jogoAtualParaCompartilhar = numerosSorteados.toString();
+
+        for (int i = 1; i <= 25; i++) {
+            if (bolasTabuleiro[i] != null) {
+                if (numerosSorteados.contains(i)) {
+                    // SE FOI SORTEADO:
+                    bolasTabuleiro[i].setBackgroundResource(R.drawable.bola_selecionada); // Fica Circular Colorido
+                    bolasTabuleiro[i].setTextColor(Color.WHITE); // Número Branco para destacar
+                }
+                // Se não foi sorteado, ele já está como "bola_apagada" por causa do limparTabuleiro() chamado acima
+            }
         }
     }
 
@@ -142,7 +199,6 @@ public class MainActivity extends AppCompatActivity {
                         }
                     }
                 }
-
                 cacheOficiais.clear();
                 Map<String, String> oficiaisMap = DadosOficiais.carregarResultadosOficiais(this);
                 if (oficiaisMap != null) {
@@ -153,22 +209,17 @@ public class MainActivity extends AppCompatActivity {
                         }
                     }
                 }
-
-                Collections.sort(cacheOficiais, new Comparator<DadosConcurso>() {
-                    @Override
-                    public int compare(DadosConcurso o1, DadosConcurso o2) {
-                        int n1 = 0, n2 = 0;
-                        try { n1 = Integer.parseInt(o1.nomeConcurso.split(" ")[1]); } catch(Exception e){}
-                        try { n2 = Integer.parseInt(o2.nomeConcurso.split(" ")[1]); } catch(Exception e){}
-                        return Integer.compare(n1, n2);
-                    }
+                Collections.sort(cacheOficiais, (o1, o2) -> {
+                    int n1 = 0, n2 = 0;
+                    try { n1 = Integer.parseInt(o1.nomeConcurso.split(" ")[1]); } catch(Exception e){}
+                    try { n2 = Integer.parseInt(o2.nomeConcurso.split(" ")[1]); } catch(Exception e){}
+                    return Integer.compare(n1, n2);
                 });
-
                 runOnUiThread(() -> {
                     try {
                         List<Integer> faltantes = calcularDezenasDoCiclo();
                         if (lblCiclo != null) {
-                            if (faltantes.isEmpty()) lblCiclo.setText("Ciclo: Fechado (Todas saíram recentemente)");
+                            if (faltantes.isEmpty()) lblCiclo.setText("Ciclo: Fechado");
                             else lblCiclo.setText("Faltam no Ciclo: " + faltantes.toString());
                         }
                     } catch (Exception e) {}
@@ -194,16 +245,12 @@ public class MainActivity extends AppCompatActivity {
         for (int i = cacheOficiais.size() - 1; i >= 0; i--) {
             int[] nums = cacheOficiais.get(i).numeros;
             for (int n : nums) saiuRecentemente.add(n);
-            if (saiuRecentemente.size() == 25) {
-                break;
-            }
+            if (saiuRecentemente.size() == 25) { break; }
         }
         List<Integer> faltantes = new ArrayList<>();
         if (saiuRecentemente.size() < 25 && !saiuRecentemente.isEmpty()) {
             for (int i = 1; i <= 25; i++) {
-                if (!saiuRecentemente.contains(i)) {
-                    faltantes.add(i);
-                }
+                if (!saiuRecentemente.contains(i)) faltantes.add(i);
             }
         }
         return faltantes;
@@ -258,7 +305,7 @@ public class MainActivity extends AppCompatActivity {
                         }
                     }
                 } catch (Exception e) {
-                    Toast.makeText(this, "Erro nos números fixos. Use espaço ou vírgula.", Toast.LENGTH_SHORT).show();
+                    Toast.makeText(this, "Erro fixas.", Toast.LENGTH_SHORT).show();
                 }
             }
         }
@@ -275,7 +322,7 @@ public class MainActivity extends AppCompatActivity {
         while (true) {
             tentativasLoop++;
             if (tentativasLoop > 50000) {
-                Toast.makeText(this, "Não foi possível combinar as Fixas com os Filtros!", Toast.LENGTH_LONG).show();
+                Toast.makeText(this, "Difícil combinar!", Toast.LENGTH_LONG).show();
                 return;
             }
 
@@ -339,8 +386,8 @@ public class MainActivity extends AppCompatActivity {
             }
         }
 
-        String resultadoLimpo = listaDefinitiva.toString().replace("[", "").replace("]", "");
-        txtResultado.setText(resultadoLimpo);
+        // --- ATUALIZAÇÃO VISUAL: CHAMA O TABULEIRO ---
+        atualizarTabuleiro(listaDefinitiva);
 
         lblSomaPrimos.setText("Soma: " + somaFinal + " / Primos: " + primosFinal);
         lblParesImpares.setText("Pares: " + paresFinal + " / Ímpares: " + (15 - paresFinal));
@@ -355,18 +402,17 @@ public class MainActivity extends AppCompatActivity {
             } catch (Exception e){}
         }
 
-        lblFibRepetidos.setText("Fib: " + fibonacciFinal + " / Repetidos: " + repetidosFinal + " (Conc. " + textoConcurso + ")");
+        lblFibRepetidos.setText("Fibo: " + fibonacciFinal + " / Repe: " + repetidosFinal + " do concurso " + textoConcurso);
 
         atualizarContadorTela();
 
         int novoTotal = meusJogosSalvos.size() + 1;
         StringBuilder msg = new StringBuilder();
         msg.append("Jogo Inteligente nº ").append(novoTotal).append(" Gerado!");
+        if (!numerosFixosUsuario.isEmpty()) msg.append("\n\uD83D\uDCCC ").append(numerosFixosUsuario.size()).append(" Fixas");
+        if (!dezenasCiclo.isEmpty()) msg.append("\n\uD83D\uDD04 Ciclo");
 
-        if (!numerosFixosUsuario.isEmpty()) msg.append("\n\uD83D\uDCCC Com ").append(numerosFixosUsuario.size()).append(" Fixas");
-        if (!dezenasCiclo.isEmpty()) msg.append("\n\uD83D\uDD04 Priorizando Ciclo");
-
-        Toast.makeText(this, msg.toString(), Toast.LENGTH_LONG).show();
+        Toast.makeText(this, msg.toString(), Toast.LENGTH_SHORT).show();
     }
 
     private void salvarJogo(String historicoAntigo, String novoJogo) {
@@ -388,11 +434,10 @@ public class MainActivity extends AppCompatActivity {
     }
 
     public void compartilharJogo() {
-        String textoJogo = txtResultado.getText().toString();
-        if (textoJogo.contains("Clique") || textoJogo.isEmpty()) {
+        if (jogoAtualParaCompartilhar.isEmpty()) {
             Toast.makeText(MainActivity.this, "Gere um jogo primeiro!", Toast.LENGTH_SHORT).show();
         } else {
-            compartilharTexto("Olha esse jogo da Lotofácil: \n" + textoJogo);
+            compartilharTexto("Olha esse jogo da Lotofácil: \n" + jogoAtualParaCompartilhar);
         }
     }
 

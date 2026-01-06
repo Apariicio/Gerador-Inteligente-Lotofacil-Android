@@ -39,15 +39,16 @@
 
         <EditText
             android:id="@+id/inputBuscaJogo"
-            android:layout_width="0dp"
+            android:layout_width="50dp"
             android:layout_height="wrap_content"
-            android:layout_weight="1"
             android:layout_marginEnd="5dp"
+            android:layout_weight="1"
             android:background="#90FFFFFF"
             android:hint="Buscar Jogo nº (ex: 557)"
             android:inputType="number"
             android:padding="10dp"
-            android:textColor="#000000" />
+            android:textColor="#000000"
+            android:textColorHint="#444444" />
 
         <Button
             android:id="@+id/btnBuscarJogo"
@@ -70,8 +71,8 @@
 
     <ListView
         android:id="@+id/listaHistorico"
-        android:layout_width="match_parent"
-        android:layout_height="450dp"
+        android:layout_width="wrap_content"
+        android:layout_height="610dp"
         android:background="#7AB3D4F8" />
 
 </LinearLayout>

@@ -3,18 +3,17 @@
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:background="@drawable/background_inicial"
-    android:padding="20dp">
+    android:padding="16dp">
 
     <TextClock
         android:id="@+id/relogioDigital"
-        android:layout_width="228dp"
-        android:layout_height="46dp"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
         android:layout_alignParentTop="true"
         android:layout_centerHorizontal="true"
-        android:layout_marginTop="80dp"
+        android:layout_marginTop="30dp"
         android:format12Hour="HH:mm:ss"
         android:format24Hour="HH:mm:ss"
-        android:textAlignment="center"
         android:textColor="#333333"
         android:textSize="26sp"
         android:textStyle="bold" />
@@ -22,50 +21,206 @@
     <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:layout_below="@+id/relogioDigital"
-        android:layout_marginTop="20dp"
-        android:gravity="center"
-        android:orientation="vertical">
+        android:layout_below="@id/relogioDigital"
+        android:layout_marginTop="5dp"
+        android:orientation="vertical"
+        android:gravity="center">
 
         <TextView
-            android:id="@+id/txtResultado"
-            android:layout_width="match_parent"
+            android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:layout_marginTop="5dp"
-            android:layout_marginBottom="10dp"
-            android:background="#83B3D4F8"
-            android:gravity="center"
-            android:text="Clique abaixo para gerar"
-            android:textAlignment="center"
-            android:textColor="#000000"
-            android:textSize="22sp"
-            android:textStyle="bold|italic" />
+            android:layout_marginBottom="5dp"
+            android:background="#9991E5FA"
+            android:text="Toque no volante para compartilhar"
+            android:textColor="#444444"
+            android:textSize="12sp"
+            android:textStyle="italic" />
+
+        <GridLayout
+            android:id="@+id/gridTabuleiro"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_gravity="center"
+            android:alignmentMode="alignMargins"
+            android:background="#3437957F"
+            android:columnCount="5"
+            android:rowCount="5">
+
+            <TextView
+                android:id="@+id/num01"
+                style="@style/EstiloBola"
+                android:text="01" />
+
+            <TextView
+                android:id="@+id/num02"
+                style="@style/EstiloBola"
+                android:text="02" />
+
+            <TextView
+                android:id="@+id/num03"
+                style="@style/EstiloBola"
+                android:text="03" />
+
+            <TextView
+                android:id="@+id/num04"
+                style="@style/EstiloBola"
+                android:text="04" />
+
+            <TextView
+                android:id="@+id/num05"
+                style="@style/EstiloBola"
+                android:text="05" />
+
+            <TextView
+                android:id="@+id/num06"
+                style="@style/EstiloBola"
+                android:text="06" />
+
+            <TextView
+                android:id="@+id/num07"
+                style="@style/EstiloBola"
+                android:text="07" />
+
+            <TextView
+                android:id="@+id/num08"
+                style="@style/EstiloBola"
+                android:text="08" />
+
+            <TextView
+                android:id="@+id/num09"
+                style="@style/EstiloBola"
+                android:text="09" />
+
+            <TextView
+                android:id="@+id/num10"
+                style="@style/EstiloBola"
+                android:text="10" />
+
+            <TextView
+                android:id="@+id/num11"
+                style="@style/EstiloBola"
+                android:text="11" />
+
+            <TextView
+                android:id="@+id/num12"
+                style="@style/EstiloBola"
+                android:text="12" />
+
+            <TextView
+                android:id="@+id/num13"
+                style="@style/EstiloBola"
+                android:text="13" />
+
+            <TextView
+                android:id="@+id/num14"
+                style="@style/EstiloBola"
+                android:text="14" />
+
+            <TextView
+                android:id="@+id/num15"
+                style="@style/EstiloBola"
+                android:text="15" />
+
+            <TextView
+                android:id="@+id/num16"
+                style="@style/EstiloBola"
+                android:text="16" />
+
+            <TextView
+                android:id="@+id/num17"
+                style="@style/EstiloBola"
+                android:text="17" />
+
+            <TextView
+                android:id="@+id/num18"
+                style="@style/EstiloBola"
+                android:text="18" />
+
+            <TextView
+                android:id="@+id/num19"
+                style="@style/EstiloBola"
+                android:text="19" />
+
+            <TextView
+                android:id="@+id/num20"
+                style="@style/EstiloBola"
+                android:text="20" />
+
+            <TextView
+                android:id="@+id/num21"
+                style="@style/EstiloBola"
+                android:text="21" />
+
+            <TextView
+                android:id="@+id/num22"
+                style="@style/EstiloBola"
+                android:text="22" />
+
+            <TextView
+                android:id="@+id/num23"
+                style="@style/EstiloBola"
+                android:text="23" />
+
+            <TextView
+                android:id="@+id/num24"
+                style="@style/EstiloBola"
+                android:text="24" />
+
+            <TextView
+                android:id="@+id/num25"
+                style="@style/EstiloBola"
+                android:text="25" />
+        </GridLayout>
 
         <EditText
             android:id="@+id/inputFixas"
-            android:layout_width="300dp"
-            android:layout_height="35dp"
-            android:layout_marginBottom="10dp"
+            android:layout_width="310dp"
+            android:layout_height="30dp"
+            android:layout_marginTop="5dp"
+            android:layout_marginBottom="5dp"
             android:background="#90FFFFFF"
             android:gravity="center"
-            android:hint="Digite seus números da sorte aqui (ex.: 06 10 22)"
+            android:hint="Digite aqui seus números da sorte (ex.: 01 13 25)"
             android:inputType="text"
             android:textColor="#000000"
             android:textColorHint="#444444"
             android:textSize="14sp" />
 
-        <Button
-            android:id="@+id/btnSortear"
-            android:layout_width="wrap_content"
+        <LinearLayout
+            android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:padding="15dp"
-            android:text="Buscar Jogo Ideal"
-            android:textColor="#FFFFFF" />
+            android:orientation="horizontal"
+            android:paddingStart="30dp"
+            android:paddingEnd="30dp"
+            android:layout_marginBottom="5dp">
+
+            <Button
+                android:id="@+id/btnSortear"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_marginEnd="8dp"
+                android:layout_weight="1"
+                android:padding="12dp"
+                android:text="Gerar Jogo"
+                android:textAllCaps="true"
+                android:textColor="#FFFFFF"
+                android:textStyle="bold" />
+
+            <Button
+                android:id="@+id/btnHistorico"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_marginStart="8dp"
+                android:layout_weight="1"
+                android:backgroundTint="#9CD98407"
+                android:text="Histórico"
+                android:textColor="#FFFFFF"
+                android:textStyle="italic" />
+        </LinearLayout>
 
         <LinearLayout
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:layout_marginTop="15dp"
             android:gravity="center"
             android:orientation="horizontal">
 
@@ -74,12 +229,12 @@
                 android:layout_width="0dp"
                 android:layout_height="wrap_content"
                 android:layout_weight="1"
-                android:background="#84C8E6C9"
+                android:background="#55AAB9F4"
                 android:gravity="center"
-                android:padding="8dp"
+                android:padding="5dp"
                 android:text="Soma: -- / Primos: --"
-                android:textColor="#1B5E20"
-                android:textSize="11sp"
+                android:textColor="#1D296A"
+                android:textSize="12sp"
                 android:textStyle="bold" />
 
             <TextView
@@ -88,12 +243,12 @@
                 android:layout_height="wrap_content"
                 android:layout_marginLeft="5dp"
                 android:layout_weight="1"
-                android:background="#7CCADAE7"
+                android:background="#7CC8E6C9"
                 android:gravity="center"
-                android:padding="8dp"
+                android:padding="5dp"
                 android:text="Pares: -- / Ímpares: --"
-                android:textColor="#062573"
-                android:textSize="11sp"
+                android:textColor="#1B5E20"
+                android:textSize="12sp"
                 android:textStyle="bold" />
         </LinearLayout>
 
@@ -101,121 +256,101 @@
             android:id="@+id/lblFibRepetidos"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:layout_marginTop="5dp"
-            android:background="#89C8E9ED"
+            android:layout_marginTop="3dp"
+            android:background="#4B878987"
             android:gravity="center"
-            android:padding="8dp"
-            android:text="Fibonacci: -- / Repetidos: --"
-            android:textColor="#2B715E"
-            android:textSize="13sp"
+            android:padding="5dp"
+            android:text="Fib: -- / Rep: --"
+            android:textColor="#030703"
+            android:textSize="12sp"
             android:textStyle="bold" />
 
         <TextView
             android:id="@+id/lblCiclo"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:layout_marginTop="5dp"
-            android:background="#A6FFEB3B"
+            android:layout_marginTop="3dp"
+            android:background="#65FFEB3B"
             android:gravity="center"
-            android:padding="5dp"
+            android:padding="3dp"
             android:text="Status do Ciclo: --"
-            android:textColor="#F57F17"
-            android:textSize="12sp"
+            android:textColor="#7C4617"
+            android:textSize="11sp"
             android:textStyle="bold" />
-
-        <LinearLayout
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:layout_marginTop="15dp"
-            android:gravity="center"
-            android:orientation="horizontal">
-
-            <Button
-                android:id="@+id/btnCompartilhar"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:layout_marginEnd="10dp"
-                android:backgroundTint="#92177ED0"
-                android:text="Compartilhar"
-                android:textColor="#FFFFFF" />
-
-            <Button
-                android:id="@+id/btnHistorico"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:backgroundTint="#9CD98407"
-                android:text="Ver Histórico"
-                android:textColor="#FFFFFF" />
-        </LinearLayout>
 
         <TextView
             android:id="@+id/txtContador"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:layout_marginTop="10dp"
-            android:background="#80DED6D6"
-            android:backgroundTint="#FFFFFF"
+            android:layout_marginTop="5dp"
+            android:layout_marginBottom="5dp"
+            android:background="#2F5D215C"
             android:gravity="center"
-            android:text="Jogos gerados até agora: 0"
+            android:text="Jogos gerados: 0"
             android:textAlignment="center"
-            android:textColor="#333333"
-            android:textSize="16sp"
+            android:textColor="#000000"
+            android:textSize="12sp"
             android:textStyle="bold|italic" />
 
         <LinearLayout
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:layout_marginTop="10dp"
-            android:layout_marginLeft="30dp"
-            android:layout_marginRight="30dp"
-            android:gravity="center"
             android:orientation="horizontal">
 
             <Button
                 android:id="@+id/btnConferir"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:layout_marginEnd="5dp"
+                android:layout_width="0dp"
+                android:layout_height="40dp"
+                android:layout_marginEnd="2dp"
+                android:layout_weight="1"
                 android:backgroundTint="#6A9C27B0"
+                android:insetTop="0dp"
+                android:insetBottom="0dp"
                 android:text="Conferir"
-                android:textColor="#FFFFFF" />
+                android:textColor="#FFFFFF"
+                android:textSize="10sp"
+                android:textStyle="italic" />
 
             <Button
                 android:id="@+id/btnVarredura"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:layout_marginStart="5dp"
+                android:layout_width="0dp"
+                android:layout_height="40dp"
+                android:layout_marginEnd="2dp"
+                android:layout_weight="1"
                 android:backgroundTint="#59FF5722"
-                android:text="Varredura"
-                android:textColor="#FFFFFF" />
-        </LinearLayout>
-
-        <LinearLayout
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:layout_marginTop="5dp"
-            android:layout_marginLeft="30dp"
-            android:layout_marginRight="30dp"
-            android:gravity="center"
-            android:orientation="horizontal">
+                android:insetTop="0dp"
+                android:insetBottom="0dp"
+                android:text="Varred."
+                android:textColor="#FFFFFF"
+                android:textSize="10sp"
+                android:textStyle="italic" />
 
             <Button
                 android:id="@+id/btnCadastrarOficial"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:layout_marginEnd="5dp"
+                android:layout_width="0dp"
+                android:layout_height="40dp"
+                android:layout_marginEnd="2dp"
+                android:layout_weight="1"
                 android:backgroundTint="#84009688"
-                android:text="Cadastrar"
-                android:textColor="#FFFFFF" />
+                android:insetTop="0dp"
+                android:insetBottom="0dp"
+                android:text="Cadast."
+                android:textColor="#FFFFFF"
+                android:textSize="10sp"
+                android:textStyle="italic" />
 
             <Button
                 android:id="@+id/btnGerenciarManuais"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:layout_marginStart="5dp"
+                android:layout_width="0dp"
+                android:layout_height="40dp"
+                android:layout_weight="1"
                 android:backgroundTint="#AB607D8B"
+                android:insetTop="0dp"
+                android:insetBottom="0dp"
                 android:text="Editar"
-                android:textColor="#FFFFFF" />
+                android:textColor="#FFFFFF"
+                android:textSize="10sp"
+                android:textStyle="italic" />
         </LinearLayout>
 
     </LinearLayout>
@@ -227,13 +362,10 @@
         android:layout_alignParentTop="true"
         android:layout_alignParentEnd="true"
         android:layout_marginTop="25dp"
-        android:layout_marginEnd="40dp"
-        android:background="#70CCB17E"
-        android:clickable="true"
-        android:focusable="true"
+        android:layout_marginEnd="10dp"
+        android:background="#7094784C"
         android:text="Criado por Liu..!"
-        android:textColor="#0D0C0C"
-        android:textSize="16sp"
+        android:textSize="14sp"
         android:textStyle="bold|italic" />
 
 </RelativeLayout>
