@@ -11,6 +11,7 @@ import android.widget.Button;
 import android.widget.EditText;
 import android.widget.GridLayout;
 import android.widget.LinearLayout;
+import android.widget.Switch;
 import android.widget.TextView;
 import android.widget.Toast;
 import androidx.appcompat.app.AlertDialog;
@@ -18,7 +19,6 @@ import androidx.appcompat.app.AppCompatActivity;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
-import java.util.Comparator;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
@@ -27,21 +27,22 @@ import java.util.Set;
 
 public class MainActivity extends AppCompatActivity {
 
-    // Removemos txtResultado
     TextView txtContador;
     TextView lblSomaPrimos, lblParesImpares, lblFibRepetidos, txtAssinatura, lblCiclo;
     EditText inputFixas;
-    Button btnSortear, btnHistorico, btnConferir, btnVarredura, btnCadastrarOficial, btnGerenciarManuais;
-    // Layout do Tabuleiro
+
+    // --- TODAS AS 6 CHAVES ---
+    Switch switchPares, switchSoma, switchPrimos;
+    Switch switchRepetidos, switchFibonacci, switchCiclo;
+
+    Button btnSortear, btnHistorico, btnInserirManual, btnConferir, btnVarredura, btnCadastrarOficial, btnGerenciarManuais;
     GridLayout gridTabuleiro;
-    TextView[] bolasTabuleiro = new TextView[26]; // Indices 1 a 25
+    TextView[] bolasTabuleiro = new TextView[26];
 
     SharedPreferences bancoDeDados;
     private static final String SEPARADOR = "####";
     private List<int[]> cacheMeusJogos = new ArrayList<>();
     private List<DadosConcurso> cacheOficiais = new ArrayList<>();
-
-    // Variável para guardar o jogo atual para compartilhamento
     private String jogoAtualParaCompartilhar = "";
 
     @Override
@@ -52,17 +53,35 @@ public class MainActivity extends AppCompatActivity {
         try {
             ocultarBarrasDeNavegacao();
 
-            // Mapeando componentes novos
             gridTabuleiro = findViewById(R.id.gridTabuleiro);
-            inicializarBolasDoTabuleiro(); // Conecta os IDs num01, num02...
+            inicializarBolasDoTabuleiro();
 
             inputFixas = findViewById(R.id.inputFixas);
+
+            // --- Mapeando as 6 Chaves ---
+            switchPares = findViewById(R.id.switchPares);
+            switchSoma = findViewById(R.id.switchSoma);
+            switchPrimos = findViewById(R.id.switchPrimos);
+            switchRepetidos = findViewById(R.id.switchRepetidos);
+            switchFibonacci = findViewById(R.id.switchFibonacci);
+            switchCiclo = findViewById(R.id.switchCiclo);
+
+            // --- Configurando Pintura das Chaves ---
+            configurarPinturaChave(switchPares);
+            configurarPinturaChave(switchSoma);
+            configurarPinturaChave(switchPrimos);
+            configurarPinturaChave(switchRepetidos);
+            configurarPinturaChave(switchFibonacci);
+            configurarPinturaChave(switchCiclo);
+
             btnSortear = findViewById(R.id.btnSortear);
             btnHistorico = findViewById(R.id.btnHistorico);
             btnConferir = findViewById(R.id.btnConferir);
             btnVarredura = findViewById(R.id.btnVarredura);
             btnCadastrarOficial = findViewById(R.id.btnCadastrarOficial);
             btnGerenciarManuais = findViewById(R.id.btnGerenciarManuais);
+            btnInserirManual = findViewById(R.id.btnInserirManual);
+            btnInserirManual.setOnClickListener(v -> abrirInserirJogoManual());
 
             lblSomaPrimos = findViewById(R.id.lblSomaPrimos);
             lblParesImpares = findViewById(R.id.lblParesImpares);
@@ -77,12 +96,10 @@ public class MainActivity extends AppCompatActivity {
                 txtAssinatura.setOnClickListener(v -> mostrarRedesSociais());
             }
 
-            // Clique no Tabuleiro para Compartilhar
             gridTabuleiro.setOnClickListener(v -> compartilharJogo());
 
             bancoDeDados = getSharedPreferences("HistoricoJogos", MODE_PRIVATE);
 
-            // Textos Iniciais
             lblSomaPrimos.setText("Soma: -- / Primos: --");
             lblParesImpares.setText("Pares: -- / Ímpares: --");
             lblFibRepetidos.setText("Fib: -- / Rep: --");
@@ -97,8 +114,6 @@ public class MainActivity extends AppCompatActivity {
 
             atualizarContadorTela();
             carregarDadosParaMemoria();
-
-            // Mostra o tabuleiro vazio (tudo invisivel ou cinza)
             limparTabuleiro();
 
         } catch (Exception e) {
@@ -107,13 +122,32 @@ public class MainActivity extends AppCompatActivity {
         }
     }
 
+    // Função auxiliar para configurar a pintura inicial e o clique
+    private void configurarPinturaChave(Switch chave) {
+        pintarChave(chave); // Pinta estado inicial
+        chave.setOnCheckedChangeListener((buttonView, isChecked) -> pintarChave(chave));
+    }
+
+    private void pintarChave(Switch chave) {
+        int corBolinhaOn = Color.parseColor("#4CAF50");
+        int corBarraOn   = Color.parseColor("#A5D6A7");
+        int corBolinhaOff = Color.parseColor("#ECECEC");
+        int corBarraOff   = Color.parseColor("#9E9E9E");
+
+        if (chave.isChecked()) {
+            chave.getThumbDrawable().setTint(corBolinhaOn);
+            chave.getTrackDrawable().setTint(corBarraOn);
+        } else {
+            chave.getThumbDrawable().setTint(corBolinhaOff);
+            chave.getTrackDrawable().setTint(corBarraOff);
+        }
+    }
+
     private void inicializarBolasDoTabuleiro() {
-        // Mapeia os IDs do XML para o Array Java para facilitar o acesso
         for (int i = 1; i <= 25; i++) {
             String idName = "num" + (i < 10 ? "0" + i : i);
             int resID = getResources().getIdentifier(idName, "id", getPackageName());
             bolasTabuleiro[i] = findViewById(resID);
-            // Torna o texto clicável para passar o clique para o pai (grid)
             bolasTabuleiro[i].setOnClickListener(v -> compartilharJogo());
         }
     }
@@ -121,30 +155,22 @@ public class MainActivity extends AppCompatActivity {
     private void limparTabuleiro() {
         for (int i = 1; i <= 25; i++) {
             if (bolasTabuleiro[i] != null) {
-                // AGORA NÃO FICA MAIS INVISÍVEL
                 bolasTabuleiro[i].setVisibility(View.VISIBLE);
-
-                // Fica com visual de "Hint" (apagado)
                 bolasTabuleiro[i].setBackgroundResource(R.drawable.bola_apagada);
-                bolasTabuleiro[i].setTextColor(Color.parseColor("#999999")); // Cinza escuro para o número
+                bolasTabuleiro[i].setTextColor(Color.parseColor("#999999"));
             }
         }
     }
 
     private void atualizarTabuleiro(List<Integer> numerosSorteados) {
-        // Primeiro limpa tudo para o estado "apagado"
         limparTabuleiro();
-
         jogoAtualParaCompartilhar = numerosSorteados.toString();
-
         for (int i = 1; i <= 25; i++) {
             if (bolasTabuleiro[i] != null) {
                 if (numerosSorteados.contains(i)) {
-                    // SE FOI SORTEADO:
-                    bolasTabuleiro[i].setBackgroundResource(R.drawable.bola_selecionada); // Fica Circular Colorido
-                    bolasTabuleiro[i].setTextColor(Color.WHITE); // Número Branco para destacar
+                    bolasTabuleiro[i].setBackgroundResource(R.drawable.bola_selecionada);
+                    bolasTabuleiro[i].setTextColor(Color.WHITE);
                 }
-                // Se não foi sorteado, ele já está como "bola_apagada" por causa do limparTabuleiro() chamado acima
             }
         }
     }
@@ -218,9 +244,13 @@ public class MainActivity extends AppCompatActivity {
                 runOnUiThread(() -> {
                     try {
                         List<Integer> faltantes = calcularDezenasDoCiclo();
-                        if (lblCiclo != null) {
+                        if (!switchCiclo.isChecked()) {
+                            lblCiclo.setText("Ciclo: (Filtro Desativado)");
+                            lblCiclo.setTextColor(Color.GRAY);
+                        } else {
                             if (faltantes.isEmpty()) lblCiclo.setText("Ciclo: Fechado");
                             else lblCiclo.setText("Faltam no Ciclo: " + faltantes.toString());
+                            lblCiclo.setTextColor(Color.parseColor("#7C4617"));
                         }
                     } catch (Exception e) {}
                 });
@@ -317,22 +347,33 @@ public class MainActivity extends AppCompatActivity {
         ArrayList<Integer> numerosFibonacci = new ArrayList<>();
         Collections.addAll(numerosFibonacci, 1, 2, 3, 5, 8, 13, 21);
 
+        // --- LENDO O ESTADO DAS 6 CHAVES ---
+        boolean usarPares = switchPares.isChecked();
+        boolean usarSoma = switchSoma.isChecked();
+        boolean usarPrimos = switchPrimos.isChecked();
+        boolean usarRepetidos = switchRepetidos.isChecked();
+        boolean usarFibonacci = switchFibonacci.isChecked();
+        boolean usarCiclo = switchCiclo.isChecked();
+        // -----------------------------------
+
         int tentativasLoop = 0;
 
         while (true) {
             tentativasLoop++;
             if (tentativasLoop > 50000) {
-                Toast.makeText(this, "Difícil combinar!", Toast.LENGTH_LONG).show();
+                Toast.makeText(this, "Difícil! Desative algumas chaves.", Toast.LENGTH_LONG).show();
                 return;
             }
 
             ArrayList<Integer> tentativa = new ArrayList<>();
             tentativa.addAll(numerosFixosUsuario);
 
-            for (int dCiclo : dezenasCiclo) {
-                if (!tentativa.contains(dCiclo) && tentativa.size() < 15) {
-                    if (gerador.nextInt(100) < 70) {
-                        tentativa.add(dCiclo);
+            if (usarCiclo) {
+                for (int dCiclo : dezenasCiclo) {
+                    if (!tentativa.contains(dCiclo) && tentativa.size() < 15) {
+                        if (gerador.nextInt(100) < 70) {
+                            tentativa.add(dCiclo);
+                        }
                     }
                 }
             }
@@ -358,15 +399,18 @@ public class MainActivity extends AppCompatActivity {
                 if (dezenasFrias.contains(numero)) quantidadeFriasNoJogo++;
             }
 
-            boolean paresOk = (pares >= 6 && pares <= 9);
-            boolean somaOk = (somaTotal >= 165 && somaTotal <= 235);
-            boolean molduraOk = (naMoldura >= 8 && naMoldura <= 11);
-            boolean primosOk = (nosPrimos >= 4 && nosPrimos <= 7);
-            boolean fibonacciOk = (nosFibonacci >= 3 && nosFibonacci <= 6);
+            // --- REGRAS ---
+            boolean paresOk = !usarPares || (pares >= 6 && pares <= 9);
+            boolean somaOk = !usarSoma || (somaTotal >= 165 && somaTotal <= 230);
+            boolean primosOk = !usarPrimos || (nosPrimos >= 4 && nosPrimos <= 7);
+            boolean fibonacciOk = !usarFibonacci || (nosFibonacci >= 3 && nosFibonacci <= 5);
+
             boolean repetidosOk = true;
-            if (!numerosDoUltimoConcurso.isEmpty()) {
+            if (usarRepetidos && !numerosDoUltimoConcurso.isEmpty()) {
                 repetidosOk = (repetidosDoUltimo >= 7 && repetidosDoUltimo <= 10);
             }
+
+            boolean molduraOk = (naMoldura >= 8 && naMoldura <= 11);
             boolean gradeOk = validarEquilibrioGrade(tentativa);
 
             if (paresOk && somaOk && molduraOk && primosOk && fibonacciOk && repetidosOk && gradeOk) {
@@ -386,11 +430,16 @@ public class MainActivity extends AppCompatActivity {
             }
         }
 
-        // --- ATUALIZAÇÃO VISUAL: CHAMA O TABULEIRO ---
         atualizarTabuleiro(listaDefinitiva);
 
-        lblSomaPrimos.setText("Soma: " + somaFinal + " / Primos: " + primosFinal);
-        lblParesImpares.setText("Pares: " + paresFinal + " / Ímpares: " + (15 - paresFinal));
+        // --- MENSAGENS VISUAIS DE STATUS (OFF/ON) ---
+        String statusSoma = somaFinal + (usarSoma ? "" : " (Livre)");
+        String statusPrimos = primosFinal + (usarPrimos ? "" : " (Livre)");
+        lblSomaPrimos.setText("Soma: " + statusSoma + " / Primos: " + statusPrimos);
+
+        String statusPares = paresFinal + (usarPares ? "" : " (Livre)");
+        String statusImpares = (15 - paresFinal) + (usarPares ? "" : " (Livre)");
+        lblParesImpares.setText("Pares: " + statusPares + " / Ímpares: " + statusImpares);
 
         String textoConcurso = "N/A";
         if (!cacheOficiais.isEmpty()) {
@@ -402,15 +451,44 @@ public class MainActivity extends AppCompatActivity {
             } catch (Exception e){}
         }
 
-        lblFibRepetidos.setText("Fibo: " + fibonacciFinal + " / Repe: " + repetidosFinal + " do concurso " + textoConcurso);
+        String statusFibo = fibonacciFinal + (usarFibonacci ? "" : " (Livre)");
+        String statusRep = repetidosFinal + (usarRepetidos ? "" : " (Livre)");
+        lblFibRepetidos.setText("Fibo: " + statusFibo + " / Repe: " + statusRep + " (conc. " + textoConcurso + ")");
+
+        if (!usarCiclo) {
+            lblCiclo.setText("Ciclo: (Filtro Desativado)");
+            lblCiclo.setTextColor(Color.GRAY);
+        } else {
+            List<Integer> faltantes = calcularDezenasDoCiclo();
+            if (faltantes.isEmpty()) lblCiclo.setText("Ciclo: Fechado");
+            else lblCiclo.setText("Faltam no Ciclo: " + faltantes.toString());
+            lblCiclo.setTextColor(Color.parseColor("#7C4617"));
+        }
 
         atualizarContadorTela();
 
+        // RECUPERANDO O CONTADOR DE NÚMERO DO JOGO
         int novoTotal = meusJogosSalvos.size() + 1;
+
         StringBuilder msg = new StringBuilder();
+        // Mensagem completa com o contador
         msg.append("Jogo Inteligente nº ").append(novoTotal).append(" Gerado!");
-        if (!numerosFixosUsuario.isEmpty()) msg.append("\n\uD83D\uDCCC ").append(numerosFixosUsuario.size()).append(" Fixas");
-        if (!dezenasCiclo.isEmpty()) msg.append("\n\uD83D\uDD04 Ciclo");
+
+        if (!numerosFixosUsuario.isEmpty()) {
+            msg.append("\n* ").append(numerosFixosUsuario.size()).append(" Fixas");
+        }
+
+        if (!usarPares) msg.append("\n(OFF) Par Livre/Ímp Livre");
+        if (!usarSoma) msg.append("\n(OFF) Soma Livre");
+        if (!usarPrimos) msg.append("\n(OFF) Primos Livre");
+        if (!usarRepetidos) msg.append("\n(OFF) Repet. Livre");
+        if (!usarFibonacci) msg.append("\n(OFF) Fibo Livre");
+
+        if (usarCiclo) {
+            if (!dezenasCiclo.isEmpty()) msg.append("\n[Ciclo Ativado]");
+        } else {
+            msg.append("\n(OFF) Ciclo Livre");
+        }
 
         Toast.makeText(this, msg.toString(), Toast.LENGTH_SHORT).show();
     }
@@ -594,18 +672,14 @@ public class MainActivity extends AppCompatActivity {
             else if (melhorPontuacao == 15) qtd15++;
 
             if (melhorPontuacao >= 14) {
-                // AQUI FOI ALTERADO: REMOVI A LISTA DE NÚMEROS (CLEAN)
                 String emojiTrofeu = new String(Character.toChars(0x1F3C6));
-
                 String msgFinal = emojiTrofeu + " " + melhorPontuacao + " PONTOS! (Seu Jogo " + (i + 1) + ")\n" +
                         "No " + concursoDoRecorde;
-
                 listaParaOrdenar.add(new ItemCampeao(numeroDoConcursoRecorde, msgFinal));
             }
         }
 
         Collections.sort(listaParaOrdenar, (item1, item2) -> Integer.compare(item2.concurso, item1.concurso));
-
         ArrayList<String> detalhesFinais = new ArrayList<>();
         for (ItemCampeao item : listaParaOrdenar) {
             detalhesFinais.add(item.textoFormatado);
@@ -679,5 +753,59 @@ public class MainActivity extends AppCompatActivity {
             }
         } catch (Exception e) {}
         return lista;
+    }
+
+    public void abrirInserirJogoManual() {
+        AlertDialog.Builder builder = new AlertDialog.Builder(this);
+        builder.setTitle("Proteger Jogo Manual");
+        builder.setMessage("Digite os 15 números que você jogou. Eles serão salvos no histórico e o app evitará gerá-los novamente.");
+
+        final EditText input = new EditText(this);
+        input.setHint("Ex: 01 02 03 04...");
+        input.setInputType(InputType.TYPE_CLASS_TEXT);
+        builder.setView(input);
+
+        builder.setPositiveButton("SALVAR E PROTEGER", (dialog, which) -> {
+            String texto = input.getText().toString();
+            processarSalvamentoManual(texto);
+        });
+        builder.setNegativeButton("Cancelar", null);
+        builder.show();
+    }
+
+    private void processarSalvamentoManual(String entrada) {
+        try {
+            String[] partes = entrada.replace(",", " ").replace("-", " ").trim().split("\\s+");
+            if (partes.length != 15) {
+                Toast.makeText(this, "Erro: Digite exatamente 15 números!", Toast.LENGTH_LONG).show();
+                return;
+            }
+            ArrayList<Integer> numeros = new ArrayList<>();
+            for (String p : partes) {
+                int n = Integer.parseInt(p);
+                if (n < 1 || n > 25) {
+                    Toast.makeText(this, "Erro: Número " + n + " inválido (use 1 a 25).", Toast.LENGTH_LONG).show();
+                    return;
+                }
+                if (numeros.contains(n)) {
+                    Toast.makeText(this, "Erro: Número " + n + " repetido.", Toast.LENGTH_LONG).show();
+                    return;
+                }
+                numeros.add(n);
+            }
+            Collections.sort(numeros);
+            String jogoFormatado = numeros.toString();
+            String historicoGeral = bancoDeDados.getString("historico_ordenado", "");
+            if (historicoGeral.contains(jogoFormatado)) {
+                Toast.makeText(this, "Atenção: Este jogo JÁ ESTAVA no seu histórico!", Toast.LENGTH_LONG).show();
+                return;
+            }
+            salvarJogo(historicoGeral, jogoFormatado);
+            atualizarTabuleiro(numeros);
+            atualizarContadorTela();
+            Toast.makeText(this, "Jogo salvo Manualmente!", Toast.LENGTH_SHORT).show();
+        } catch (Exception e) {
+            Toast.makeText(this, "Erro: Verifique se digitou apenas números.", Toast.LENGTH_SHORT).show();
+        }
     }
 }

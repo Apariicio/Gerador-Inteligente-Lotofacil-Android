@@ -1,5 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:orientation="vertical"
@@ -39,22 +41,37 @@
 
         <EditText
             android:id="@+id/inputBuscaJogo"
-            android:layout_width="50dp"
+            android:layout_width="160dp"
             android:layout_height="wrap_content"
             android:layout_marginEnd="5dp"
-            android:layout_weight="1"
             android:background="#90FFFFFF"
-            android:hint="Buscar Jogo nº (ex: 557)"
+            android:hint="Jogo nº (ex: 221)"
             android:inputType="number"
-            android:padding="10dp"
+            android:padding="5dp"
             android:textColor="#000000"
             android:textColorHint="#444444" />
 
         <Button
             android:id="@+id/btnBuscarJogo"
             android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:text="Ir" />
+            android:layout_height="30dp"
+            android:backgroundTint="#859C27B0"
+            android:insetTop="0dp"
+            android:insetBottom="0dp"
+            android:minWidth="0dp"
+            android:minHeight="0dp"
+            android:paddingStart="12dp"
+            android:paddingEnd="12dp"
+            android:text="IR"
+            android:textColor="#FFFFFF"
+            android:textSize="14sp"
+            android:textStyle="bold"
+
+            app:icon="@drawable/ic_lupa"
+            app:iconGravity="textStart"
+            app:iconPadding="4dp"
+            app:iconTint="#FFFFFF"
+            tools:ignore="TouchTargetSizeCheck" />
     </LinearLayout>
 
     <TextView
@@ -72,7 +89,7 @@
     <ListView
         android:id="@+id/listaHistorico"
         android:layout_width="wrap_content"
-        android:layout_height="610dp"
+        android:layout_height="480dp"
         android:background="#7AB3D4F8" />
 
 </LinearLayout>
