@@ -1,4 +1,4 @@
-package com.aparicioamaral.quinzenumerosaleatorios;
+package com.aparicioamaral.quinzenumerosaleatorios; // CONFIRA SE O SEU PACOTE É ESSE MESMO
 
 import android.os.Bundle;
 import android.view.View;
@@ -38,28 +38,31 @@ public class ResultadoVarreduraActivity extends AppCompatActivity {
         if (total > 0) {
             StringBuilder relatorio = new StringBuilder();
 
-            // \uD83D\uDCCA é o Gráfico
+            // � é o Gráfico
             relatorio.append("\uD83D\uDCCA ESTATÍSTICAS RÁPIDAS \uD83D\uDCCA\n");
             relatorio.append("Total Analisado: ").append(total).append(" jogos\n\n");
 
-            // \uD83D\uDCB0 é o Saco de Dinheiro
+            // � é o Saco de Dinheiro
             relatorio.append("\uD83D\uDCB0 15 Pontos: ").append(q15).append("\n");
             relatorio.append("\uD83D\uDCB0 14 Pontos: ").append(q14).append("\n");
 
-            // \uD83D\uDD35 é a Bola Azul
+            // � é a Bola Azul
             relatorio.append("\uD83D\uDD35 13 Pontos: ").append(q13).append("\n");
 
-            // \u26AA é a Bola Branca
+            // ⚪ é a Bola Branca
             relatorio.append("\u26AA 12 Pontos: ").append(q12).append("\n");
             relatorio.append("\u26AA 11 Pontos: ").append(q11).append("\n");
 
             relatorio.append("----------------------------------\n");
 
             if (detalhes != null && !detalhes.isEmpty()) {
-                // Troféu de novo
+                // � Troféu de novo
                 relatorio.append("\uD83C\uDFC6 GALERIA DE CAMPEÕES (14/15) ABAIXO:");
                 listaConflitos.setVisibility(View.VISIBLE);
 
+                // ATENÇÃO: Aqui estou usando 'item_historico' como estava no seu código original.
+                // Se der erro, verifique se você tem esse arquivo XML.
+                // Se não tiver, pode trocar por 'android.R.layout.simple_list_item_1' ou 'R.layout.item_lista_preta'
                 ArrayAdapter<String> adapter = new ArrayAdapter<>(
                         this,
                         R.layout.item_historico,
@@ -77,14 +80,16 @@ public class ResultadoVarreduraActivity extends AppCompatActivity {
     }
 
     private void ocultarBarrasDeNavegacao() {
-        View decorView = getWindow().getDecorView();
-        decorView.setSystemUiVisibility(
-                View.SYSTEM_UI_FLAG_IMMERSIVE_STICKY
-                        | View.SYSTEM_UI_FLAG_LAYOUT_STABLE
-                        | View.SYSTEM_UI_FLAG_LAYOUT_HIDE_NAVIGATION
-                        | View.SYSTEM_UI_FLAG_LAYOUT_FULLSCREEN
-                        | View.SYSTEM_UI_FLAG_HIDE_NAVIGATION
-                        | View.SYSTEM_UI_FLAG_FULLSCREEN);
+        try {
+            View decorView = getWindow().getDecorView();
+            decorView.setSystemUiVisibility(
+                    View.SYSTEM_UI_FLAG_IMMERSIVE_STICKY
+                            | View.SYSTEM_UI_FLAG_LAYOUT_STABLE
+                            | View.SYSTEM_UI_FLAG_LAYOUT_HIDE_NAVIGATION
+                            | View.SYSTEM_UI_FLAG_LAYOUT_FULLSCREEN
+                            | View.SYSTEM_UI_FLAG_HIDE_NAVIGATION
+                            | View.SYSTEM_UI_FLAG_FULLSCREEN);
+        } catch (Exception e) {}
     }
 
     @Override

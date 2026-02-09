@@ -630,70 +630,117 @@ public class MainActivity extends AppCompatActivity {
 
     public void fazerVarreduraRelampago() {
         if (cacheMeusJogos.isEmpty()) {
-            Toast.makeText(this, "Carregando dados... Tente em 2 segundos.", Toast.LENGTH_SHORT).show();
+            Toast.makeText(this, "Carregando histórico...", Toast.LENGTH_SHORT).show();
             carregarDadosParaMemoria();
             return;
         }
 
-        int qtd11 = 0, qtd12 = 0, qtd13 = 0, qtd14 = 0, qtd15 = 0;
-        int totalJogos = cacheMeusJogos.size();
-        List<ItemCampeao> listaParaOrdenar = new ArrayList<>();
+        Toast.makeText(this, "Iniciando Varredura...", Toast.LENGTH_SHORT).show();
 
-        for (int i = 0; i < cacheMeusJogos.size(); i++) {
-            int[] meuJogo = cacheMeusJogos.get(i);
-            int melhorPontuacao = 0;
-            String concursoDoRecorde = "";
-            int numeroDoConcursoRecorde = 0;
+        new Thread(() -> {
 
-            for (DadosConcurso oficial : cacheOficiais) {
-                int acertos = 0;
-                for (int m : meuJogo) {
-                    for (int o : oficial.numeros) {
-                        if (m == o) { acertos++; break; }
-                    }
-                }
-                if (acertos > melhorPontuacao) {
-                    melhorPontuacao = acertos;
-                    concursoDoRecorde = oficial.nomeConcurso;
-                    try {
-                        String[] parts = concursoDoRecorde.split(" ");
-                        if (parts.length > 1) {
-                            numeroDoConcursoRecorde = Integer.parseInt(parts[1]);
+            // VOLTAMOS A USAR A LISTA COMPLETA PARA SABER O NÚMERO DO JOGO
+            int totalJogos = cacheMeusJogos.size();
+
+            // Zera contadores
+            int qtd11 = 0, qtd12 = 0, qtd13 = 0, qtd14 = 0, qtd15 = 0;
+
+            List<ItemCampeao> listaParaOrdenar = new ArrayList<>();
+
+            // Loop clássico para ter o ÍNDICE (i) de volta
+            for (int i = 0; i < totalJogos; i++) {
+                int[] meuJogo = cacheMeusJogos.get(i);
+
+                // Variável para guardar APENAS a maior nota deste jogo na história
+                int recordePessoal = 0;
+                String concursoRecorde = "";
+                int numConcRecorde = 0;
+
+                // COMPARA COM TODOS OS RESULTADOS OFICIAIS
+                for (DadosConcurso oficial : cacheOficiais) {
+                    int acertos = 0;
+
+                    // Conta acertos
+                    for (int m : meuJogo) {
+                        for (int o : oficial.numeros) {
+                            if (m == o) { acertos++; break; }
                         }
-                    } catch (Exception e) { numeroDoConcursoRecorde = 0; }
+                    }
+
+                    // ATUALIZA O RECORDE (Highlander: Só pode haver um recorde por jogo)
+                    // Se o jogo fez 11 num concurso e 13 no outro, o 13 ganha e o 11 é esquecido.
+                    if (acertos > recordePessoal) {
+                        recordePessoal = acertos;
+                        concursoRecorde = oficial.nomeConcurso;
+                        try {
+                            String[] parts = concursoRecorde.split(" ");
+                            if (parts.length > 1) numConcRecorde = Integer.parseInt(parts[1]);
+                        } catch (Exception e) {}
+                    }
+
+                    // Se já achou 15, para de procurar (nota máxima)
+                    if (recordePessoal == 15) break;
                 }
-                if (melhorPontuacao == 15) break;
+
+                // AQUI ESTÁ A BLINDAGEM MATEMÁTICA (SWITCH CASE)
+                // O switch obriga o código a escolher UMA ÚNICA porta.
+                // Se entrar na porta 13, é impossível entrar na porta 11.
+                switch (recordePessoal) {
+                    case 15: qtd15++; break;
+                    case 14: qtd14++; break;
+                    case 13: qtd13++; break;
+                    case 12: qtd12++; break;
+                    case 11: qtd11++; break;
+                    // Se for 10 ou menos, não faz nada
+                }
+
+                // DETALHES PARA A LISTA (Recuperando o número do jogo!)
+                if (recordePessoal >= 14) {
+                    String emojiTrofeu = new String(Character.toChars(0x1F3C6));
+                    String premio = (recordePessoal == 15) ? "15 PONTOS!!" : "14 PONTOS";
+
+                    // AQUI ESTÁ A CORREÇÃO: (i + 1) mostra o número real da posição
+                    String msg = emojiTrofeu + " " + premio + " (Jogo " + (i + 1) + ")\n" +
+                            "No " + concursoRecorde;
+
+                    listaParaOrdenar.add(new ItemCampeao(numConcRecorde, msg));
+                }
             }
 
-            if (melhorPontuacao == 11) qtd11++;
-            else if (melhorPontuacao == 12) qtd12++;
-            else if (melhorPontuacao == 13) qtd13++;
-            else if (melhorPontuacao == 14) qtd14++;
-            else if (melhorPontuacao == 15) qtd15++;
+            // Ordena do mais recente para o antigo
+            Collections.sort(listaParaOrdenar, (item1, item2) -> Integer.compare(item2.concurso, item1.concurso));
 
-            if (melhorPontuacao >= 14) {
-                String emojiTrofeu = new String(Character.toChars(0x1F3C6));
-                String msgFinal = emojiTrofeu + " " + melhorPontuacao + " PONTOS! (Seu Jogo " + (i + 1) + ")\n" +
-                        "No " + concursoDoRecorde;
-                listaParaOrdenar.add(new ItemCampeao(numeroDoConcursoRecorde, msgFinal));
+            ArrayList<String> detalhesFinais = new ArrayList<>();
+            for (ItemCampeao item : listaParaOrdenar) {
+                detalhesFinais.add(item.textoFormatado);
             }
-        }
 
-        Collections.sort(listaParaOrdenar, (item1, item2) -> Integer.compare(item2.concurso, item1.concurso));
-        ArrayList<String> detalhesFinais = new ArrayList<>();
-        for (ItemCampeao item : listaParaOrdenar) {
-            detalhesFinais.add(item.textoFormatado);
-        }
+            // Variáveis finais para passar para a tela
+            int f11 = qtd11; int f12 = qtd12; int f13 = qtd13; int f14 = qtd14; int f15 = qtd15;
 
-        Intent intent = new Intent(this, ResultadoVarreduraActivity.class);
-        intent.putExtra("total", totalJogos);
-        intent.putExtra("q11", qtd11);
-        intent.putExtra("q12", qtd12);
-        intent.putExtra("q13", qtd13);
-        intent.putExtra("q14", qtd14);
-        intent.putExtra("q15", qtd15);
-        intent.putStringArrayListExtra("detalhes_campeoes", detalhesFinais);
-        startActivity(intent);
+            runOnUiThread(() -> {
+                Intent intent = new Intent(MainActivity.this, ResultadoVarreduraActivity.class);
+                intent.putExtra("total", totalJogos);
+                intent.putExtra("q11", f11);
+                intent.putExtra("q12", f12);
+                intent.putExtra("q13", f13);
+                intent.putExtra("q14", f14);
+                intent.putExtra("q15", f15);
+
+                // Trava de segurança para não travar o emulador se a lista for gigante
+                ArrayList<String> listaSegura = new ArrayList<>();
+                if (detalhesFinais.size() > 200) {
+                    listaSegura.addAll(detalhesFinais.subList(0, 200));
+                    listaSegura.add("... e mais campeões ocultos.");
+                } else {
+                    listaSegura.addAll(detalhesFinais);
+                }
+
+                intent.putStringArrayListExtra("detalhes_campeoes", listaSegura);
+                startActivity(intent);
+            });
+
+        }).start();
     }
 
     private static class ItemCampeao {
