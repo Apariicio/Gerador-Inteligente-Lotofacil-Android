@@ -347,6 +347,10 @@ public class MainActivity extends AppCompatActivity {
         ArrayList<Integer> numerosFibonacci = new ArrayList<>();
         Collections.addAll(numerosFibonacci, 1, 2, 3, 5, 8, 13, 21);
 
+        // NOVO: Adicionado os múltiplos de 3
+        ArrayList<Integer> numerosMultiplos3 = new ArrayList<>();
+        Collections.addAll(numerosMultiplos3, 3, 6, 9, 12, 15, 18, 21, 24);
+
         // --- LENDO O ESTADO DAS 6 CHAVES ---
         boolean usarPares = switchPares.isChecked();
         boolean usarSoma = switchSoma.isChecked();
@@ -361,7 +365,7 @@ public class MainActivity extends AppCompatActivity {
         while (true) {
             tentativasLoop++;
             if (tentativasLoop > 50000) {
-                Toast.makeText(this, "Difícil! Desative algumas chaves.", Toast.LENGTH_LONG).show();
+                Toast.makeText(this, "A combinação exigida está muito rígida! Desative algumas chaves.", Toast.LENGTH_LONG).show();
                 return;
             }
 
@@ -388,6 +392,7 @@ public class MainActivity extends AppCompatActivity {
 
             int pares = 0, somaTotal = 0, naMoldura = 0, nosPrimos = 0, nosFibonacci = 0, repetidosDoUltimo = 0;
             int quantidadeFriasNoJogo = 0;
+            int nosMultiplos3 = 0; // NOVO: Contador de Múltiplos de 3
 
             for (Integer numero : tentativa) {
                 if (numero % 2 == 0) pares++;
@@ -395,11 +400,24 @@ public class MainActivity extends AppCompatActivity {
                 if (numerosDaMoldura.contains(numero)) naMoldura++;
                 if (numerosPrimos.contains(numero)) nosPrimos++;
                 if (numerosFibonacci.contains(numero)) nosFibonacci++;
+                if (numerosMultiplos3.contains(numero)) nosMultiplos3++; // NOVO: Checagem
                 if (!numerosDoUltimoConcurso.isEmpty() && numerosDoUltimoConcurso.contains(numero)) repetidosDoUltimo++;
                 if (dezenasFrias.contains(numero)) quantidadeFriasNoJogo++;
             }
 
-            // --- REGRAS ---
+            // NOVO: Cálculo da Maior Sequência (Evita o "Trenzinho")
+            int sequenciaAtual = 1;
+            int maiorSequencia = 1;
+            for (int i = 0; i < tentativa.size() - 1; i++) {
+                if (tentativa.get(i) + 1 == tentativa.get(i + 1)) {
+                    sequenciaAtual++;
+                    if (sequenciaAtual > maiorSequencia) maiorSequencia = sequenciaAtual;
+                } else {
+                    sequenciaAtual = 1;
+                }
+            }
+
+            // --- REGRAS E TRAVAS ---
             boolean paresOk = !usarPares || (pares >= 6 && pares <= 9);
             boolean somaOk = !usarSoma || (somaTotal >= 165 && somaTotal <= 230);
             boolean primosOk = !usarPrimos || (nosPrimos >= 4 && nosPrimos <= 7);
@@ -410,11 +428,20 @@ public class MainActivity extends AppCompatActivity {
                 repetidosOk = (repetidosDoUltimo >= 7 && repetidosDoUltimo <= 10);
             }
 
+            // Travas Silenciosas (Hardcoded)
             boolean molduraOk = (naMoldura >= 8 && naMoldura <= 11);
             boolean gradeOk = validarEquilibrioGrade(tentativa);
 
-            if (paresOk && somaOk && molduraOk && primosOk && fibonacciOk && repetidosOk && gradeOk) {
+            // NOVO: Travas Silenciosas Estatísticas
+            boolean multiplosOk = (nosMultiplos3 >= 3 && nosMultiplos3 <= 6);
+            boolean sequenciaOk = (maiorSequencia <= 7); // Bloqueia 8 ou mais números colados
+            boolean friasOk = (dezenasFrias.isEmpty() || quantidadeFriasNoJogo >= 1); // Exige pelo menos 1 número "frio" para quebrar o padrão
+
+            // O Jogo só passa se for aprovado em TODOS os testes (visuais e silenciosos)
+            if (paresOk && somaOk && molduraOk && primosOk && fibonacciOk && repetidosOk && gradeOk && multiplosOk && sequenciaOk && friasOk) {
                 String assinaturaDoJogo = tentativa.toString();
+
+                // Evita criar jogo que já existe no seu celular ou que já saiu na Lotofácil
                 if (meusJogosSalvos.contains(assinaturaDoJogo)) continue;
                 if (oficiaisMap != null && oficiaisMap.containsKey(assinaturaDoJogo)) continue;
 
@@ -467,11 +494,9 @@ public class MainActivity extends AppCompatActivity {
 
         atualizarContadorTela();
 
-        // RECUPERANDO O CONTADOR DE NÚMERO DO JOGO
         int novoTotal = meusJogosSalvos.size() + 1;
 
         StringBuilder msg = new StringBuilder();
-        // Mensagem completa com o contador
         msg.append("Jogo Inteligente nº ").append(novoTotal).append(" Gerado!");
 
         if (!numerosFixosUsuario.isEmpty()) {

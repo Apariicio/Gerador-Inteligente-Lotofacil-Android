@@ -66,7 +66,6 @@
             android:textColor="#FFFFFF"
             android:textSize="14sp"
             android:textStyle="bold"
-
             app:icon="@drawable/ic_lupa"
             app:iconGravity="textStart"
             app:iconPadding="4dp"
@@ -77,7 +76,7 @@
     <TextView
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:layout_marginBottom="5dp"
+        android:layout_marginBottom="10dp"
         android:background="#7AB3D4F8"
         android:gravity="center"
         android:text="Clique para compartilhar / Segure para apagar"
@@ -86,10 +85,23 @@
         android:textSize="14sp"
         android:textStyle="bold|italic" />
 
+    <Button
+        android:id="@+id/btnApagarTudoHistorico"
+        android:layout_width="280dp"
+        android:layout_gravity="end"
+        android:layout_height="45dp"
+        android:layout_marginBottom="10dp"
+        android:backgroundTint="#D32F2F"
+        android:text="🗑️ LIMPAR HISTÓRICO COMPLETO"
+        android:textColor="#FFFFFF"
+        android:textSize="14sp"
+        android:textStyle="bold" />
+
     <ListView
         android:id="@+id/listaHistorico"
-        android:layout_width="wrap_content"
-        android:layout_height="480dp"
+        android:layout_width="match_parent"
+        android:layout_height="0dp"
+        android:layout_weight="1"
         android:background="#7AB3D4F8" />
 
 </LinearLayout>
