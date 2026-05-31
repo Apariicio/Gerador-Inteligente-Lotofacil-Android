@@ -19,6 +19,23 @@
         android:textSize="26sp"
         android:textStyle="bold" />
 
+    <Button
+        android:id="@+id/btnInformacao"
+        android:layout_width="40dp"
+        android:layout_height="40dp"
+        android:layout_alignParentStart="true"
+        android:layout_alignParentTop="true"
+        android:layout_marginStart="5dp"
+        android:layout_marginTop="25dp"
+        android:backgroundTint="#AB5A7D8E"
+        android:insetTop="0dp"
+        android:insetBottom="0dp"
+        android:padding="0dp"
+        android:text="ℹ️"
+        android:textColor="#FFFFFF"
+        android:textSize="18sp"
+        android:textStyle="bold" />
+
     <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
@@ -108,7 +125,7 @@
                     android:checked="true"
                     android:text="Soma"
                     android:textColor="#000000"
-                    android:textSize="12sp"
+                    android:textSize="14sp"
                     android:textStyle="bold" />
 
                 <Switch
@@ -119,7 +136,7 @@
                     android:checked="true"
                     android:text="Primos"
                     android:textColor="#000000"
-                    android:textSize="12sp"
+                    android:textSize="14sp"
                     android:textStyle="bold" />
 
 
@@ -131,7 +148,7 @@
                     android:checked="true"
                     android:text="Par/Ímp"
                     android:textColor="#000000"
-                    android:textSize="12sp"
+                    android:textSize="14sp"
                     android:textStyle="bold" />
             </LinearLayout>
 
@@ -149,7 +166,7 @@
                     android:checked="true"
                     android:text="Fibo"
                     android:textColor="#000000"
-                    android:textSize="12sp"
+                    android:textSize="14sp"
                     android:textStyle="bold" />
 
                 <Switch
@@ -160,7 +177,7 @@
                     android:checked="true"
                     android:text="Repet."
                     android:textColor="#000000"
-                    android:textSize="12sp"
+                    android:textSize="14sp"
                     android:textStyle="bold" />
 
                 <Switch
@@ -170,8 +187,25 @@
                     android:checked="true"
                     android:text="Ciclo"
                     android:textColor="#000000"
-                    android:textSize="12sp"
+                    android:textSize="14sp"
                     android:textStyle="bold" />
+            </LinearLayout>
+            <LinearLayout
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="5dp"
+                android:orientation="horizontal">
+
+                <Switch
+                    android:id="@+id/switchOcultas"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:background="#40386792"
+                    android:checked="true"
+                    android:text="Travas Ocultas (Moldura, Sequência, Coluna, Múltiplos, Frias)"
+                    android:textColor="#000000"
+                    android:textSize="12sp"
+                    android:textStyle="bold|italic" />
             </LinearLayout>
         </LinearLayout>
         <LinearLayout
@@ -235,7 +269,7 @@
                 android:padding="5dp"
                 android:text="Soma: -- / Primos: --"
                 android:textColor="#1D296A"
-                android:textSize="16sp"
+                android:textSize="12sp"
                 android:textStyle="bold" />
 
             <TextView
@@ -249,43 +283,52 @@
                 android:padding="5dp"
                 android:text="Pares: -- / Ímpares: --"
                 android:textColor="#1B5E20"
-                android:textSize="16sp"
+                android:textSize="14sp"
+                android:textStyle="bold" />
+        </LinearLayout>
+
+        <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:gravity="center"
+                android:orientation="horizontal">
+
+            <TextView
+                android:id="@+id/lblFibRepetidos"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="3dp"
+                android:layout_weight="1"
+                android:background="#4B878987"
+                android:gravity="center"
+                android:padding="5dp"
+                android:text="Fib: -- / Rep: --"
+                android:textColor="#030703"
+                android:textSize="12sp"
+                android:textStyle="bold" />
+
+            <TextView
+                android:id="@+id/lblCiclo"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_marginLeft="5dp"
+                android:layout_weight="1"
+                android:background="#4EFFEB3B"
+                android:gravity="center"
+                android:padding="3dp"
+                android:text="Status do Ciclo: --"
+                android:textColor="#7C4617"
+                android:textSize="12sp"
                 android:textStyle="bold" />
         </LinearLayout>
 
         <TextView
-            android:id="@+id/lblFibRepetidos"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:layout_marginTop="3dp"
-            android:background="#4B878987"
-            android:gravity="center"
-            android:padding="5dp"
-            android:text="Fib: -- / Rep: --"
-            android:textColor="#030703"
-            android:textSize="16sp"
-            android:textStyle="bold" />
-
-        <TextView
-            android:id="@+id/lblCiclo"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:layout_marginTop="3dp"
-            android:background="#65FFEB3B"
-            android:gravity="center"
-            android:padding="3dp"
-            android:text="Status do Ciclo: --"
-            android:textColor="#7C4617"
-            android:textSize="14sp"
-            android:textStyle="bold" />
-
-        <TextView
             android:id="@+id/txtContador"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
+            android:layout_width="220dp"
+            android:layout_height="20dp"
             android:layout_marginTop="5dp"
             android:layout_marginBottom="5dp"
-            android:background="#2F5D215C"
+            android:background="#3BB0276E"
             android:gravity="center"
             android:text="Jogos gerados: 0"
             android:textAlignment="center"

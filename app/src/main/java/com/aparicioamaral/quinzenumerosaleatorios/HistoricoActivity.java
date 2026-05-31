@@ -2,8 +2,10 @@ package com.aparicioamaral.quinzenumerosaleatorios;
 
 import android.content.Intent;
 import android.content.SharedPreferences;
+import android.graphics.Color;
 import android.os.Bundle;
 import android.view.View;
+import android.view.ViewGroup;
 import android.widget.ArrayAdapter;
 import android.widget.Button;
 import android.widget.EditText;
@@ -12,8 +14,12 @@ import android.widget.TextView;
 import android.widget.Toast;
 import androidx.appcompat.app.AlertDialog;
 import androidx.appcompat.app.AppCompatActivity;
+
 import java.util.ArrayList;
+import java.util.Collections;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 
 public class HistoricoActivity extends AppCompatActivity {
 
@@ -21,10 +27,14 @@ public class HistoricoActivity extends AppCompatActivity {
     TextView txtContadorHistorico;
     EditText inputBuscaJogo;
     Button btnBuscarJogo;
+    Button btnApagarTudoHistorico; // Mapeamento do botão vermelho
     SharedPreferences bancoDeDados;
 
     List<String> listaOriginalDeJogos;
     List<String> listaExibida;
+
+    // Variável que guarda quais jogos estão selecionados
+    private Set<Integer> posicoesSelecionadas = new HashSet<>();
 
     private static final String SEPARADOR = "####";
 
@@ -39,6 +49,7 @@ public class HistoricoActivity extends AppCompatActivity {
         txtContadorHistorico = findViewById(R.id.txtContadorHistorico);
         inputBuscaJogo = findViewById(R.id.inputBuscaJogo);
         btnBuscarJogo = findViewById(R.id.btnBuscarJogo);
+        btnApagarTudoHistorico = findViewById(R.id.btnApagarTudoHistorico); // Conecta o botão XML ao Java
 
         bancoDeDados = getSharedPreferences("HistoricoJogos", MODE_PRIVATE);
 
@@ -47,22 +58,8 @@ public class HistoricoActivity extends AppCompatActivity {
         // Botão de busca com SCROLL (rolagem)
         btnBuscarJogo.setOnClickListener(v -> irParaJogoEspecifico());
 
-        // Clique simples para compartilhar
-        listView.setOnItemClickListener((parent, view, position, id) -> {
-            String itemTexto = listaExibida.get(position);
-            compartilharJogo(itemTexto);
-        });
-
-        // Clique longo para deletar
-        listView.setOnItemLongClickListener((parent, view, position, id) -> {
-            String itemExibido = listaExibida.get(position);
-            int indexReal = descobrirIndexPeloTexto(itemExibido);
-
-            if (indexReal != -1) {
-                confirmarDelecao(indexReal);
-            }
-            return true;
-        });
+        // Ação do Botão Vermelho (Apagar Tudo ou Apagar Selecionados)
+        btnApagarTudoHistorico.setOnClickListener(v -> acaoBotaoApagar());
     }
 
     private void irParaJogoEspecifico() {
@@ -122,6 +119,8 @@ public class HistoricoActivity extends AppCompatActivity {
     public void carregarListaInvertida() {
         listaOriginalDeJogos = new ArrayList<>();
         listaExibida = new ArrayList<>();
+        posicoesSelecionadas.clear(); // Limpa as seleções ao recarregar
+        atualizarTextoBotao(); // Reseta o texto do botão vermelho
 
         String historicoGeral = bancoDeDados.getString("historico_ordenado", "");
 
@@ -142,27 +141,114 @@ public class HistoricoActivity extends AppCompatActivity {
             txtContadorHistorico.setText("Total de Jogos: " + listaOriginalDeJogos.size());
         }
 
-        ArrayAdapter<String> adapter = new ArrayAdapter<>(
+        // ADAPTADOR CUSTOMIZADO PARA PINTAR OS JOGOS SELECIONADOS
+        ArrayAdapter<String> adapter = new ArrayAdapter<String>(
                 this,
-                R.layout.item_historico, // Seu arquivo visual PRETO
-                R.id.text1,              // O ID do TextView dentro dele
+                R.layout.item_historico,
+                R.id.text1,
                 listaExibida
-        );
+        ) {
+            @Override
+            public View getView(int position, View convertView, ViewGroup parent) {
+                View view = super.getView(position, convertView, parent);
+                if (posicoesSelecionadas.contains(position)) {
+                    view.setBackgroundColor(Color.parseColor("#40D32F2F")); // Fundo vermelho suave
+                } else {
+                    view.setBackgroundColor(Color.TRANSPARENT);
+                }
+                return view;
+            }
+        };
         listView.setAdapter(adapter);
+
+        // CLIQUE SIMPLES
+        listView.setOnItemClickListener((parent, view, position, id) -> {
+            if (listaExibida.isEmpty()) return;
+
+            // Se já tem algo selecionado, o clique simples apenas seleciona/deseleciona
+            if (!posicoesSelecionadas.isEmpty()) {
+                if (posicoesSelecionadas.contains(position)) {
+                    posicoesSelecionadas.remove(position);
+                } else {
+                    posicoesSelecionadas.add(position);
+                }
+                atualizarTextoBotao();
+                adapter.notifyDataSetChanged();
+            } else {
+                // Se não tem nada selecionado, compartilha o jogo
+                String itemTexto = listaExibida.get(position);
+                compartilharJogo(itemTexto);
+            }
+        });
+
+        // CLIQUE LONGO (Ativa o modo de seleção)
+        listView.setOnItemLongClickListener((parent, view, position, id) -> {
+            if (listaExibida.isEmpty()) return true;
+
+            if (posicoesSelecionadas.contains(position)) {
+                posicoesSelecionadas.remove(position);
+            } else {
+                posicoesSelecionadas.add(position);
+            }
+            atualizarTextoBotao();
+            adapter.notifyDataSetChanged();
+            return true;
+        });
     }
 
-    public void confirmarDelecao(final int indexNoBanco) {
-        AlertDialog.Builder alerta = new AlertDialog.Builder(this);
-        alerta.setTitle("Apagar Jogo?");
-        alerta.setMessage("Deseja excluir este jogo?");
-        alerta.setPositiveButton("SIM", (dialog, which) -> deletarJogo(indexNoBanco));
-        alerta.setNegativeButton("Não", null);
-        alerta.show();
+    private void atualizarTextoBotao() {
+        if (posicoesSelecionadas.isEmpty()) {
+            btnApagarTudoHistorico.setText("🗑️ LIMPAR HISTÓRICO COMPLETO");
+        } else {
+            btnApagarTudoHistorico.setText("🗑️ DELETAR SELECIONADOS (" + posicoesSelecionadas.size() + ")");
+        }
     }
 
-    public void deletarJogo(int index) {
-        listaOriginalDeJogos.remove(index);
+    private void acaoBotaoApagar() {
+        if (!posicoesSelecionadas.isEmpty()) {
+            // MODO: DELETAR SÓ OS SELECIONADOS
+            AlertDialog.Builder alerta = new AlertDialog.Builder(this);
+            alerta.setTitle("Apagar Selecionados?");
+            alerta.setMessage("Deseja remover " + posicoesSelecionadas.size() + " jogos do histórico?");
+            alerta.setPositiveButton("Sim", (dialog, which) -> {
 
+                List<Integer> indexParaRemover = new ArrayList<>();
+                for (int pos : posicoesSelecionadas) {
+                    int realIndex = descobrirIndexPeloTexto(listaExibida.get(pos));
+                    if (realIndex != -1) indexParaRemover.add(realIndex);
+                }
+
+                // Ordena do maior para o menor para não bagunçar os index ao remover
+                Collections.sort(indexParaRemover, Collections.reverseOrder());
+
+                for (int i : indexParaRemover) {
+                    if (i < listaOriginalDeJogos.size()) {
+                        listaOriginalDeJogos.remove(i);
+                    }
+                }
+                salvarBancoDeDadosNovo();
+                Toast.makeText(this, posicoesSelecionadas.size() + " jogos apagados!", Toast.LENGTH_SHORT).show();
+                carregarListaInvertida();
+            });
+            alerta.setNegativeButton("Cancelar", null);
+            alerta.show();
+
+        } else {
+            // MODO: DELETAR TUDO
+            AlertDialog.Builder alerta = new AlertDialog.Builder(this);
+            alerta.setTitle("LIXEIRA TOTAL");
+            alerta.setMessage("Deseja deletar permanentemente TODOS os jogos que você gerou no app?");
+            alerta.setPositiveButton("Sim, Esvaziar", (dialog, which) -> {
+                bancoDeDados.edit().remove("historico_ordenado").apply();
+                Toast.makeText(this, "Histórico completamente zerado!", Toast.LENGTH_SHORT).show();
+                carregarListaInvertida();
+            });
+            alerta.setNegativeButton("Cancelar", null);
+            alerta.show();
+        }
+    }
+
+    private void salvarBancoDeDadosNovo() {
         StringBuilder novoHistorico = new StringBuilder();
         for (int i = 0; i < listaOriginalDeJogos.size(); i++) {
             novoHistorico.append(listaOriginalDeJogos.get(i));
@@ -178,9 +264,6 @@ public class HistoricoActivity extends AppCompatActivity {
             editor.putString("historico_ordenado", novoHistorico.toString());
         }
         editor.apply();
-
-        Toast.makeText(this, "Apagado!", Toast.LENGTH_SHORT).show();
-        carregarListaInvertida();
     }
 
     public void compartilharJogo(String jogo) {

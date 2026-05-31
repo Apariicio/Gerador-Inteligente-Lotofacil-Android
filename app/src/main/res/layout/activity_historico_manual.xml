@@ -31,14 +31,14 @@
 
     <Button
         android:id="@+id/btnApagarTudoManual"
-        android:layout_width="170dp"
-        android:layout_height="45dp"
+        android:layout_width="280dp"
+        android:layout_height="35dp"
         android:layout_gravity="end"
         android:layout_marginBottom="10dp"
         android:backgroundTint="#D32F2F"
         android:text="🗑️ APAGAR TUDO"
         android:textColor="#FFFFFF"
-        android:textSize="14sp"
+        android:textSize="13sp"
         android:textStyle="bold" />
 
     <ListView

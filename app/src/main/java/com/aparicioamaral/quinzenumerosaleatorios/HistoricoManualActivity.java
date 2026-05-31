@@ -1,10 +1,13 @@
 package com.aparicioamaral.quinzenumerosaleatorios;
 
 import android.content.DialogInterface;
+import android.graphics.Color;
 import android.os.Bundle;
 import android.view.View;
+import android.view.ViewGroup;
 import android.widget.AdapterView;
 import android.widget.ArrayAdapter;
+import android.widget.Button;
 import android.widget.ListView;
 import android.widget.Toast;
 import androidx.appcompat.app.AlertDialog;
@@ -13,14 +16,20 @@ import androidx.appcompat.app.AppCompatActivity;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Comparator;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
 public class HistoricoManualActivity extends AppCompatActivity {
 
     ListView listaManuais;
+    Button btnApagarTudoManual; // Mapeamento do botão vermelho
     ArrayList<String> listaVisual;
     ArrayList<String> listaChaves;
+
+    // Variável que guarda quais jogos estão selecionados
+    private Set<Integer> posicoesSelecionadas = new HashSet<>();
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -31,10 +40,14 @@ public class HistoricoManualActivity extends AppCompatActivity {
         ocultarBarrasDeNavegacao();
 
         listaManuais = findViewById(R.id.listaManuais);
+        btnApagarTudoManual = findViewById(R.id.btnApagarTudoManual);
+
         carregarLista();
+
+        btnApagarTudoManual.setOnClickListener(v -> acaoBotaoApagar());
     }
 
-    // --- MÉTODOS PARA TELA CHEIA (NOVO) ---
+    // --- MÉTODOS PARA TELA CHEIA ---
     private void ocultarBarrasDeNavegacao() {
         View decorView = getWindow().getDecorView();
         decorView.setSystemUiVisibility(
@@ -73,87 +86,136 @@ public class HistoricoManualActivity extends AppCompatActivity {
 
         listaVisual = new ArrayList<>();
         listaChaves = new ArrayList<>();
+        posicoesSelecionadas.clear();
+        atualizarTextoBotao();
 
         if (todosManuais.isEmpty()) {
-            Toast.makeText(this, "Nenhum jogo cadastrado manualmente.", Toast.LENGTH_SHORT).show();
-            listaManuais.setAdapter(null);
-            return;
-        }
+            listaVisual.add("Nenhum cadastro manual encontrado.");
+        } else {
+            // 1. Criamos uma lista temporária para poder ordenar
+            List<ItemJogo> listaTemporaria = new ArrayList<>();
 
-        // 1. Criamos uma lista temporária para poder ordenar
-        List<ItemJogo> listaTemporaria = new ArrayList<>();
+            for (Map.Entry<String, ?> entry : todosManuais.entrySet()) {
+                String jogoNumeros = entry.getKey();
+                String infoConcurso = entry.getValue().toString();
 
-        for (Map.Entry<String, ?> entry : todosManuais.entrySet()) {
-            String jogoNumeros = entry.getKey();
-            String infoConcurso = entry.getValue().toString();
-
-            // Tenta extrair o número do concurso do texto para poder ordenar
-            int numConcurso = 0;
-            try {
-                String[] partes = infoConcurso.split(" ");
-                if (partes.length > 1) {
-                    numConcurso = Integer.parseInt(partes[1]);
+                int numConcurso = 0;
+                try {
+                    String[] partes = infoConcurso.split(" ");
+                    if (partes.length > 1) {
+                        numConcurso = Integer.parseInt(partes[1]);
+                    }
+                } catch (Exception e) {
+                    numConcurso = 0;
                 }
-            } catch (Exception e) {
-                numConcurso = 0;
+
+                String textoBonito = infoConcurso + "\n" + jogoNumeros;
+                listaTemporaria.add(new ItemJogo(numConcurso, textoBonito, jogoNumeros));
             }
 
-            // Adiciona na lista temporária
-            String textoBonito = infoConcurso + "\n" + jogoNumeros;
-            listaTemporaria.add(new ItemJogo(numConcurso, textoBonito, jogoNumeros));
-        }
+            // 2. MÁGICA DA ORDENAÇÃO
+            Collections.sort(listaTemporaria, new Comparator<ItemJogo>() {
+                @Override
+                public int compare(ItemJogo jogo1, ItemJogo jogo2) {
+                    return Integer.compare(jogo2.numeroConcurso, jogo1.numeroConcurso);
+                }
+            });
 
-        // 2. AGORA FAZEMOS A MÁGICA DA ORDENAÇÃO
-        Collections.sort(listaTemporaria, new Comparator<ItemJogo>() {
-            @Override
-            public int compare(ItemJogo jogo1, ItemJogo jogo2) {
-                // Retorna positivo se o 2 for maior que o 1 (inverte a ordem)
-                return Integer.compare(jogo2.numeroConcurso, jogo1.numeroConcurso);
+            // 3. Passa os dados para as listas finais
+            for (ItemJogo item : listaTemporaria) {
+                listaVisual.add(item.textoParaTela);
+                listaChaves.add(item.chaveParaDeletar);
             }
-        });
-
-        // 3. Passa os dados já ordenados para as listas finais que o Android usa
-        for (ItemJogo item : listaTemporaria) {
-            listaVisual.add(item.textoParaTela);
-            listaChaves.add(item.chaveParaDeletar);
         }
 
-        // 4. Mostra na tela
-        ArrayAdapter<String> adapter = new ArrayAdapter<>(
+        // 4. Adaptador customizado
+        ArrayAdapter<String> adapter = new ArrayAdapter<String>(
                 this,
                 R.layout.item_historico,
                 listaVisual
-        );
+        ) {
+            @Override
+            public View getView(int position, View convertView, ViewGroup parent) {
+                View view = super.getView(position, convertView, parent);
+                if (posicoesSelecionadas.contains(position)) {
+                    view.setBackgroundColor(Color.parseColor("#40D32F2F")); // Vermelho
+                } else {
+                    view.setBackgroundColor(Color.TRANSPARENT);
+                }
+                return view;
+            }
+        };
         listaManuais.setAdapter(adapter);
 
-        listaManuais.setOnItemLongClickListener(new AdapterView.OnItemLongClickListener() {
-            @Override
-            public boolean onItemLongClick(AdapterView<?> parent, View view, int position, long id) {
-                confirmarDelecao(position);
-                return true;
+        // CLIQUE SIMPLES
+        listaManuais.setOnItemClickListener((parent, view, position, id) -> {
+            if (listaVisual.get(0).equals("Nenhum cadastro manual encontrado.")) return;
+
+            if (!posicoesSelecionadas.isEmpty()) {
+                if (posicoesSelecionadas.contains(position)) posicoesSelecionadas.remove(position);
+                else posicoesSelecionadas.add(position);
+
+                atualizarTextoBotao();
+                adapter.notifyDataSetChanged();
             }
+        });
+
+        // CLIQUE LONGO
+        listaManuais.setOnItemLongClickListener((parent, view, position, id) -> {
+            if (listaVisual.get(0).equals("Nenhum cadastro manual encontrado.")) return true;
+
+            if (posicoesSelecionadas.contains(position)) posicoesSelecionadas.remove(position);
+            else posicoesSelecionadas.add(position);
+
+            atualizarTextoBotao();
+            adapter.notifyDataSetChanged();
+            return true;
         });
     }
 
-    public void confirmarDelecao(int posicao) {
-        String itemVisual = listaVisual.get(posicao);
-        final String chaveParaDeletar = listaChaves.get(posicao);
+    private void atualizarTextoBotao() {
+        if (posicoesSelecionadas.isEmpty()) {
+            btnApagarTudoManual.setText("🗑️ APAGAR TUDO");
+        } else {
+            btnApagarTudoManual.setText("🗑️ DELETAR SELECIONADOS (" + posicoesSelecionadas.size() + ")");
+        }
+    }
 
-        AlertDialog.Builder alerta = new AlertDialog.Builder(this);
-        alerta.setTitle("Excluir Registro?");
-        alerta.setMessage("Tem certeza que deseja apagar este jogo?\n\n" + itemVisual);
-        alerta.setIcon(android.R.drawable.ic_menu_delete);
+    private void acaoBotaoApagar() {
+        if (listaVisual.isEmpty() || listaVisual.get(0).equals("Nenhum cadastro manual encontrado.")) return;
 
-        alerta.setPositiveButton("SIM, APAGAR", new DialogInterface.OnClickListener() {
-            @Override
-            public void onClick(DialogInterface dialog, int which) {
-                DadosOficiais.deletarResultadoManual(HistoricoManualActivity.this, chaveParaDeletar);
-                Toast.makeText(HistoricoManualActivity.this, "Apagado com sucesso!", Toast.LENGTH_SHORT).show();
-                carregarLista(); // Recarrega a lista para atualizar a ordem e remover o item
-            }
-        });
+        if (!posicoesSelecionadas.isEmpty()) {
+            // DELETAR SÓ OS SELECIONADOS
+            AlertDialog.Builder alerta = new AlertDialog.Builder(this);
+            alerta.setTitle("Excluir Selecionados?");
+            alerta.setMessage("Deseja apagar os " + posicoesSelecionadas.size() + " registros selecionados?");
+            alerta.setIcon(android.R.drawable.ic_menu_delete);
+            alerta.setPositiveButton("Sim, Apagar", (dialog, which) -> {
+                for (int pos : posicoesSelecionadas) {
+                    String chaveParaDeletar = listaChaves.get(pos);
+                    DadosOficiais.deletarResultadoManual(this, chaveParaDeletar);
+                }
+                Toast.makeText(this, posicoesSelecionadas.size() + " apagados!", Toast.LENGTH_SHORT).show();
+                carregarLista();
+            });
+            alerta.setNegativeButton("Cancelar", null);
+            alerta.show();
 
-        alerta.setNegativeButton("Cancelar", null);
-        alerta.show();
+        } else {
+            // DELETAR TUDO
+            AlertDialog.Builder alerta = new AlertDialog.Builder(this);
+            alerta.setTitle("Excluir Tudo?");
+            alerta.setMessage("Isso vai apagar DEFINITIVAMENTE TODOS os seus cadastros manuais. Tem certeza?");
+            alerta.setIcon(android.R.drawable.ic_dialog_alert);
+            alerta.setPositiveButton("Sim, Limpar Tudo", (dialog, which) -> {
+                for (String chave : listaChaves) {
+                    DadosOficiais.deletarResultadoManual(this, chave);
+                }
+                Toast.makeText(this, "Tudo apagado!", Toast.LENGTH_SHORT).show();
+                carregarLista();
+            });
+            alerta.setNegativeButton("Cancelar", null);
+            alerta.show();
+        }
     }
 }
