@@ -301,10 +301,20 @@ public class MainActivity extends AppCompatActivity {
 
     public void mostrarInformacoesApp() {
         AlertDialog.Builder builder = new AlertDialog.Builder(this);
-        builder.setTitle("ℹ️ Entenda as Estatísticas");
+        builder.setTitle("ℹ️ Guia de Funcionalidades e Estatísticas");
 
-        // Texto formatado em HTML para o Dialog do Android ficar bonito e organizado
-        String mensagemHTML = "<b>ESTATÍSTICAS OPCIONAIS</b><br>" +
+        // Nova string HTML contendo o resumo das funções do app + as estatísticas originais
+        String mensagemHTML = "📱 <b>FUNCIONALIDADES DO APLICATIVO</b><br>" +
+                "• <b>Sortear / Gerar Jogo:</b> Cria uma combinação inteligente aplicando os filtros ativos e a salva no histórico.<br>" +
+                "• <b>Fixar Números (Campo de Entrada):</b> Permite digitar dezenas obrigatórias que sempre estarão presentes nos jogos gerados.<br>" +
+                "• <b>Histórico Geral:</b> Lista todos os jogos gerados pelo app para você buscar, compartilhar ou excluir.<br>" +
+                "• <b>Proteger Jogo Manual:</b> Salva jogos que você já fez fisicamente na lotérica, impedindo o gerador de criá-los novamente.<br>" +
+                "• <b>Conferir no Histórico:</b> Digite 15 números para checar rapidamente se você já gerou esse jogo antes.<br>" +
+                "• <b>Varredura Relâmpago:</b> Cruza todos os seus jogos salvos contra a história oficial e lista se você já teria feito de 11 a 15 pontos.<br>" +
+                "• <b>Cadastrar Oficial / Gerenciar Manuais:</b> Permite inserir novos resultados reais da Lotofácil para manter o app atualizado.<br>" +
+                "• <b>Compartilhar:</b> Toque no tabuleiro de bolas ou em um jogo do histórico para enviá-lo por WhatsApp ou redes sociais.<br><br>" +
+
+                "📊 <b>ESTATÍSTICAS OPCIONAIS (SWITCHES)</b><br>" +
                 "• <b>Par / Ímpar:</b> Exige que o jogo tenha entre 6 e 9 números pares (e consequentemente, 6 a 9 ímpares).<br>" +
                 "• <b>Soma:</b> A soma de todos os 15 números deve dar entre 165 e 230.<br>" +
                 "• <b>Primos:</b> Exige entre 4 e 7 números primos no jogo.<br>" +
@@ -326,7 +336,8 @@ public class MainActivity extends AppCompatActivity {
 
         // Usando um ScrollView para garantir que telas pequenas consigam ler tudo
         android.widget.ScrollView scrollView = new android.widget.ScrollView(this);
-        scrollView.setBackgroundColor(Color.parseColor("#FAFAFA"));
+        // Força o fundo a ficar branco (corrige legibilidade no Dark Mode)
+        scrollView.setBackgroundColor(Color.parseColor("#FFFFFF"));
         android.widget.TextView textView = new android.widget.TextView(this);
 
         if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.N) {
@@ -698,6 +709,7 @@ public class MainActivity extends AppCompatActivity {
 
     public void verificarSeJogoExiste(String entrada) {
         try {
+            // Limpa e padroniza a entrada do usuário
             String[] partes = entrada.replace(",", " ").replace("-", " ").trim().split("\\s+");
             if (partes.length != 15) {
                 Toast.makeText(this, "Digite 15 números!", Toast.LENGTH_SHORT).show();
@@ -707,13 +719,62 @@ public class MainActivity extends AppCompatActivity {
             for (String p : partes) nums.add(Integer.parseInt(p));
             Collections.sort(nums);
             String jogo = nums.toString();
-            String historico = bancoDeDados.getString("historico_ordenado", "");
-            if (historico.contains(jogo)) {
-                new AlertDialog.Builder(this).setTitle("ENCONTRADO!").setMessage("Você já gerou esse jogo.").setPositiveButton("OK", null).show();
-            } else {
-                new AlertDialog.Builder(this).setTitle("Não encontrado").setMessage("Esse jogo não está no seu histórico.").setPositiveButton("OK", null).show();
+
+            // --- 1º PROBLEMA RESOLVIDO: Verificar nos Resultados Oficiais ---
+            Map<String, String> oficiaisMap = DadosOficiais.carregarResultadosOficiais(this);
+            boolean achouOficial = false;
+            String infoOficial = "";
+            if (oficiaisMap != null && oficiaisMap.containsKey(jogo)) {
+                achouOficial = true;
+                infoOficial = oficiaisMap.get(jogo); // Pega o "Concurso XXXX (dd/mm/aaaa)"
             }
-        } catch (Exception e) {}
+
+            // --- 2º PROBLEMA RESOLVIDO: Descobrir a posição exata no histórico do App ---
+            String historico = bancoDeDados.getString("historico_ordenado", "");
+            boolean achouNoApp = false;
+            int numeroDoJogo = -1;
+
+            if (!historico.isEmpty()) {
+                String[] jogosSalvos = historico.split(SEPARADOR);
+                for (int i = 0; i < jogosSalvos.length; i++) {
+                    if (jogosSalvos[i].trim().equals(jogo)) {
+                        achouNoApp = true;
+                        numeroDoJogo = i + 1; // i + 1 dá o número real da posição (Jogo 1, Jogo 2, etc.)
+                        break;
+                    }
+                }
+            }
+
+            // --- Construção da Mensagem de Retorno ---
+            StringBuilder mensagem = new StringBuilder();
+            String tituloDialog = "Resultado do Conferidor";
+
+            // Seção Oficial
+            if (achouOficial) {
+                tituloDialog = "🚨 JOGO JÁ SORTEADO!";
+                mensagem.append("⚠️ **LOTOFÁCIL OFICIAL:**\nEste jogo JÁ FOI SORTEADO com 15 pontos na história!\n👉 ").append(infoOficial).append("\n\n");
+            } else {
+                mensagem.append("✅ **LOTOFÁCIL OFICIAL:**\nJogo inédito! Nunca fez 15 pontos em concursos oficiais.\n\n");
+            }
+
+            // Seção Histórico do App
+            if (achouNoApp) {
+                if (!achouOficial) tituloDialog = "🗂️ JOGO JÁ GERADO";
+                mensagem.append("📱 **HISTÓRICO DO APP:**\nVocê já gerou ou salvou este jogo antes!\n👉 Ele se encontra como o **Jogo nº ").append(numeroDoJogo).append("** na sua lista geral.");
+            } else {
+                mensagem.append("📱 **HISTÓRICO DO APP:**\nEste jogo não consta no seu histórico de jogos salvos.");
+            }
+
+            // Exibe a janela de alerta bem detalhada
+            new AlertDialog.Builder(this)
+                    .setTitle(tituloDialog)
+                    .setMessage(mensagem.toString())
+                    .setPositiveButton("Entendi", null)
+                    .show();
+
+        } catch (Exception e) {
+            Toast.makeText(this, "Erro ao processar e conferir os números.", Toast.LENGTH_SHORT).show();
+        }
     }
 
     public void fazerVarreduraRelampago() {
