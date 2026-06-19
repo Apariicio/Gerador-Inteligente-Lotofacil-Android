@@ -395,7 +395,19 @@
                 android:textColor="#FFFFFF"
                 android:textSize="10sp"
                 android:textStyle="italic" />
+
         </LinearLayout>
+        <TextView
+            android:id="@+id/txtFiltrosAtivos"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Filtros ativos: 0/7"
+            android:textColor="#555555"
+            android:textStyle="bold"
+            android:textSize="16sp"
+            android:layout_gravity="center"
+            android:layout_marginTop="10dp"
+            android:layout_marginBottom="10dp"/>
 
     </LinearLayout> <TextView
     android:id="@+id/txtAssinatura"
@@ -410,5 +422,36 @@
     android:textColor="#000000"
     android:textSize="14sp"
     android:textStyle="bold|italic" />
+
+    <LinearLayout
+        android:id="@+id/layoutProgresso"
+        android:layout_width="280dp"
+        android:layout_height="wrap_content"
+        android:layout_centerInParent="true"
+        android:background="#FAFAFA"
+        android:elevation="15dp"
+        android:gravity="center"
+        android:orientation="vertical"
+        android:padding="20dp"
+        android:visibility="gone">
+
+        <TextView
+            android:id="@+id/txtProgressoVarredura"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Analisando jogos..."
+            android:textColor="#333333"
+            android:textSize="14sp"
+            android:textStyle="bold"
+            android:layout_marginBottom="10dp"/>
+
+        <ProgressBar
+            android:id="@+id/progressBarVarredura"
+            style="?android:attr/progressBarStyleHorizontal"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:scaleY="2"
+            android:progressTint="#72FF5722" />
+    </LinearLayout>
 
 </RelativeLayout>

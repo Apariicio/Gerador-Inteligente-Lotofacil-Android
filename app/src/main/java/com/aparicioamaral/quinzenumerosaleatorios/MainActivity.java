@@ -11,6 +11,7 @@ import android.widget.Button;
 import android.widget.EditText;
 import android.widget.GridLayout;
 import android.widget.LinearLayout;
+import android.widget.ProgressBar;
 import android.widget.Switch;
 import android.widget.TextView;
 import android.widget.Toast;
@@ -29,11 +30,15 @@ public class MainActivity extends AppCompatActivity {
 
     TextView txtContador;
     TextView lblSomaPrimos, lblParesImpares, lblFibRepetidos, txtAssinatura, lblCiclo;
+    TextView txtFiltrosAtivos;
     EditText inputFixas;
 
     // --- TODAS AS 6 CHAVES ---
     Switch switchPares, switchSoma, switchPrimos;
     Switch switchRepetidos, switchFibonacci, switchCiclo, switchOcultas;
+    LinearLayout layoutProgresso;
+    ProgressBar progressBarVarredura;
+    TextView txtProgressoVarredura;
 
     Button btnSortear, btnHistorico, btnInserirManual, btnConferir, btnVarredura, btnCadastrarOficial, btnGerenciarManuais, btnInformacao;
     GridLayout gridTabuleiro;
@@ -42,6 +47,7 @@ public class MainActivity extends AppCompatActivity {
     SharedPreferences bancoDeDados;
     private static final String SEPARADOR = "####";
     private List<int[]> cacheMeusJogos = new ArrayList<>();
+    private int[] freqUltimos20 = new int[26];
     private List<DadosConcurso> cacheOficiais = new ArrayList<>();
     private String jogoAtualParaCompartilhar = "";
 
@@ -67,6 +73,9 @@ public class MainActivity extends AppCompatActivity {
             switchCiclo = findViewById(R.id.switchCiclo);
             switchOcultas = findViewById(R.id.switchOcultas);
 
+            txtFiltrosAtivos = findViewById(R.id.txtFiltrosAtivos);
+            atualizarContadorFiltros();
+
             // --- Configurando Pintura das Chaves ---
             configurarPinturaChave(switchPares);
             configurarPinturaChave(switchSoma);
@@ -83,7 +92,7 @@ public class MainActivity extends AppCompatActivity {
             btnCadastrarOficial = findViewById(R.id.btnCadastrarOficial);
             btnGerenciarManuais = findViewById(R.id.btnGerenciarManuais);
             btnInformacao = findViewById(R.id.btnInformacao);
-            btnInformacao.setOnClickListener(v -> mostrarInformacoesApp());
+            btnInformacao.setOnClickListener(v -> mostrarInformacoesApp(false));
             btnInserirManual = findViewById(R.id.btnInserirManual);
             btnInserirManual.setOnClickListener(v -> abrirInserirJogoManual());
 
@@ -93,8 +102,11 @@ public class MainActivity extends AppCompatActivity {
             lblCiclo = findViewById(R.id.lblCiclo);
 
             txtContador = findViewById(R.id.txtContador);
-            txtAssinatura = findViewById(R.id.txtAssinatura);
+            layoutProgresso = findViewById(R.id.layoutProgresso);
+            progressBarVarredura = findViewById(R.id.progressBarVarredura);
+            txtProgressoVarredura = findViewById(R.id.txtProgressoVarredura);
 
+            txtAssinatura = findViewById(R.id.txtAssinatura);
             /*if (txtAssinatura != null) {
                 txtAssinatura.setPaintFlags(txtAssinatura.getPaintFlags() | android.graphics.Paint.UNDERLINE_TEXT_FLAG);
                 txtAssinatura.setOnClickListener(v -> mostrarRedesSociais());
@@ -120,6 +132,12 @@ public class MainActivity extends AppCompatActivity {
             carregarDadosParaMemoria();
             limparTabuleiro();
 
+            // VERIFICAÇÃO DO PRIMEIRO ACESSO
+            boolean ocultarGuia = bancoDeDados.getBoolean("ocultar_guia_inicio", false);
+            if (!ocultarGuia) {
+                mostrarInformacoesApp(true); // Chama o modo demo marcando que é abertura automática
+            }
+
         } catch (Exception e) {
             e.printStackTrace();
             Toast.makeText(this, "Erro: " + e.getMessage(), Toast.LENGTH_LONG).show();
@@ -129,7 +147,25 @@ public class MainActivity extends AppCompatActivity {
     // Função auxiliar para configurar a pintura inicial e o clique
     private void configurarPinturaChave(Switch chave) {
         pintarChave(chave); // Pinta estado inicial
-        chave.setOnCheckedChangeListener((buttonView, isChecked) -> pintarChave(chave));
+        chave.setOnCheckedChangeListener((buttonView, isChecked) -> {
+            pintarChave(chave);
+            atualizarContadorFiltros();
+        });
+    }
+
+    private void atualizarContadorFiltros() {
+        if (txtFiltrosAtivos == null) return;
+        int ativos = 0;
+
+        if (switchPares != null && switchPares.isChecked()) ativos++;
+        if (switchSoma != null && switchSoma.isChecked()) ativos++;
+        if (switchPrimos != null && switchPrimos.isChecked()) ativos++;
+        if (switchRepetidos != null && switchRepetidos.isChecked()) ativos++;
+        if (switchFibonacci != null && switchFibonacci.isChecked()) ativos++;
+        if (switchCiclo != null && switchCiclo.isChecked()) ativos++;
+        if (switchOcultas != null && switchOcultas.isChecked()) ativos++;
+
+        txtFiltrosAtivos.setText("Filtros ativos: " + ativos + "/7");
     }
 
     private void pintarChave(Switch chave) {
@@ -157,23 +193,74 @@ public class MainActivity extends AppCompatActivity {
     }
 
     private void limparTabuleiro() {
+        // 1. Calcula a frequência nos últimos 20 concursos em segundo plano (salvando na variável global)
+        Arrays.fill(freqUltimos20, 0);
+        if (cacheOficiais != null && !cacheOficiais.isEmpty()) {
+            int totalConcursosAnalisados = 0;
+            for (int i = cacheOficiais.size() - 1; i >= 0 && totalConcursosAnalisados < 20; i--) {
+                for (int num : cacheOficiais.get(i).numeros) {
+                    if (num >= 1 && num <= 25) {
+                        freqUltimos20[num]++;
+                    }
+                }
+                totalConcursosAnalisados++;
+            }
+        }
+
+        // 2. Aplica a cor PADRÃO UNIFORME para todas as bolas (estado inicial/apagado)
         for (int i = 1; i <= 25; i++) {
             if (bolasTabuleiro[i] != null) {
                 bolasTabuleiro[i].setVisibility(View.VISIBLE);
+                bolasTabuleiro[i].setAlpha(1.0f); // 100% visível
                 bolasTabuleiro[i].setBackgroundResource(R.drawable.bola_apagada);
+
+                // Remove qualquer pintura de cor do mapa de calor
+                if (bolasTabuleiro[i].getBackground() != null) {
+                    bolasTabuleiro[i].getBackground().mutate().setTintList(null);
+                }
+
+                // Cor do texto padrão (cinza claro) para bolas não sorteadas
                 bolasTabuleiro[i].setTextColor(Color.parseColor("#999999"));
             }
         }
     }
 
     private void atualizarTabuleiro(List<Integer> numerosSorteados) {
-        limparTabuleiro();
+        limparTabuleiro(); // Deixa todas padronizadas, uniformes e apagadas primeiro
         jogoAtualParaCompartilhar = numerosSorteados.toString();
+
         for (int i = 1; i <= 25; i++) {
             if (bolasTabuleiro[i] != null) {
+
                 if (numerosSorteados.contains(i)) {
+                    // === BOLA SORTEADA (Aplica o Mapa de Calor Apenas Aqui!) ===
                     bolasTabuleiro[i].setBackgroundResource(R.drawable.bola_selecionada);
+
+                    if (bolasTabuleiro[i].getBackground() != null) {
+                        bolasTabuleiro[i].getBackground().mutate().setTintList(null);
+                    }
+
+                    // Texto padrão branco
                     bolasTabuleiro[i].setTextColor(Color.WHITE);
+
+                    /*int freq = freqUltimos20[i];
+                    int corFundoSelecionado;
+
+                    if (freq >= 14) {
+                        corFundoSelecionado = Color.parseColor("#D32F2F"); // Vermelho Forte (Quentes)
+                    } else if (freq >= 12) {
+                        corFundoSelecionado = Color.parseColor("#F57C00"); // Laranja Forte (Médios)
+                    } else if (freq >= 10) {
+                        corFundoSelecionado = Color.parseColor("#FFB300"); // Amarelo Forte
+                    } else {
+                        corFundoSelecionado = Color.parseColor("#FFE082"); // Amarelo Claro
+                    }
+
+                    if (bolasTabuleiro[i].getBackground() != null) {
+                        bolasTabuleiro[i].getBackground().mutate().setTint(corFundoSelecionado);
+                    }
+
+                    bolasTabuleiro[i].setTextColor(Color.WHITE);*/
                 }
             }
         }
@@ -265,6 +352,10 @@ public class MainActivity extends AppCompatActivity {
 
                         lblCiclo.setText("Rep: --");
                         lblCiclo.setTextColor(Color.parseColor("#333333"));
+
+                        if (jogoAtualParaCompartilhar.isEmpty()) {
+                            limparTabuleiro(); // Aciona as cores assim que os concursos oficiais carregam
+                        }
                     } catch (Exception e) {}
                 });
             } catch (Exception e) { e.printStackTrace(); }
@@ -299,7 +390,7 @@ public class MainActivity extends AppCompatActivity {
         return faltantes;
     }
 
-    public void mostrarInformacoesApp() {
+    public void mostrarInformacoesApp(boolean isAberturaAutomatica) {
         AlertDialog.Builder builder = new AlertDialog.Builder(this);
         builder.setTitle("📖 Guia Completo do App");
 
@@ -348,9 +439,14 @@ public class MainActivity extends AppCompatActivity {
                         "🎯 Com <b>TODAS AS CHAVES ATIVADAS</b>, o funil fica extremo! Cada filtro sobrepõe o outro, reduzindo drasticamente o mar de combinações para um núcleo de elite de aproximadamente <b>80.000 a 150.000 jogos</b>.<br><br>" +
                         "📈 <b>Conclusão:</b> Quanto mais chaves ligadas, mais 'inteligente' e filtrado é o jogo, aumentando as chances de você estar dentro do grupo de combinações com maior potencial estatístico!";
 
+        LinearLayout layoutPrincipal = new LinearLayout(this);
+        layoutPrincipal.setOrientation(LinearLayout.VERTICAL);
+        layoutPrincipal.setBackgroundColor(Color.parseColor("#F5F5F5"));
         // ScrollView para garantir que todo o conteúdo seja visualizado
         android.widget.ScrollView scrollView = new android.widget.ScrollView(this);
-        scrollView.setBackgroundColor(Color.parseColor("#F5F5F5")); // Fundo cinza claro para melhor leitura
+        LinearLayout.LayoutParams paramsScroll = new LinearLayout.LayoutParams(
+                LinearLayout.LayoutParams.MATCH_PARENT, 0, 1.0f);
+        scrollView.setLayoutParams(paramsScroll);
 
         android.widget.TextView textView = new android.widget.TextView(this);
         if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.N) {
@@ -365,9 +461,28 @@ public class MainActivity extends AppCompatActivity {
         textView.setLineSpacing(0, 1.3f); // Espaçamento entre linhas
 
         scrollView.addView(textView);
-        builder.setView(scrollView);
+        layoutPrincipal.addView(scrollView);
 
-        builder.setPositiveButton("Entendi! ✅", null);
+        // Caixinha de Seleção (Só aparece se for a abertura automática)
+        android.widget.CheckBox chkNaoMostrar = new android.widget.CheckBox(this);
+        if (isAberturaAutomatica) {
+            chkNaoMostrar.setText("Não mostrar este Guia na próxima vez");
+            chkNaoMostrar.setTextColor(Color.parseColor("#444444"));
+            chkNaoMostrar.setPadding(20, 20, 20, 20);
+            layoutPrincipal.addView(chkNaoMostrar);
+        }
+
+        builder.setView(layoutPrincipal);
+
+        builder.setPositiveButton("Certo, entendi!", (dialog, which) -> {
+            // Se a pessoa marcou a caixa na abertura automática, salvamos no SharedPreferences
+            if (isAberturaAutomatica && chkNaoMostrar.isChecked()) {
+                SharedPreferences.Editor editor = bancoDeDados.edit();
+                editor.putBoolean("ocultar_guia_inicio", true);
+                editor.apply();
+                Toast.makeText(this, "Guia silenciado. Acesse via botão 'Informação' quando quiser.", Toast.LENGTH_LONG).show();
+            }
+        });
         builder.show();
     }
 
@@ -853,41 +968,35 @@ public class MainActivity extends AppCompatActivity {
             return;
         }
 
-        Toast.makeText(this, "Iniciando Varredura...", Toast.LENGTH_SHORT).show();
+        int totalJogos = cacheMeusJogos.size();
+
+        // 1. MOSTRA A CAIXA DE PROGRESSO E DESATIVA O BOTÃO
+        layoutProgresso.setVisibility(View.VISIBLE);
+        btnVarredura.setEnabled(false);
+        progressBarVarredura.setMax(totalJogos);
+        progressBarVarredura.setProgress(0);
+        txtProgressoVarredura.setText("Analisando " + totalJogos + " jogos...");
 
         new Thread(() -> {
 
-            // VOLTAMOS A USAR A LISTA COMPLETA PARA SABER O NÚMERO DO JOGO
-            int totalJogos = cacheMeusJogos.size();
-
-            // Zera contadores
             int qtd11 = 0, qtd12 = 0, qtd13 = 0, qtd14 = 0, qtd15 = 0;
-
             List<ItemCampeao> listaParaOrdenar = new ArrayList<>();
 
-            // Loop clássico para ter o ÍNDICE (i) de volta
             for (int i = 0; i < totalJogos; i++) {
                 int[] meuJogo = cacheMeusJogos.get(i);
-
-                // Variável para guardar APENAS a maior nota deste jogo na história
                 int recordePessoal = 0;
                 String concursoRecorde = "";
                 int numConcRecorde = 0;
                 int[] melhorOficialNumeros = null;
 
-                // COMPARA COM TODOS OS RESULTADOS OFICIAIS
                 for (DadosConcurso oficial : cacheOficiais) {
                     int acertos = 0;
-
-                    // Conta acertos
                     for (int m : meuJogo) {
                         for (int o : oficial.numeros) {
                             if (m == o) { acertos++; break; }
                         }
                     }
 
-                    // ATUALIZA O RECORDE (Highlander: Só pode haver um recorde por jogo)
-                    // Se o jogo fez 11 num concurso e 13 no outro, o 13 ganha e o 11 é esquecido.
                     if (acertos > recordePessoal) {
                         recordePessoal = acertos;
                         concursoRecorde = oficial.nomeConcurso;
@@ -897,52 +1006,36 @@ public class MainActivity extends AppCompatActivity {
                             if (parts.length > 1) numConcRecorde = Integer.parseInt(parts[1]);
                         } catch (Exception e) {}
                     }
-
-                    // Se já achou 15, para de procurar (nota máxima)
                     if (recordePessoal == 15) break;
                 }
 
-                // AQUI ESTÁ A BLINDAGEM MATEMÁTICA (SWITCH CASE)
-                // O switch obriga o código a escolher UMA ÚNICA porta.
-                // Se entrar na porta 13, é impossível entrar na porta 11.
                 switch (recordePessoal) {
                     case 15: qtd15++; break;
                     case 14: qtd14++; break;
                     case 13: qtd13++; break;
                     case 12: qtd12++; break;
                     case 11: qtd11++; break;
-                    // Se for 10 ou menos, não faz nada
                 }
 
-                // DETALHES PARA A LISTA (Recuperando o número do jogo!)
                 if (recordePessoal >= 14) {
                     String emojiTrofeu = new String(Character.toChars(0x1F3C6));
                     String premio = (recordePessoal == 15) ? "15 PONTOS!!" : "14 PONTOS";
+                    String msg = emojiTrofeu + " " + premio + " (Jogo " + (i + 1) + ")\nNo " + concursoRecorde;
 
-                    // AQUI ESTÁ A CORREÇÃO: (i + 1) mostra o número real da posição
-                    String msg = emojiTrofeu + " " + premio + " (Jogo " + (i + 1) + ")\n" +
-                            "No " + concursoRecorde;
-
-                    // --- NOVO: Formata os números do jogo para mandar para a tela ---
                     StringBuilder sbDezenas = new StringBuilder();
-                    for(int n : meuJogo) {
-                        sbDezenas.append(String.format("%02d ", n));
-                    }
-                    String dezenasString = sbDezenas.toString().trim();
+                    for(int n : meuJogo) sbDezenas.append(String.format("%02d ", n));
 
                     StringBuilder sbOficiais = new StringBuilder();
                     if (melhorOficialNumeros != null) {
-                        for(int n : melhorOficialNumeros) {
-                            sbOficiais.append(String.format("%02d ", n));
-                        }
+                        for(int n : melhorOficialNumeros) sbOficiais.append(String.format("%02d ", n));
                     }
-                    String oficiaisString = sbOficiais.toString().trim();
-
-                    listaParaOrdenar.add(new ItemCampeao(numConcRecorde, msg, dezenasString, oficiaisString));
+                    listaParaOrdenar.add(new ItemCampeao(numConcRecorde, msg, sbDezenas.toString().trim(), sbOficiais.toString().trim()));
                 }
+
+                // 2. ATUALIZA A BARRA EM TEMPO REAL NO MEIO DO LOOP
+                progressBarVarredura.setProgress(i + 1);
             }
 
-            // Ordena do mais recente para o antigo
             Collections.sort(listaParaOrdenar, (item1, item2) -> Integer.compare(item2.concurso, item1.concurso));
 
             ArrayList<String> detalhesFinais = new ArrayList<>();
@@ -954,10 +1047,13 @@ public class MainActivity extends AppCompatActivity {
                 oficiaisFinais.add(item.dezenasOficiais);
             }
 
-            // Variáveis finais para passar para a tela
             int f11 = qtd11; int f12 = qtd12; int f13 = qtd13; int f14 = qtd14; int f15 = qtd15;
 
             runOnUiThread(() -> {
+                // 3. ESCONDE A BARRA E REATIVA O BOTÃO
+                layoutProgresso.setVisibility(View.GONE);
+                btnVarredura.setEnabled(true);
+
                 Intent intent = new Intent(MainActivity.this, ResultadoVarreduraActivity.class);
                 intent.putExtra("total", totalJogos);
                 intent.putExtra("q11", f11);
@@ -966,16 +1062,15 @@ public class MainActivity extends AppCompatActivity {
                 intent.putExtra("q14", f14);
                 intent.putExtra("q15", f15);
 
-                // Trava de segurança para não travar o emulador se a lista for gigante
                 ArrayList<String> listaSegura = new ArrayList<>();
                 ArrayList<String> dezenasSeguras = new ArrayList<>();
                 ArrayList<String> oficiaisSeguras = new ArrayList<>();
                 if (detalhesFinais.size() > 200) {
                     listaSegura.addAll(detalhesFinais.subList(0, 200));
                     listaSegura.add("... e mais campeões ocultos.");
-                    dezenasSeguras.addAll(dezenasFinais.subList(0, 200)); // NOVO
-                    dezenasSeguras.add(""); // Placeholder vazio para o item "... e mais"
-                    oficiaisSeguras.addAll(oficiaisFinais.subList(0, 200)); // NOVO
+                    dezenasSeguras.addAll(dezenasFinais.subList(0, 200));
+                    dezenasSeguras.add("");
+                    oficiaisSeguras.addAll(oficiaisFinais.subList(0, 200));
                     oficiaisSeguras.add("");
                 } else {
                     listaSegura.addAll(detalhesFinais);
