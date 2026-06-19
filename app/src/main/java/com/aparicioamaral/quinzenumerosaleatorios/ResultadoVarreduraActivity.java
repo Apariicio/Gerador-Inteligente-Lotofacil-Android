@@ -32,6 +32,8 @@ public class ResultadoVarreduraActivity extends AppCompatActivity {
         int q15 = getIntent().getIntExtra("q15", 0);
 
         ArrayList<String> detalhes = getIntent().getStringArrayListExtra("detalhes_campeoes");
+        ArrayList<String> dezenas = getIntent().getStringArrayListExtra("dezenas_campeoes");
+        ArrayList<String> oficiais = getIntent().getStringArrayListExtra("oficiais_campeoes");
 
         txtResumo.setTextSize(16);
 
@@ -69,6 +71,40 @@ public class ResultadoVarreduraActivity extends AppCompatActivity {
                         detalhes
                 );
                 listaConflitos.setAdapter(adapter);
+                // --- NOVO: AÇÃO DE CLIQUE NA LISTA PARA MOSTRAR OS NÚMEROS ---
+                if (dezenas != null) {
+                    listaConflitos.setOnItemClickListener((parent, view, position, id) -> {
+                        String sequencia = dezenas.get(position);
+                        String sequenciaOficial = (oficiais != null) ? oficiais.get(position) : "";
+                        String textoDetalhe = detalhes.get(position); // Pega o texto da lista para extrair o número
+
+                        // Se não for vazia (proteção contra o item "... e mais campeões ocultos")
+                        if (sequencia != null && !sequencia.isEmpty()) {
+                            String tituloPersonalizado = "Jogo gerado";
+                            try {
+                                int inicio = textoDetalhe.indexOf("(Jogo ") + 6; // Acha onde começa o número
+                                int fim = textoDetalhe.indexOf(")", inicio);     // Acha onde termina o número
+                                if (inicio >= 6 && fim > inicio) {
+                                    String numero = textoDetalhe.substring(inicio, fim);
+                                    tituloPersonalizado = "Jogo gerado nº " + numero;
+                                }
+                            } catch (Exception e) {
+                                // Se der qualquer erro na extração, mantém um título padrão seguro
+                            }
+                            String mensagemComparativa = "📱 SEU JOGO GERADO:\n" + sequencia;
+
+                            if (sequenciaOficial != null && !sequenciaOficial.isEmpty()) {
+                                mensagemComparativa += "\n\n🎰 SORTEIO OFICIAL CAIXA:\n" + sequenciaOficial;
+                            }
+                            new androidx.appcompat.app.AlertDialog.Builder(ResultadoVarreduraActivity.this)
+                                    .setTitle(tituloPersonalizado)
+                                    .setMessage(mensagemComparativa)
+                                    .setIcon(R.mipmap.ic_launcher) // Opcional: usa o ícone do seu app
+                                    .setPositiveButton("OK", null)
+                                    .show();
+                        }
+                    });
+                }
 
             } else {
                 relatorio.append("Nenhum jogo com 14 ou 15 pontos encontrado no histórico.");

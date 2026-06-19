@@ -95,10 +95,10 @@ public class MainActivity extends AppCompatActivity {
             txtContador = findViewById(R.id.txtContador);
             txtAssinatura = findViewById(R.id.txtAssinatura);
 
-            if (txtAssinatura != null) {
+            /*if (txtAssinatura != null) {
                 txtAssinatura.setPaintFlags(txtAssinatura.getPaintFlags() | android.graphics.Paint.UNDERLINE_TEXT_FLAG);
                 txtAssinatura.setOnClickListener(v -> mostrarRedesSociais());
-            }
+            }*/
 
             gridTabuleiro.setOnClickListener(v -> compartilharJogo());
 
@@ -301,45 +301,58 @@ public class MainActivity extends AppCompatActivity {
 
     public void mostrarInformacoesApp() {
         AlertDialog.Builder builder = new AlertDialog.Builder(this);
-        builder.setTitle("ℹ️ Guia de Funcionalidades e Estatísticas");
+        builder.setTitle("📖 Guia Completo do App");
 
-        // Nova string HTML contendo o resumo das funções do app + as estatísticas originais
-        String mensagemHTML = "📱 <b>FUNCIONALIDADES DO APLICATIVO</b><br>" +
-                "• <b>Sortear / Gerar Jogo:</b> Cria uma combinação inteligente aplicando os filtros ativos e a salva no histórico.<br>" +
-                "• <b>Fixar Números (Campo de Entrada):</b> Permite digitar dezenas obrigatórias que sempre estarão presentes nos jogos gerados.<br>" +
-                "• <b>Histórico Geral:</b> Lista todos os jogos gerados pelo app para você buscar, compartilhar ou excluir.<br>" +
-                "• <b>Proteger Jogo Manual:</b> Salva jogos que você já fez fisicamente na lotérica, impedindo o gerador de criá-los novamente.<br>" +
-                "• <b>Conferir no Histórico:</b> Digite 15 números para checar rapidamente se você já gerou esse jogo antes.<br>" +
-                "• <b>Varredura Relâmpago:</b> Cruza todos os seus jogos salvos contra a história oficial e lista se você já teria feito de 11 a 15 pontos.<br>" +
-                "• <b>Cadastrar Oficial / Gerenciar Manuais:</b> Permite inserir novos resultados reais da Lotofácil para manter o app atualizado.<br>" +
-                "• <b>Compartilhar:</b> Toque no tabuleiro de bolas ou em um jogo do histórico para enviá-lo por WhatsApp ou redes sociais.<br><br>" +
+        // Mensagem HTML revisada e expandida
+        String mensagemHTML =
+                "📱 <b>FUNCIONALIDADES PRINCIPAIS</b><br>" +
+                        "————————————————————<br>" +
+                        "🎯 <b>Gerar Jogo Inteligente:</b> Cria combinações aplicando os filtros ativos (Switches). <b>Ele nunca repete</b> jogos que você já fez ou que já saíram na história oficial.<br><br>" +
 
-                "📊 <b>ESTATÍSTICAS OPCIONAIS (SWITCHES)</b><br>" +
-                "• <b>Par / Ímpar:</b> Exige que o jogo tenha entre 6 e 9 números pares (e consequentemente, 6 a 9 ímpares).<br>" +
-                "• <b>Soma:</b> A soma de todos os 15 números deve dar entre 165 e 230.<br>" +
-                "• <b>Primos:</b> Exige entre 4 e 7 números primos no jogo.<br>" +
-                "• <b>Fibonacci:</b> Exige entre 3 e 5 números da sequência.<br>" +
-                "• <b>Repetidos:</b> Exige que repitam entre 7 e 10 números do sorteio anterior.<br>" +
-                "• <b>Ciclo:</b> Força o gerador a dar prioridade (70% de chance) para as dezenas que ainda não saíram no ciclo atual.<br><br>" +
+                        "🔒 <b>Fixar Números (Campo de Entrada):</b> Digite dezenas obrigatórias que você quer jogar (ex: 01 13 25) e o sistema garantirá que elas sempre entrem no jogo gerado.<br><br>" +
 
-                "🛡️ <b>ESTATÍSTICAS FIXAS (OCULTAS)</b><br>" +
-                "• <b>Moldura (Borda):</b> O jogo é obrigado a ter entre 8 e 11 números na borda.<br>" +
-                "• <b>Múltiplos de 3:</b> Exige entre 3 e 6 números múltiplos de três.<br>" +
-                "• <b>Equilíbrio de Grade:</b> Impede linhas ou colunas inteiras vazias (0) ou cheias (5).<br>" +
-                "• <b>Trava de Sequência:</b> O jogo é descartado se tiver 8 ou mais números colados em sequência (limite máximo de 7).<br>" +
-                "• <b>Dezena Fria:</b> Obriga que o jogo contenha pelo menos 1 número que saiu 3 vezes ou menos nos últimos 10 concursos.<br>" +
-                "• <b>Anti-Duplicidade:</b> Nunca gera um jogo que você já salvou ou que já tenha saído nos 3.000+ resultados oficiais.<br><br>" +
+                        "📜 <b>Histórico Geral:</b> Veja todos os jogos que você gerou. <b>Toque no jogo</b> para compartilhar, ou <b>segure</b> para selecionar e apagar vários de uma vez.<br><br>" +
 
-                "📊 <b>A MATEMÁTICA E A CAPACIDADE</b><br>" +
-                "O total absoluto da Lotofácil é de <b>3.268.760 combinações</b>. Com todas as chaves <i>DESATIVADAS</i> (apenas as Fixas agindo), o app já corta o 'lixo matemático', reduzindo o universo para cerca de 1.200.000 a 1.500.000 jogos.<br><br>" +
-                "Com TODAS as chaves <i>ATIVADAS</i>, o funil fica extremo! Um filtro sobrepõe o outro e o seu aplicativo passa a funcionar como um <b>Sniper</b>, reduzindo o cenário de 3,2 milhões para um núcleo de elite entre <b>80.000 e 150.000 jogos</b> altamente prováveis!";
+                        "🛡️ <b>Proteger Jogo Manual (Inserir Manual):</b> Salve um jogo que você já fez na lotérica. O app JAMAIS o gerará novamente, evitando que você jogue o mesmo jogo duas vezes.<br><br>" +
 
-        // Usando um ScrollView para garantir que telas pequenas consigam ler tudo
+                        "🔍 <b>Conferidor de Histórico:</b> Digite 15 números para descobrir se você já gerou esse jogo antes e se ele já foi sorteado pela Caixa.<br><br>" +
+
+                        "⚡ <b>Varredura Relâmpago (Validação):</b> Cruza automaticamente todos os seus jogos salvos contra os concursos oficiais. Você descobre quais jogos teriam feito de <b>11 a 15 pontos</b> em sorteios passados, medindo a eficiência do seu método.<br><br>" +
+
+                        "📥 <b>Cadastrar Oficial / Gerenciar Manuais:</b> Mantenha o banco de dados do app atualizado inserindo novos resultados oficiais da Lotofácil. <b>Toque e segure</b> na lista para deletar cadastros manuais.<br><br>" +
+
+                        "📤 <b>Compartilhar:</b> Toque no tabuleiro de bolas (com um jogo gerado) ou em qualquer jogo no histórico para enviar a combinação por WhatsApp, redes sociais, ou SMS.<br><br>" +
+
+                        "📊 <b>FILTROS OPCIONAIS (SWITCHES) - A LÓGICA POR TRÁS</b><br>" +
+                        "————————————————————<br>" +
+                        "🧮 <b>Soma:</b> Mantém a soma dos 15 números entre <b>165 e 230</b>, evitando somas muito baixas ou altas.<br>" +
+                        "🔢 <b>Par / Ímpar:</b> Equilíbrio de gênero! Exige de <b>6 a 9 pares</b> (e, portanto, 6 a 9 ímpares).<br>" +
+                        "🔴 <b>Primos:</b> Exige entre <b>4 e 7 números primos</b> (2,3,5,7,11,13,17,19,23).<br>" +
+                        "🌀 <b>Fibonacci:</b> Exige entre <b>3 e 5 números</b> da famosa sequência (1,2,3,5,8,13,21).<br>" +
+                        "🔥 <b>Repetidos (Hot Numbers):</b> Exige que <b>7 a 10 números</b> sejam do ÚLTIMO sorteio oficial cadastrado. (Estratégia de números quentes).<br>" +
+                        "❄️ <b>Ciclo (Cold Numbers):</b> Dá prioridade (70% de chance) para as dezenas que <b>ainda não saíram no ciclo atual</b> (dezenas atrasadas).<br><br>" +
+
+                        "🛡️ <b>TRAVAS OCULTAS (SEMPRE ATIVAS OU CONTROLADAS PELO ÚLTIMO SWITCH)</b><br>" +
+                        "————————————————————<br>" +
+                        "🟩 <b>Moldura (Borda):</b> Exige entre <b>8 e 11 números</b> da borda do tabuleiro (1,2,3,4,5,6,10,11,15,16,20,21,22,23,24,25).<br>" +
+                        "✖️ <b>Múltiplos de 3:</b> Exige entre <b>3 e 6 números</b> múltiplos de três (3,6,9,12,15,18,21,24).<br>" +
+                        "📐 <b>Equilíbrio de Grade:</b> Impede que qualquer linha ou coluna do tabuleiro fique completamente vazia (0) ou completamente cheia (5), forçando uma distribuição uniforme.<br>" +
+                        "📏 <b>Trava de Sequência:</b> Bloqueia jogos com <b>8 ou mais números colados</b> em sequência (ex: 1,2,3,4,5,6,7,8). O limite máximo é 7, aumentando a imprevisibilidade.<br>" +
+                        "🥶 <b>Dezena Fria:</b> Obriga que o jogo contenha <b>pelo menos 1 número</b> que saiu apenas 3 vezes ou menos nos últimos 10 concursos (equilibrando o jogo).<br>" +
+                        "🚫 <b>Anti-Duplicidade Suprema:</b> É a trava mais forte! O gerador DESCARTA imediatamente qualquer jogo que <b>já exista no seu histórico pessoal</b> ou nos <b>+3.000 concursos oficiais</b> da Caixa.<br><br>" +
+
+                        "🧠 <b>O EFEITO 'SNIPER' (A MATEMÁTICA DO FUNIL)</b><br>" +
+                        "————————————————————<br>" +
+                        "O universo da Lotofácil tem <b>3.268.760 combinações</b>.<br><br>" +
+                        "⚙️ Com <b>TODOS OS SWITCHES DESLIGADOS</b> (apenas as travas ocultas e anti-duplicidade ativas), o app já elimina o 'lixo matemático', cortando o universo para <b>cerca de 1.200.000 jogos</b>.<br><br>" +
+                        "🎯 Com <b>TODAS AS CHAVES ATIVADAS</b>, o funil fica extremo! Cada filtro sobrepõe o outro, reduzindo drasticamente o mar de combinações para um núcleo de elite de aproximadamente <b>80.000 a 150.000 jogos</b>.<br><br>" +
+                        "📈 <b>Conclusão:</b> Quanto mais chaves ligadas, mais 'inteligente' e filtrado é o jogo, aumentando as chances de você estar dentro do grupo de combinações com maior potencial estatístico!";
+
+        // ScrollView para garantir que todo o conteúdo seja visualizado
         android.widget.ScrollView scrollView = new android.widget.ScrollView(this);
-        // Força o fundo a ficar branco (corrige legibilidade no Dark Mode)
-        scrollView.setBackgroundColor(Color.parseColor("#FFFFFF"));
-        android.widget.TextView textView = new android.widget.TextView(this);
+        scrollView.setBackgroundColor(Color.parseColor("#F5F5F5")); // Fundo cinza claro para melhor leitura
 
+        android.widget.TextView textView = new android.widget.TextView(this);
         if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.N) {
             textView.setText(android.text.Html.fromHtml(mensagemHTML, android.text.Html.FROM_HTML_MODE_COMPACT));
         } else {
@@ -347,14 +360,14 @@ public class MainActivity extends AppCompatActivity {
         }
 
         textView.setPadding(50, 40, 50, 40);
-        textView.setTextSize(14f);
-        textView.setTextColor(Color.parseColor("#333333"));
-        textView.setLineSpacing(0, 1.2f);
+        textView.setTextSize(15f); // Um pouco maior para facilitar a leitura
+        textView.setTextColor(Color.parseColor("#222222"));
+        textView.setLineSpacing(0, 1.3f); // Espaçamento entre linhas
 
         scrollView.addView(textView);
         builder.setView(scrollView);
 
-        builder.setPositiveButton("Certo, Entendi!", null);
+        builder.setPositiveButton("Entendi! ✅", null);
         builder.show();
     }
 
@@ -453,10 +466,66 @@ public class MainActivity extends AppCompatActivity {
                 }
             }
 
-            while (tentativa.size() < 15) {
-                int num = gerador.nextInt(25) + 1;
-                if (!tentativa.contains(num)) {
-                    tentativa.add(num);
+            // OTIMIZAÇÃO CRUCIAL: GERAÇÃO INTELIGENTE DE PARES E ÍMPARES
+            if (usarPares) {
+                // 1. Sorteia uma meta válida dentro da sua faixa permitida (6, 7, 8 ou 9)
+                int metaPares = gerador.nextInt(4) + 6;
+                int metaImpares = 15 - metaPares;
+
+                // 2. Conta quantos pares e ímpares já vieram das Fixas + dezenas do Ciclo
+                int atuaisPares = 0;
+                int atuaisImpares = 0;
+                for (int n : tentativa) {
+                    if (n % 2 == 0) atuaisPares++;
+                    else atuaisImpares++;
+                }
+
+                // 3. Validação de segurança: Se as fixas/ciclo já estourarem a meta, pula para a próxima tentativa
+                if (atuaisPares > metaPares || atuaisImpares > metaImpares) {
+                    continue;
+                }
+
+                // 4. Calcula exatamente quantos faltam de cada tipo para fechar o jogo
+                int faltamPares = metaPares - atuaisPares;
+                int faltamImpares = metaImpares - atuaisImpares;
+
+                // 5. Separa as dezenas restantes de 1 a 25 que ainda NÃO estão no jogo
+                ArrayList<Integer> paresDisponiveis = new ArrayList<>();
+                ArrayList<Integer> imparesDisponiveis = new ArrayList<>();
+                for (int i = 1; i <= 25; i++) {
+                    if (!tentativa.contains(i)) {
+                        if (i % 2 == 0) paresDisponiveis.add(i);
+                        else imparesDisponiveis.add(i);
+                    }
+                }
+
+                // 6. Preenche cirurgicamente a quantidade exata de pares necessários
+                while (faltamPares > 0 && !paresDisponiveis.isEmpty()) {
+                    int idx = gerador.nextInt(paresDisponiveis.size());
+                    tentativa.add(paresDisponiveis.remove(idx));
+                    faltamPares--;
+                }
+
+                // 7. Preenche cirurgicamente a quantidade exata de ímpares necessários
+                while (faltamImpares > 0 && !imparesDisponiveis.isEmpty()) {
+                    int idx = gerador.nextInt(imparesDisponiveis.size());
+                    tentativa.add(imparesDisponiveis.remove(idx));
+                    faltamImpares--;
+                }
+
+                // 8. Trava de segurança extra (caso falte algo por inconsistência matemática)
+                while (tentativa.size() < 15) {
+                    int num = gerador.nextInt(25) + 1;
+                    if (!tentativa.contains(num)) tentativa.add(num);
+                }
+
+            } else {
+                //FLUXO TRADICIONAL: Se a chave de pares estiver DESLIGADA, sorteia tudo aleatório
+                while (tentativa.size() < 15) {
+                    int num = gerador.nextInt(25) + 1;
+                    if (!tentativa.contains(num)) {
+                        tentativa.add(num);
+                    }
                 }
             }
             Collections.sort(tentativa);
@@ -504,7 +573,7 @@ public class MainActivity extends AppCompatActivity {
             if (paresOk && somaOk && molduraOk && primosOk && fibonacciOk && repetidosOk && gradeOk && multiplosOk && sequenciaOk && friasOk) {
                 String assinaturaDoJogo = tentativa.toString();
 
-                // 🛑 A LEI SUPREMA E INVIOLÁVEL: ANTI-DUPLICIDADE 🛑
+                // A LEI SUPREMA E INVIOLÁVEL: ANTI-DUPLICIDADE
                 // Independente de travas estarem ligadas ou desligadas, o jogo repetido morre aqui.
                 if (meusJogosSalvos.contains(assinaturaDoJogo)) continue;
                 if (oficiaisMap != null && oficiaisMap.containsKey(assinaturaDoJogo)) continue;
@@ -625,7 +694,7 @@ public class MainActivity extends AppCompatActivity {
         startActivity(Intent.createChooser(intent, "Compartilhar"));
     }
 
-    public void mostrarRedesSociais() {
+    /*public void mostrarRedesSociais() {
         String[] opcoes = {"Instagram", "Facebook", "LinkedIn"};
         AlertDialog.Builder builder = new AlertDialog.Builder(this);
         builder.setTitle("Conecte-se com Liu:");
@@ -641,7 +710,7 @@ public class MainActivity extends AppCompatActivity {
         try {
             startActivity(new Intent(Intent.ACTION_VIEW, Uri.parse(url)));
         } catch (Exception e) {}
-    }
+    }*/
 
     public void abrirCadastroOficial() {
         AlertDialog.Builder builder = new AlertDialog.Builder(this);
@@ -804,6 +873,7 @@ public class MainActivity extends AppCompatActivity {
                 int recordePessoal = 0;
                 String concursoRecorde = "";
                 int numConcRecorde = 0;
+                int[] melhorOficialNumeros = null;
 
                 // COMPARA COM TODOS OS RESULTADOS OFICIAIS
                 for (DadosConcurso oficial : cacheOficiais) {
@@ -821,6 +891,7 @@ public class MainActivity extends AppCompatActivity {
                     if (acertos > recordePessoal) {
                         recordePessoal = acertos;
                         concursoRecorde = oficial.nomeConcurso;
+                        melhorOficialNumeros = oficial.numeros;
                         try {
                             String[] parts = concursoRecorde.split(" ");
                             if (parts.length > 1) numConcRecorde = Integer.parseInt(parts[1]);
@@ -852,7 +923,22 @@ public class MainActivity extends AppCompatActivity {
                     String msg = emojiTrofeu + " " + premio + " (Jogo " + (i + 1) + ")\n" +
                             "No " + concursoRecorde;
 
-                    listaParaOrdenar.add(new ItemCampeao(numConcRecorde, msg));
+                    // --- NOVO: Formata os números do jogo para mandar para a tela ---
+                    StringBuilder sbDezenas = new StringBuilder();
+                    for(int n : meuJogo) {
+                        sbDezenas.append(String.format("%02d ", n));
+                    }
+                    String dezenasString = sbDezenas.toString().trim();
+
+                    StringBuilder sbOficiais = new StringBuilder();
+                    if (melhorOficialNumeros != null) {
+                        for(int n : melhorOficialNumeros) {
+                            sbOficiais.append(String.format("%02d ", n));
+                        }
+                    }
+                    String oficiaisString = sbOficiais.toString().trim();
+
+                    listaParaOrdenar.add(new ItemCampeao(numConcRecorde, msg, dezenasString, oficiaisString));
                 }
             }
 
@@ -860,8 +946,12 @@ public class MainActivity extends AppCompatActivity {
             Collections.sort(listaParaOrdenar, (item1, item2) -> Integer.compare(item2.concurso, item1.concurso));
 
             ArrayList<String> detalhesFinais = new ArrayList<>();
+            ArrayList<String> dezenasFinais = new ArrayList<>();
+            ArrayList<String> oficiaisFinais = new ArrayList<>();
             for (ItemCampeao item : listaParaOrdenar) {
                 detalhesFinais.add(item.textoFormatado);
+                dezenasFinais.add(item.dezenas);
+                oficiaisFinais.add(item.dezenasOficiais);
             }
 
             // Variáveis finais para passar para a tela
@@ -878,14 +968,25 @@ public class MainActivity extends AppCompatActivity {
 
                 // Trava de segurança para não travar o emulador se a lista for gigante
                 ArrayList<String> listaSegura = new ArrayList<>();
+                ArrayList<String> dezenasSeguras = new ArrayList<>();
+                ArrayList<String> oficiaisSeguras = new ArrayList<>();
                 if (detalhesFinais.size() > 200) {
                     listaSegura.addAll(detalhesFinais.subList(0, 200));
                     listaSegura.add("... e mais campeões ocultos.");
+                    dezenasSeguras.addAll(dezenasFinais.subList(0, 200)); // NOVO
+                    dezenasSeguras.add(""); // Placeholder vazio para o item "... e mais"
+                    oficiaisSeguras.addAll(oficiaisFinais.subList(0, 200)); // NOVO
+                    oficiaisSeguras.add("");
                 } else {
                     listaSegura.addAll(detalhesFinais);
+                    dezenasSeguras.addAll(dezenasFinais);
+                    oficiaisSeguras.addAll(oficiaisFinais);
                 }
 
                 intent.putStringArrayListExtra("detalhes_campeoes", listaSegura);
+                intent.putStringArrayListExtra("dezenas_campeoes", dezenasSeguras);
+                intent.putStringArrayListExtra("oficiais_campeoes", oficiaisSeguras);
+
                 startActivity(intent);
             });
 
@@ -895,9 +996,13 @@ public class MainActivity extends AppCompatActivity {
     private static class ItemCampeao {
         int concurso;
         String textoFormatado;
-        public ItemCampeao(int c, String t) {
+        String dezenas;
+        String dezenasOficiais;
+        public ItemCampeao(int c, String t, String d, String dof) {
             this.concurso = c;
             this.textoFormatado = t;
+            this.dezenas = d;
+            this.dezenasOficiais = dof;
         }
     }
 
