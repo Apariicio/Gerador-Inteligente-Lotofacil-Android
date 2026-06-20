@@ -315,7 +315,11 @@ public class MainActivity extends AppCompatActivity {
                     String[] jogos = historico.split(SEPARADOR);
                     for (String j : jogos) {
                         if (!j.trim().isEmpty()) {
-                            cacheMeusJogos.add(converterStringParaArrayInt(j));
+                            String numerosParaMemoria = j;
+                            if (j.contains("&DATA&")) {
+                                numerosParaMemoria = j.split("&DATA&")[0]; // Arranca a data
+                            }
+                            cacheMeusJogos.add(converterStringParaArrayInt(numerosParaMemoria));
                         }
                     }
                 }
@@ -538,7 +542,10 @@ public class MainActivity extends AppCompatActivity {
         String historicoGeral = bancoDeDados.getString("historico_ordenado", "");
         List<String> meusJogosSalvos = new ArrayList<>();
         if (!historicoGeral.isEmpty()) {
-            meusJogosSalvos = Arrays.asList(historicoGeral.split(SEPARADOR));
+            for (String j : historicoGeral.split(SEPARADOR)) {
+                if (j.contains("&DATA&")) meusJogosSalvos.add(j.split("&DATA&")[0]);
+                else meusJogosSalvos.add(j);
+            }
         }
 
         Map<String, String> oficiaisMap = DadosOficiais.carregarResultadosOficiais(this);
@@ -806,11 +813,17 @@ public class MainActivity extends AppCompatActivity {
     }
 
     private void salvarJogo(String historicoAntigo, String novoJogo) {
+        // Gera a data e hora atual (ex: 20/06/26 15:13:58)
+        String dataAtual = new java.text.SimpleDateFormat("dd/MM/yy HH:mm:ss", java.util.Locale.getDefault()).format(new java.util.Date());
+
+        // Cola uma etiqueta invisível &DATA& para separar os números da data
+        String jogoComData = novoJogo + "&DATA&" + dataAtual;
+
         SharedPreferences.Editor editor = bancoDeDados.edit();
         if (historicoAntigo.isEmpty()) {
-            editor.putString("historico_ordenado", novoJogo);
+            editor.putString("historico_ordenado", jogoComData);
         } else {
-            editor.putString("historico_ordenado", historicoAntigo + SEPARADOR + novoJogo);
+            editor.putString("historico_ordenado", historicoAntigo + SEPARADOR + jogoComData);
         }
         editor.apply();
         cacheMeusJogos.add(converterStringParaArrayInt(novoJogo));
@@ -950,9 +963,13 @@ public class MainActivity extends AppCompatActivity {
             if (!historico.isEmpty()) {
                 String[] jogosSalvos = historico.split(SEPARADOR);
                 for (int i = 0; i < jogosSalvos.length; i++) {
-                    if (jogosSalvos[i].trim().equals(jogo)) {
+                    String jogoSalvo = jogosSalvos[i].trim();
+                    if (jogoSalvo.contains("&DATA&")) {
+                        jogoSalvo = jogoSalvo.split("&DATA&")[0]; // Olha só pros números
+                    }
+                    if (jogoSalvo.equals(jogo)) {
                         achouNoApp = true;
-                        numeroDoJogo = i + 1; // i + 1 dá o número real da posição (Jogo 1, Jogo 2, etc.)
+                        numeroDoJogo = i + 1;
                         break;
                     }
                 }
@@ -1221,7 +1238,20 @@ public class MainActivity extends AppCompatActivity {
             Collections.sort(numeros);
             String jogoFormatado = numeros.toString();
             String historicoGeral = bancoDeDados.getString("historico_ordenado", "");
-            if (historicoGeral.contains(jogoFormatado)) {
+            boolean jogoJaExiste = false;
+
+            if (!historicoGeral.isEmpty()) {
+                for (String j : historicoGeral.split(SEPARADOR)) {
+                    String apenasNumeros = j;
+                    if (j.contains("&DATA&")) apenasNumeros = j.split("&DATA&")[0];
+                    if (apenasNumeros.equals(jogoFormatado)) {
+                        jogoJaExiste = true;
+                        break;
+                    }
+                }
+            }
+
+            if (jogoJaExiste) {
                 Toast.makeText(this, "Atenção: Este jogo JÁ ESTAVA no seu histórico!", Toast.LENGTH_LONG).show();
                 return;
             }
@@ -1240,7 +1270,13 @@ public class MainActivity extends AppCompatActivity {
         // Preparando as regras exatas que você já usa no app
         Random gerador = new Random();
         String historicoGeral = bancoDeDados.getString("historico_ordenado", "");
-        List<String> meusJogosSalvos = new ArrayList<>(Arrays.asList(historicoGeral.split(SEPARADOR)));
+        List<String> meusJogosSalvos = new ArrayList<>();
+        if (!historicoGeral.isEmpty()) {
+            for (String j : historicoGeral.split(SEPARADOR)) {
+                if (j.contains("&DATA&")) meusJogosSalvos.add(j.split("&DATA&")[0]);
+                else meusJogosSalvos.add(j);
+            }
+        }
         Map<String, String> oficiaisMap = DadosOficiais.carregarResultadosOficiais(this);
 
         ArrayList<Integer> numerosDoUltimo = new ArrayList<>();
@@ -1403,20 +1439,40 @@ public class MainActivity extends AppCompatActivity {
         // Descobrindo o número oficial atual do histórico para colocar no título
         int historicoTamanhoAtual = bancoDeDados.getString("historico_ordenado", "").split(SEPARADOR).length;
 
+        // 🌟 NOVO: Buscando o número do último concurso para exibir nos repetidos
+        String textoConcurso = "N/A";
+        if (!cacheOficiais.isEmpty()) {
+            String nome = cacheOficiais.get(cacheOficiais.size()-1).nomeConcurso;
+            try {
+                String[] partes = nome.split(" ");
+                if (partes.length > 1) textoConcurso = partes[1];
+                else textoConcurso = nome.replaceAll("[^0-9]", "");
+            } catch (Exception e){}
+        }
+
+        // 🌟 NOVO: Calculando o status atual do Ciclo
+        String textoCiclo = "";
+        List<Integer> faltantes = calcularDezenasDoCiclo();
+        if (faltantes.isEmpty()) {
+            textoCiclo = "Fechado";
+        } else {
+            textoCiclo = "Faltam " + faltantes.toString();
+        }
+
         for (int i = 0; i < 3; i++) {
             int numJogoGeral = (historicoTamanhoAtual - 2) + i;
 
-            // Quadrinho individual
+            // Quadrinho individual (O Fundo Principal)
             LinearLayout cardJogo = new LinearLayout(this);
             cardJogo.setOrientation(LinearLayout.VERTICAL);
             cardJogo.setPadding(25, 15, 25, 15);
             cardJogo.setBackgroundColor(Color.parseColor("#A6F5F5F5"));
 
-            // Mantemos WRAP_CONTENT aqui para o fundo branco abraçar o tabuleiro perfeitamente
+            // Mantemos WRAP_CONTENT para abraçar tudo dinamicamente
             LinearLayout.LayoutParams cardParams = new LinearLayout.LayoutParams(
                     LinearLayout.LayoutParams.WRAP_CONTENT, LinearLayout.LayoutParams.WRAP_CONTENT);
             cardParams.setMargins(0, 0, 0, 15);
-            cardParams.gravity = android.view.Gravity.CENTER_HORIZONTAL; // Centraliza o quadrinho na tela
+            cardParams.gravity = android.view.Gravity.CENTER_HORIZONTAL;
             cardJogo.setLayoutParams(cardParams);
 
             // Título de cada tabuleiro
@@ -1429,8 +1485,52 @@ public class MainActivity extends AppCompatActivity {
             tituloJogo.setPadding(0, 0, 0, 5);
 
             cardJogo.addView(tituloJogo);
-            cardJogo.addView(criarMiniTabuleiro(jogosTurboGerados.get(i)));
 
+            // 🌟 NOVO: Container Horizontal para colocar Tabuleiro e Textos Lado a Lado
+            LinearLayout layoutLadoALado = new LinearLayout(this);
+            layoutLadoALado.setOrientation(LinearLayout.HORIZONTAL);
+            layoutLadoALado.setGravity(android.view.Gravity.CENTER_VERTICAL); // Centraliza no meio da altura
+
+            // 1. O Mini-tabuleiro na Esquerda
+            GridLayout miniTab = criarMiniTabuleiro(jogosTurboGerados.get(i));
+            LinearLayout.LayoutParams paramsTab = new LinearLayout.LayoutParams(
+                    LinearLayout.LayoutParams.WRAP_CONTENT, LinearLayout.LayoutParams.WRAP_CONTENT);
+            paramsTab.setMargins(0, 0, 20, 0); // Espaço de 20dp na direita para afastar da caixinha branca
+            miniTab.setLayoutParams(paramsTab);
+            layoutLadoALado.addView(miniTab);
+
+            // 2. Extraindo os números e calculando as Estatísticas reais deste jogo gerado
+            List<Integer> jogoAtual = jogosTurboGerados.get(i);
+            int cSoma = 0, cPares = 0, cPrimos = 0, cFibo = 0, cRepetidos = 0;
+
+            for (int n : jogoAtual) {
+                cSoma += n;
+                if (n % 2 == 0) cPares++;
+                if (prim.contains(n)) cPrimos++;
+                if (fib.contains(n)) cFibo++;
+                if (numerosDoUltimo.contains(n)) cRepetidos++;
+            }
+            int cImpares = 15 - cPares;
+
+            // 3. A Caixinha de Estatísticas na Direita (Sem o fundo extra!)
+            TextView txtStats = new TextView(this);
+            txtStats.setText("Resumo rápido do jogo\n" +
+                    "\nSoma: " + cSoma + "\n" +
+                    "Par: " + cPares + " / Ímpar: " + cImpares + "\n" +
+                    "Primos: " + cPrimos + "\n" +
+                    "Fibo: " + cFibo + "\n" +
+                    "Repet.: " + cRepetidos + " (" + textoConcurso + ")\n" +
+                    "Ciclo: " + textoCiclo);
+            txtStats.setTextSize(13f);
+            txtStats.setTextColor(Color.parseColor("#333333")); // Letras escuras
+            txtStats.setPadding(15, 15, 15, 15);
+            txtStats.setTypeface(null, android.graphics.Typeface.BOLD);
+
+            // Adiciona a caixinha ao lado do tabuleiro
+            layoutLadoALado.addView(txtStats);
+
+            // Por fim, coloca o conjunto Lado-a-Lado de volta dentro do Quadrinho
+            cardJogo.addView(layoutLadoALado);
             layoutConteudo.addView(cardJogo);
         }
 

@@ -100,7 +100,7 @@ public class HistoricoActivity extends AppCompatActivity {
     private int descobrirIndexPeloTexto(String textoVisivel) {
         try {
             String[] partes = textoVisivel.split(":");
-            String parteNumero = partes[0].replace("Jogo", "").trim();
+            String parteNumero = partes[0].replace("JOGO", "").trim();
             int numeroJogo = Integer.parseInt(parteNumero);
             return numeroJogo - 1;
         } catch (Exception e) {
@@ -132,7 +132,32 @@ public class HistoricoActivity extends AppCompatActivity {
                 }
             }
             for (int i = listaOriginalDeJogos.size() - 1; i >= 0; i--) {
-                String linha = "Jogo " + (i + 1) + " : " + listaOriginalDeJogos.get(i);
+                String linhaBruta = listaOriginalDeJogos.get(i);
+                String numerosStr = linhaBruta;
+                String dataStr = "";
+
+                // Verifica se tem a etiqueta de data que criamos e separa
+                if (linhaBruta.contains("&DATA&")) {
+                    String[] partes = linhaBruta.split("&DATA&");
+                    numerosStr = partes[0]; // Pega só os números
+
+                    // Formata a data e hora para a linha de baixo
+                    if (partes.length > 1) {
+                        String dataHora = partes[1];
+                        String[] dividida = dataHora.split(" ");
+                        if (dividida.length == 2) {
+                            dataStr = "\nDATA: " + dividida[0] + " HORA: " + dividida[1];
+                        } else {
+                            dataStr = "\nDATA: " + dataHora; // Caso de segurança
+                        }
+                    }
+                }
+
+                // Remove os colchetes dos números para ficar limpo como você pediu
+                numerosStr = numerosStr.replace("[", "").replace("]", "");
+
+                // Formata a linha final para a vitrine do Histórico
+                String linha = "JOGO " + (i + 1) + ": " + numerosStr + dataStr;
                 listaExibida.add(linha);
             }
         }
@@ -237,11 +262,24 @@ public class HistoricoActivity extends AppCompatActivity {
             // MODO: DELETAR TUDO
             AlertDialog.Builder alerta = new AlertDialog.Builder(this);
             alerta.setTitle("LIXEIRA TOTAL");
-            alerta.setMessage("Deseja deletar permanentemente TODOS os jogos que você gerou no app?");
+            alerta.setMessage("Deseja deletar Permanentemente TODOS os jogos que você gerou no app?");
             alerta.setPositiveButton("Sim, Esvaziar", (dialog, which) -> {
-                bancoDeDados.edit().remove("historico_ordenado").apply();
-                Toast.makeText(this, "Histórico completamente zerado!", Toast.LENGTH_SHORT).show();
-                carregarListaInvertida();
+
+                // 🌟 NOVO: TRAVA DE SEGURANÇA (SEGUNDA CONFIRMAÇÃO)
+                AlertDialog.Builder travaSeguranca = new AlertDialog.Builder(this);
+                travaSeguranca.setTitle("⚠️ AÇÃO IRREVERSÍVEL");
+                travaSeguranca.setMessage("Tem certeza que deseja deletar? O histórico inteiro será apagado e não será possível recuperá-lo.");
+
+                travaSeguranca.setPositiveButton("Sim, Tenho Certeza", (dialogTrava, whichTrava) -> {
+                    // Aqui sim, a exclusão real acontece!
+                    bancoDeDados.edit().remove("historico_ordenado").apply();
+                    Toast.makeText(this, "Histórico completamente zerado!", Toast.LENGTH_SHORT).show();
+                    carregarListaInvertida();
+                });
+
+                travaSeguranca.setNegativeButton("Cancelar", null);
+                travaSeguranca.show();
+
             });
             alerta.setNegativeButton("Cancelar", null);
             alerta.show();
