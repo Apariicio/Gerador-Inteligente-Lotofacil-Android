@@ -67,3 +67,58 @@ Independentemente dos filtros visíveis ativados, o motor de geração obriga o 
 * **Anti-Duplicidade Absoluta:** Verifica em tempo real as bases locais de dados e destrói instantaneamente qualquer jogo repetido gerado que já exista no seu histórico ou que já tenha premiado com 15 pontos no passado.
 
 ---
+
+## 🆕 Novas Funcionalidades (Última Versão)
+
+| Funcionalidade | Descrição |
+|----------------|-----------|
+| **🚀 Modo Turbo** | Gera 3 jogos instantaneamente em popup dedicado com botão "Gerar Turbo" para geração contínua sem fechar a janela |
+| **📊 Contador de Filtros Ativos** | Indicador visual em tempo real mostrando quantos dos 7 filtros estão ativos (0/7 a 7/7) |
+| **🎓 Guia Interativo de Boas-Vindas** | Tutorial automático na primeira execução com opção "Não mostrar novamente" |
+| **⏳ Barra de Progresso na Varredura** | Feedback visual do andamento da análise em tempo real |
+| **📅 Histórico com Data/Hora** | Registro temporal de cada jogo gerado para rastreamento de estratégias |
+| **🛡️ Trava de Segurança na Exclusão** | Confirmação em duas etapas para operações destrutivas no histórico |
+| **🔒 Blindagem de Tela no Guia** | Container de fundo claro com alto contraste garantindo legibilidade em qualquer tema |
+| **📱 Interface Otimizada** | Ajustes visuais para melhor experiência em diferentes tamanhos de tela |
+
+---
+
+## 🔧 Requisitos Técnicos
+
+- **Android SDK:** API 21 (Android 5.0 Lollipop) ou superior
+- **Linguagem:** Java 8+
+- **Persistência:** SharedPreferences
+- **Assets:** Arquivo `resultados.txt` contendo a base histórica oficial da Lotofácil
+- **Arquitetura:** Single Activity com múltiplas Activities de suporte (Histórico, Varredura, Turbo)
+
+---
+
+## 📱 Compatibilidade
+
+O aplicativo foi testado e funciona em:
+- ✅ Dispositivos Android 5.0 (Lollipop) a Android 14 (Upside Down Cake)
+- ✅ Telas de 4.7" a 7" (Smartphones e Tablets)
+- ✅ Modo Retrato e Paisagem (suporte básico)
+- ✅ Temas Claro e Escuro (com adaptação forçada no guia)
+
+---
+
+## 🚀 Futuras Melhorias (Roadmap)
+
+- [ ] Exportação/Importação de dados (Backup completo)
+- [ ] Gráficos de frequência dos números gerados
+- [ ] Notificações de novos concursos
+- [ ] Modo Concentração (tela limpa com apenas o tabuleiro)
+- [ ] Efeito de "Revelação" das bolas no sorteio
+
+---
+
+## 📝 Licença
+
+Este projeto é de uso pessoal e educacional. Todos os direitos reservados.
+
+---
+
+## 👨‍💻 Desenvolvedor
+
+Desenvolvido por Liu Amaral
