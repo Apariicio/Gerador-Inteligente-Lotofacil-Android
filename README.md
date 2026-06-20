@@ -6,6 +6,15 @@ O aplicativo utiliza persistência leve de dados (`SharedPreferences`) e process
 
 ---
 
+📸 CAPTURAS DE TELA DO APP
+Abaixo algumas imagens demonstrando as principais telas e funcionalidades do aplicativo:
+
+<img width="387" height="812" alt="Captura de tela 2026-06-20 171808" src="https://github.com/user-attachments/assets/2833c792-bebf-4846-96b5-60f96b06e2ae" />
+<img width="388" height="816" alt="Captura de tela 2026-06-20 171830" src="https://github.com/user-attachments/assets/96d61d11-3038-465e-9945-21885cacf263" />
+<img width="392" height="810" alt="Captura de tela 2026-06-20 171852" src="https://github.com/user-attachments/assets/f7886780-8779-493a-b20b-4f861cfb3b25" />
+<img width="392" height="815" alt="Captura de tela 2026-06-20 171911" src="https://github.com/user-attachments/assets/12621469-6bcc-446d-900c-12bc376347bc" />
+<img width="395" height="821" alt="Captura de tela 2026-06-20 171939" src="https://github.com/user-attachments/assets/5ea3e858-cb2a-46e8-8d4b-a621b70bd360" />
+---
 ## 🛠️ Funcionalidades Principais
 
 * **Sorteio Estratégico Multi-Filtros:** Geração automática baseada em parâmetros estatísticos tradicionais e avançados.
