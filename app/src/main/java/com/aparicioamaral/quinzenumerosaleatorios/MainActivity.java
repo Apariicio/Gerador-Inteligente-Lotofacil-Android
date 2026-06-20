@@ -40,7 +40,8 @@ public class MainActivity extends AppCompatActivity {
     ProgressBar progressBarVarredura;
     TextView txtProgressoVarredura;
 
-    Button btnSortear, btnHistorico, btnInserirManual, btnConferir, btnVarredura, btnCadastrarOficial, btnGerenciarManuais, btnInformacao;
+    Button btnSortear, btnTurbo, btnInformacao;
+    TextView btnHistorico, btnInserirManual, btnConferir, btnVarredura, btnCadastrarOficial, btnGerenciarManuais;
     GridLayout gridTabuleiro;
     TextView[] bolasTabuleiro = new TextView[26];
 
@@ -86,6 +87,8 @@ public class MainActivity extends AppCompatActivity {
             configurarPinturaChave(switchOcultas);
 
             btnSortear = findViewById(R.id.btnSortear);
+            btnTurbo = findViewById(R.id.btnTurbo);
+            btnTurbo.setOnClickListener(v -> abrirPopupTurbo3x());
             btnHistorico = findViewById(R.id.btnHistorico);
             btnConferir = findViewById(R.id.btnConferir);
             btnVarredura = findViewById(R.id.btnVarredura);
@@ -437,7 +440,33 @@ public class MainActivity extends AppCompatActivity {
                         "O universo da Lotofácil tem <b>3.268.760 combinações</b>.<br><br>" +
                         "⚙️ Com <b>TODOS OS SWITCHES DESLIGADOS</b> (apenas as travas ocultas e anti-duplicidade ativas), o app já elimina o 'lixo matemático', cortando o universo para <b>cerca de 1.200.000 jogos</b>.<br><br>" +
                         "🎯 Com <b>TODAS AS CHAVES ATIVADAS</b>, o funil fica extremo! Cada filtro sobrepõe o outro, reduzindo drasticamente o mar de combinações para um núcleo de elite de aproximadamente <b>80.000 a 150.000 jogos</b>.<br><br>" +
-                        "📈 <b>Conclusão:</b> Quanto mais chaves ligadas, mais 'inteligente' e filtrado é o jogo, aumentando as chances de você estar dentro do grupo de combinações com maior potencial estatístico!";
+                        "📈 <b>Conclusão:</b> Quanto mais chaves ligadas, mais 'inteligente' e filtrado é o jogo, aumentando as chances de você estar dentro do grupo de combinações com maior potencial estatístico!" +
+
+                        // ═══════════════════════════════════════════════════════════════
+                        // ║         NOVIDADES ADICIONADAS NAS ÚLTIMAS VERSÕES         ║
+                        // ═══════════════════════════════════════════════════════════════
+
+                        "<br><br>🆕 <b>NOVAS FUNCIONALIDADES!</b><br>" +
+                        "————————————————————<br>" +
+
+                        "🚀 <b>MODO TURBO (GERAÇÃO RÁPIDA DE MÚLTIPLOS JOGOS):</b> Ative o Modo Turbo para gerar <b>3 jogos instantaneamente</b> em um popup dedicado! " +
+                        "Dentro do popup, você encontra um <b>botão \"Gerar Turbo\"</b> que permite gerar <b>mais 3 jogos</b> sem fechar a janela, " +
+                        "acumulando quantos jogos quiser rapidamente. Perfeito para quem quer várias opções de aposta sem sair da tela principal! " +
+                        "Cada jogo gerado no Turbo é automaticamente salvo no histórico.<br><br>" +
+
+                        "📊 <b>Contador de Filtros Ativos:</b> Na tela principal, você vê em tempo real quantos dos 7 filtros estão ativos. " +
+                        "Quanto mais filtros, mais restritivo e inteligente é o jogo gerado! <b>0/7</b> = modo livre, <b>7/7</b> = modo sniper.<br><br>" +
+
+                        "🎓 <b>Guia Interativo de Boas-Vindas:</b> Ao abrir o app pela primeira vez, um guia completo é exibido automaticamente. " +
+                        "Você pode marcar a opção <b>\"Não mostrar este Guia na próxima vez\"</b> para silenciá-lo. " +
+                        "Mas não se preocupe: o guia está sempre disponível no botão ℹ️.<br><br>" +
+
+                        "⏳ <b>Barra de Progresso na Varredura:</b> Agora a Varredura Relâmpago tem uma barra de progresso que mostra em tempo real " +
+                        "quantos jogos já foram analisados. Você acompanha o andamento enquanto o app cruza seus jogos com a história oficial.<br><br>" +
+
+                        "🎨 <b>Mapa de Calor das Bolas (Em breve):</b> As bolas do tabuleiro podem ser coloridas com base na frequência de cada número " +
+                        "nos últimos 20 concursos, ajudando você a identificar visualmente os números mais quentes (vermelho) e mais frios (azul). " +
+                        "Esta funcionalidade está em desenvolvimento e será ativada em breve!";
 
         LinearLayout layoutPrincipal = new LinearLayout(this);
         layoutPrincipal.setOrientation(LinearLayout.VERTICAL);
@@ -1203,5 +1232,316 @@ public class MainActivity extends AppCompatActivity {
         } catch (Exception e) {
             Toast.makeText(this, "Erro: Verifique se digitou apenas números.", Toast.LENGTH_SHORT).show();
         }
+    }
+
+    public void abrirPopupTurbo3x() {
+        Toast.makeText(this, "Processando Turbo 3x...", Toast.LENGTH_SHORT).show();
+
+        // Preparando as regras exatas que você já usa no app
+        Random gerador = new Random();
+        String historicoGeral = bancoDeDados.getString("historico_ordenado", "");
+        List<String> meusJogosSalvos = new ArrayList<>(Arrays.asList(historicoGeral.split(SEPARADOR)));
+        Map<String, String> oficiaisMap = DadosOficiais.carregarResultadosOficiais(this);
+
+        ArrayList<Integer> numerosDoUltimo = new ArrayList<>();
+        if (!cacheOficiais.isEmpty()) {
+            for(int i : cacheOficiais.get(cacheOficiais.size() - 1).numeros) numerosDoUltimo.add(i);
+        }
+        List<Integer> dezenasFrias = calcularDezenasFrias(oficiaisMap);
+        List<Integer> dezenasCiclo = calcularDezenasDoCiclo();
+        ArrayList<Integer> numerosFixos = new ArrayList<>();
+        if (inputFixas != null && !inputFixas.getText().toString().isEmpty()) {
+            try {
+                for (int n : converterStringParaLista(inputFixas.getText().toString())) {
+                    if (n >= 1 && n <= 25 && !numerosFixos.contains(n)) numerosFixos.add(n);
+                }
+            } catch (Exception e) {}
+        }
+
+        List<Integer> m3 = Arrays.asList(3, 6, 9, 12, 15, 18, 21, 24);
+        List<Integer> prim = Arrays.asList(2, 3, 5, 7, 11, 13, 17, 19, 23);
+        List<Integer> fib = Arrays.asList(1, 2, 3, 5, 8, 13, 21);
+        List<Integer> mold = Arrays.asList(1, 2, 3, 4, 5, 6, 10, 11, 15, 16, 20, 21, 22, 23, 24, 25);
+
+        boolean uPar = switchPares.isChecked(), uSoma = switchSoma.isChecked();
+        boolean uPrim = switchPrimos.isChecked(), uRep = switchRepetidos.isChecked();
+        boolean uFib = switchFibonacci.isChecked(), uCiclo = switchCiclo.isChecked();
+        boolean uOc = switchOcultas.isChecked();
+
+        // Variáveis para guardar os 3 jogos do Turbo e não deixar eles repetirem entre si
+        List<ArrayList<Integer>> jogosTurboGerados = new ArrayList<>();
+        List<String> assinaturasNestaSessao = new ArrayList<>();
+
+        // ⚡ O LOOP TURBO (RODA 3 VEZES) ⚡
+        for (int rodada = 0; rodada < 3; rodada++) {
+            ArrayList<Integer> tentativa = new ArrayList<>();
+            int loopSafeguard = 0;
+
+            while (true) {
+                loopSafeguard++;
+                if (loopSafeguard > 50000) {
+                    Toast.makeText(this, "Dificuldade ao gerar jogo " + (rodada+1) + ". Desative algumas chaves.", Toast.LENGTH_LONG).show();
+                    return; // Aborta se os filtros estiverem impossíveis
+                }
+
+                tentativa.clear();
+                tentativa.addAll(numerosFixos);
+
+                if (uCiclo) {
+                    for (int dCiclo : dezenasCiclo) {
+                        if (!tentativa.contains(dCiclo) && tentativa.size() < 15 && gerador.nextInt(100) < 70) tentativa.add(dCiclo);
+                    }
+                }
+
+                if (uPar) {
+                    int mPar = gerador.nextInt(4) + 6;
+                    int mImp = 15 - mPar;
+                    int aPar = 0, aImp = 0;
+                    for (int n : tentativa) { if (n % 2 == 0) aPar++; else aImp++; }
+                    if (aPar > mPar || aImp > mImp) continue;
+                    int fPar = mPar - aPar, fImp = mImp - aImp;
+
+                    ArrayList<Integer> pDisp = new ArrayList<>(), iDisp = new ArrayList<>();
+                    for (int i = 1; i <= 25; i++) {
+                        if (!tentativa.contains(i)) { if (i % 2 == 0) pDisp.add(i); else iDisp.add(i); }
+                    }
+                    while (fPar > 0 && !pDisp.isEmpty()) { tentativa.add(pDisp.remove(gerador.nextInt(pDisp.size()))); fPar--; }
+                    while (fImp > 0 && !iDisp.isEmpty()) { tentativa.add(iDisp.remove(gerador.nextInt(iDisp.size()))); fImp--; }
+                    while (tentativa.size() < 15) {
+                        int num = gerador.nextInt(25) + 1;
+                        if (!tentativa.contains(num)) tentativa.add(num);
+                    }
+                } else {
+                    while (tentativa.size() < 15) {
+                        int num = gerador.nextInt(25) + 1;
+                        if (!tentativa.contains(num)) tentativa.add(num);
+                    }
+                }
+                Collections.sort(tentativa);
+
+                int pares = 0, soma = 0, naMold = 0, nPrim = 0, nFib = 0, repUlt = 0, nFrias = 0, nM3 = 0;
+                for (int n : tentativa) {
+                    if (n % 2 == 0) pares++;
+                    soma += n;
+                    if (mold.contains(n)) naMold++;
+                    if (prim.contains(n)) nPrim++;
+                    if (fib.contains(n)) nFib++;
+                    if (m3.contains(n)) nM3++;
+                    if (!numerosDoUltimo.isEmpty() && numerosDoUltimo.contains(n)) repUlt++;
+                    if (dezenasFrias.contains(n)) nFrias++;
+                }
+
+                int seqAt = 1, maiorSeq = 1;
+                for (int i = 0; i < tentativa.size() - 1; i++) {
+                    if (tentativa.get(i) + 1 == tentativa.get(i + 1)) { seqAt++; if (seqAt > maiorSeq) maiorSeq = seqAt; }
+                    else seqAt = 1;
+                }
+
+                boolean pOk = !uPar || (pares >= 6 && pares <= 9);
+                boolean sOk = !uSoma || (soma >= 165 && soma <= 230);
+                boolean prOk = !uPrim || (nPrim >= 4 && nPrim <= 7);
+                boolean fOk = !uFib || (nFib >= 3 && nFib <= 5);
+                boolean rOk = !uRep || numerosDoUltimo.isEmpty() || (repUlt >= 7 && repUlt <= 10);
+
+                boolean moOk = !uOc || (naMold >= 8 && naMold <= 11);
+                boolean grOk = !uOc || validarEquilibrioGrade(tentativa);
+                boolean m3Ok = !uOc || (nM3 >= 3 && nM3 <= 6);
+                boolean sqOk = !uOc || (maiorSeq <= 7);
+                boolean frOk = !uOc || (dezenasFrias.isEmpty() || nFrias >= 1);
+
+                if (pOk && sOk && moOk && prOk && fOk && rOk && grOk && m3Ok && sqOk && frOk) {
+                    String assinatura = tentativa.toString();
+
+                    // TRAVA ANTI-DUPLICIDADE GERAL E INTERNA DO TURBO
+                    if (meusJogosSalvos.contains(assinatura)) continue;
+                    if (oficiaisMap != null && oficiaisMap.containsKey(assinatura)) continue;
+                    if (assinaturasNestaSessao.contains(assinatura)) continue; // Evita que o Jogo 2 seja igual ao Jogo 1
+
+                    // Aprovado!
+                    jogosTurboGerados.add(tentativa);
+                    assinaturasNestaSessao.add(assinatura);
+                    meusJogosSalvos.add(assinatura); // Adiciona na memória pra não repetir nos próximos loops
+
+                    // Salva no banco de dados Oficial do App na mesma hora
+                    historicoGeral = bancoDeDados.getString("historico_ordenado", "");
+                    salvarJogo(historicoGeral, assinatura);
+
+                    break; // Sai do while e vai para a próxima rodada do Turbo
+                }
+            }
+        }
+
+        // 🎨 MONTANDO O VISUAL DA JANELA FLUTUANTE (POP-UP) CUSTOMIZADA 🎨
+        AlertDialog.Builder builder = new AlertDialog.Builder(this);
+
+        // Container principal que envelopa toda a janela flutuante
+        LinearLayout layoutDialog = new LinearLayout(this);
+        layoutDialog.setOrientation(LinearLayout.VERTICAL);
+
+        // 1. BARRA DO TÍTULO (Voltou o cinza sólido original)
+        TextView tvTitulo = new TextView(this);
+        tvTitulo.setText("⚡ Turbo 3x: Combinações Geradas!");
+        tvTitulo.setTextSize(18f);
+        tvTitulo.setTextColor(Color.parseColor("#333333"));
+        tvTitulo.setTypeface(null, android.graphics.Typeface.BOLD);
+        tvTitulo.setGravity(android.view.Gravity.CENTER);
+        tvTitulo.setPadding(30, 40, 30, 40);
+        tvTitulo.setBackgroundColor(Color.parseColor("#AB5A7D8E")); // Barra superior cinza
+        layoutDialog.addView(tvTitulo);
+
+        // 2. MEIO - ÁREA DOS MINI-TABULEIROS (Fundo geral invisível para destacar os quadrinhos)
+        android.widget.ScrollView scrollView = new android.widget.ScrollView(this);
+        LinearLayout.LayoutParams scrollParams = new LinearLayout.LayoutParams(
+                LinearLayout.LayoutParams.MATCH_PARENT, 0, 1.0f); // Peso 1 para expandir apenas no meio e não empurrar os botões
+        scrollView.setLayoutParams(scrollParams);
+        scrollView.setBackgroundColor(Color.TRANSPARENT);
+
+        LinearLayout layoutConteudo = new LinearLayout(this);
+        layoutConteudo.setOrientation(LinearLayout.VERTICAL);
+        layoutConteudo.setPadding(30, 25, 30, 10);
+
+        // Descobrindo o número oficial atual do histórico para colocar no título
+        int historicoTamanhoAtual = bancoDeDados.getString("historico_ordenado", "").split(SEPARADOR).length;
+
+        for (int i = 0; i < 3; i++) {
+            int numJogoGeral = (historicoTamanhoAtual - 2) + i;
+
+            // Quadrinho individual
+            LinearLayout cardJogo = new LinearLayout(this);
+            cardJogo.setOrientation(LinearLayout.VERTICAL);
+            cardJogo.setPadding(25, 15, 25, 15);
+            cardJogo.setBackgroundColor(Color.parseColor("#A6F5F5F5"));
+
+            // Mantemos WRAP_CONTENT aqui para o fundo branco abraçar o tabuleiro perfeitamente
+            LinearLayout.LayoutParams cardParams = new LinearLayout.LayoutParams(
+                    LinearLayout.LayoutParams.WRAP_CONTENT, LinearLayout.LayoutParams.WRAP_CONTENT);
+            cardParams.setMargins(0, 0, 0, 15);
+            cardParams.gravity = android.view.Gravity.CENTER_HORIZONTAL; // Centraliza o quadrinho na tela
+            cardJogo.setLayoutParams(cardParams);
+
+            // Título de cada tabuleiro
+            TextView tituloJogo = new TextView(this);
+            tituloJogo.setText("Jogo " + (i + 1) + " (Nº " + numJogoGeral + " Gerado)");
+            tituloJogo.setTextSize(16f);
+            tituloJogo.setTextColor(Color.parseColor("#B0276E"));
+            tituloJogo.setTypeface(null, android.graphics.Typeface.BOLD);
+            tituloJogo.setGravity(android.view.Gravity.CENTER);
+            tituloJogo.setPadding(0, 0, 0, 5);
+
+            cardJogo.addView(tituloJogo);
+            cardJogo.addView(criarMiniTabuleiro(jogosTurboGerados.get(i)));
+
+            layoutConteudo.addView(cardJogo);
+        }
+
+        scrollView.addView(layoutConteudo, new android.widget.FrameLayout.LayoutParams(
+                android.widget.FrameLayout.LayoutParams.MATCH_PARENT,
+                android.widget.FrameLayout.LayoutParams.WRAP_CONTENT));
+
+        layoutDialog.addView(scrollView);
+
+        // 3. BARRA INFERIOR (Envelopa o Turbo 3x na esquerda e o Fechar na direita)
+        LinearLayout barraInferior = new LinearLayout(this);
+        barraInferior.setOrientation(LinearLayout.HORIZONTAL);
+        barraInferior.setBackgroundColor(Color.parseColor("#AB5A7D8E")); // Mantém a sua cor original da barra
+        barraInferior.setPadding(50, 35, 50, 35); // Respiro igual para as duas pontas
+
+        // Novo Texto Clicável: TURBO 3x (Alinhado à Esquerda)
+        TextView btnNovoTurbo = new TextView(this);
+        btnNovoTurbo.setText("⚡ TURBO 3x");
+        btnNovoTurbo.setTextSize(16f);
+        btnNovoTurbo.setTextColor(Color.parseColor("#333333")); // Mantém o cinza escuro original
+        btnNovoTurbo.setTypeface(null, android.graphics.Typeface.BOLD);
+        LinearLayout.LayoutParams paramsTurbo = new LinearLayout.LayoutParams(0, LinearLayout.LayoutParams.WRAP_CONTENT, 1.0f);
+        btnNovoTurbo.setLayoutParams(paramsTurbo);
+        btnNovoTurbo.setGravity(android.view.Gravity.START | android.view.Gravity.CENTER_VERTICAL); // Gruda na Esquerda
+
+        // Texto Clicável: FECHAR JOGOS (Alinhado à Direita)
+        TextView btnFecharCustom = new TextView(this);
+        btnFecharCustom.setText("FECHAR JOGOS ✅");
+        btnFecharCustom.setTextSize(16f);
+        btnFecharCustom.setTextColor(Color.parseColor("#333333"));
+        btnFecharCustom.setTypeface(null, android.graphics.Typeface.BOLD);
+        LinearLayout.LayoutParams paramsFechar = new LinearLayout.LayoutParams(0, LinearLayout.LayoutParams.WRAP_CONTENT, 1.0f);
+        btnFecharCustom.setLayoutParams(paramsFechar);
+        btnFecharCustom.setGravity(android.view.Gravity.END | android.view.Gravity.CENTER_VERTICAL); // Gruda na Direita
+
+        // Adiciona os dois textos dentro da mesma barra cinza
+        barraInferior.addView(btnNovoTurbo);
+        barraInferior.addView(btnFecharCustom);
+        layoutDialog.addView(barraInferior);
+
+        builder.setView(layoutDialog);
+        AlertDialog dialog = builder.create();
+
+        // Configura a ação do botão FECHAR
+        btnFecharCustom.setOnClickListener(v -> {
+            atualizarContadorTela();
+            dialog.dismiss();
+        });
+
+        // Configura a ação do NOVO BOTÃO TURBO (Gera 3 novos jogos instantaneamente)
+        btnNovoTurbo.setOnClickListener(v -> {
+            dialog.dismiss(); // Descarta o Pop-up atual para liberar memória
+            abrirPopupTurbo3x(); // Dispara um novo ciclo de jogos na velocidade da luz
+        });
+
+        dialog.show();
+
+        // Remove o caixote rígido do Android para que a nossa transparência do meio funcione perfeitamente
+        if (dialog.getWindow() != null) {
+            dialog.getWindow().setBackgroundDrawable(new android.graphics.drawable.ColorDrawable(Color.TRANSPARENT));
+        }
+
+        limparTabuleiro(); // Deixa o tabuleiro principal limpo/inoperante no fundo
+    }
+
+    private GridLayout criarMiniTabuleiro(List<Integer> dezenasSorteadas) {
+        GridLayout grid = new GridLayout(this);
+        grid.setColumnCount(5);
+        grid.setRowCount(5);
+        grid.setAlignmentMode(GridLayout.ALIGN_MARGINS);
+
+        // Centraliza o grid na tela
+        LinearLayout.LayoutParams gridParams = new LinearLayout.LayoutParams(
+                LinearLayout.LayoutParams.WRAP_CONTENT, LinearLayout.LayoutParams.WRAP_CONTENT);
+        gridParams.gravity = android.view.Gravity.CENTER;
+        gridParams.bottomMargin = 5; // Espaço para o próximo jogo
+        grid.setLayoutParams(gridParams);
+
+        int tamanhoBola = 85; // Tamanho ideal para o mini tabuleiro
+        int margem = 6;
+
+        for (int i = 1; i <= 25; i++) {
+            TextView bola = new TextView(this);
+            bola.setText(String.format("%02d", i));
+            bola.setGravity(android.view.Gravity.CENTER);
+            bola.setTextSize(13f);
+            bola.setTypeface(null, android.graphics.Typeface.BOLD);
+
+            GridLayout.LayoutParams params = new GridLayout.LayoutParams();
+            params.width = tamanhoBola;
+            params.height = tamanhoBola;
+            params.setMargins(margem, margem, margem, margem);
+            bola.setLayoutParams(params);
+
+            if (dezenasSorteadas.contains(i)) {
+                // A cor vermelha forte original do seu app para as dezenas sorteadas
+                bola.setBackgroundResource(R.drawable.bola_selecionada);
+                if (bola.getBackground() != null) {
+                    bola.getBackground().mutate().setTintList(null);
+                }
+                bola.setTextColor(Color.WHITE);
+            } else {
+                // Fundo apagado e texto cinza para as dezenas de fora
+                bola.setBackgroundResource(R.drawable.bola_apagada);
+                if (bola.getBackground() != null) {
+                    bola.getBackground().mutate().setTintList(null);
+                }
+                bola.setTextColor(Color.parseColor("#999999"));
+            }
+            grid.addView(bola);
+        }
+        return grid;
     }
 }
