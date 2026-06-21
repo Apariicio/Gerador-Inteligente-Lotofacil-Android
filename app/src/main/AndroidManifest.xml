@@ -26,6 +26,7 @@
         </activity>
         <activity android:name=".ResultadoVarreduraActivity" />
         <activity android:name=".HistoricoManualActivity" />
+        <receiver android:name=".LembreteReceiver" android:exported="false" />
     </application>
 
 </manifest>

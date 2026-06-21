@@ -54,6 +54,12 @@ public class MainActivity extends AppCompatActivity {
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
+
+        // 🌟 NOVO: Carrega e aplica o tema salvo pelo usuário antes de desenhar a tela
+        SharedPreferences bdTema = getSharedPreferences("HistoricoJogos", MODE_PRIVATE);
+        int temaSalvo = bdTema.getInt("tema_usuario", androidx.appcompat.app.AppCompatDelegate.MODE_NIGHT_FOLLOW_SYSTEM);
+        androidx.appcompat.app.AppCompatDelegate.setDefaultNightMode(temaSalvo);
+
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
 
@@ -95,7 +101,75 @@ public class MainActivity extends AppCompatActivity {
             btnCadastrarOficial = findViewById(R.id.btnCadastrarOficial);
             btnGerenciarManuais = findViewById(R.id.btnGerenciarManuais);
             btnInformacao = findViewById(R.id.btnInformacao);
-            btnInformacao.setOnClickListener(v -> mostrarInformacoesApp(false));
+            btnInformacao.setOnClickListener(v -> {
+
+                androidx.appcompat.view.ContextThemeWrapper wrapper = new androidx.appcompat.view.ContextThemeWrapper(MainActivity.this, R.style.TemaMenuPremium);
+                androidx.appcompat.widget.PopupMenu popup = new androidx.appcompat.widget.PopupMenu(wrapper, btnInformacao);
+
+                // Opção 1: Sobre
+                android.text.SpannableString op1 = new android.text.SpannableString("   Sobre o App 📖   ");
+                op1.setSpan(new android.text.style.StyleSpan(android.graphics.Typeface.BOLD), 0, op1.length(), 0);
+                op1.setSpan(new android.text.style.RelativeSizeSpan(1.1f), 0, op1.length(), 0);
+
+                // Opção 2: Tema
+                android.text.SpannableString op2 = new android.text.SpannableString("   Escolher Tema 🎨   ");
+                op2.setSpan(new android.text.style.StyleSpan(android.graphics.Typeface.BOLD), 0, op2.length(), 0);
+                op2.setSpan(new android.text.style.RelativeSizeSpan(1.1f), 0, op2.length(), 0);
+
+                // Opção 3: Backup
+                android.text.SpannableString op3 = new android.text.SpannableString("   Backup e Restauração 💾   ");
+                op3.setSpan(new android.text.style.StyleSpan(android.graphics.Typeface.BOLD), 0, op3.length(), 0);
+                op3.setSpan(new android.text.style.RelativeSizeSpan(1.1f), 0, op3.length(), 0);
+
+                // 🌟 NOVO - Opção 4: Lembretes de Sorteios
+                android.text.SpannableString op4 = new android.text.SpannableString("   Lembrete de Sorteios ⏰   ");
+                op4.setSpan(new android.text.style.StyleSpan(android.graphics.Typeface.BOLD), 0, op4.length(), 0);
+                op4.setSpan(new android.text.style.RelativeSizeSpan(1.1f), 0, op4.length(), 0);
+
+                // Adiciona as quatro opções ordenadas
+                popup.getMenu().add(0, 1, 0, op1);
+                popup.getMenu().add(0, 2, 1, op2);
+                popup.getMenu().add(0, 3, 2, op3);
+                popup.getMenu().add(0, 4, 3, op4); // Injeta na quarta posição
+
+                popup.setOnMenuItemClickListener(item -> {
+                    if (item.getItemId() == 1) {
+                        mostrarInformacoesApp(false);
+                        return true;
+                    } else if (item.getItemId() == 2) {
+                        // ... (Sua lógica existente de escolha de tema permanece idêntica)
+                        String[] opcoesTema = {"Tema Claro ☀️", "Tema Escuro 🌙", "Padrão do Sistema ⚙️"};
+                        int atual = bancoDeDados.getInt("tema_usuario", androidx.appcompat.app.AppCompatDelegate.MODE_NIGHT_FOLLOW_SYSTEM);
+                        int itemMarcado = 2;
+                        if (atual == androidx.appcompat.app.AppCompatDelegate.MODE_NIGHT_NO) itemMarcado = 0;
+                        else if (atual == androidx.appcompat.app.AppCompatDelegate.MODE_NIGHT_YES) itemMarcado = 1;
+
+                        new AlertDialog.Builder(MainActivity.this)
+                                .setTitle("Visual do Aplicativo")
+                                .setSingleChoiceItems(opcoesTema, itemMarcado, (dialogTema, qualItem) -> {
+                                    int modoExibicao = androidx.appcompat.app.AppCompatDelegate.MODE_NIGHT_FOLLOW_SYSTEM;
+                                    if (qualItem == 0) modoExibicao = androidx.appcompat.app.AppCompatDelegate.MODE_NIGHT_NO;
+                                    else if (qualItem == 1) modoExibicao = androidx.appcompat.app.AppCompatDelegate.MODE_NIGHT_YES;
+
+                                    bancoDeDados.edit().putInt("tema_usuario", modoExibicao).apply();
+                                    androidx.appcompat.app.AppCompatDelegate.setDefaultNightMode(modoExibicao);
+                                    dialogTema.dismiss();
+                                })
+                                .show();
+                        return true;
+                    } else if (item.getItemId() == 3) {
+                        abrirMenuBackupRestaurar();
+                        return true;
+                    } else if (item.getItemId() == 4) {
+                        // 🌟 NOVO: Abre a central de configuração do alarme
+                        abrirCentralLembretes();
+                        return true;
+                    }
+                    return false;
+                });
+
+                popup.show();
+            });
             btnInserirManual = findViewById(R.id.btnInserirManual);
             btnInserirManual.setOnClickListener(v -> abrirInserirJogoManual());
 
@@ -172,10 +246,10 @@ public class MainActivity extends AppCompatActivity {
     }
 
     private void pintarChave(Switch chave) {
-        int corBolinhaOn = Color.parseColor("#4CAF50");
-        int corBarraOn   = Color.parseColor("#A5D6A7");
-        int corBolinhaOff = Color.parseColor("#ECECEC");
-        int corBarraOff   = Color.parseColor("#9E9E9E");
+        int corBolinhaOn = androidx.core.content.ContextCompat.getColor(this, R.color.switch_bolinha_on);
+        int corBarraOn   = androidx.core.content.ContextCompat.getColor(this, R.color.switch_barra_on);
+        int corBolinhaOff = androidx.core.content.ContextCompat.getColor(this, R.color.switch_bolinha_off);
+        int corBarraOff   = androidx.core.content.ContextCompat.getColor(this, R.color.switch_barra_off);
 
         if (chave.isChecked()) {
             chave.getThumbDrawable().setTint(corBolinhaOn);
@@ -295,6 +369,23 @@ public class MainActivity extends AppCompatActivity {
             atualizarContadorTela();
             carregarDadosParaMemoria();
         } catch (Exception e) {}
+    }
+
+    @Override
+    protected void onActivityResult(int requestCode, int resultCode, android.content.Intent data) {
+        super.onActivityResult(requestCode, resultCode, data);
+
+        if (resultCode == RESULT_OK && data != null && data.getData() != null) {
+            android.net.Uri uri = data.getData();
+
+            if (requestCode == REQ_COD_BACKUP) {
+                // Usuário escolheu onde salvar o arquivo, agora gravamos os dados nele
+                realizarBackupDoSistema(uri);
+            } else if (requestCode == REQ_COD_RESTORE) {
+                // Usuário selecionou o arquivo de backup, agora lemos e restauramos
+                restaurarDadosDoSistema(uri);
+            }
+        }
     }
 
     private static class DadosConcurso {
@@ -1418,11 +1509,11 @@ public class MainActivity extends AppCompatActivity {
         TextView tvTitulo = new TextView(this);
         tvTitulo.setText("⚡ Turbo 3x: Combinações Geradas!");
         tvTitulo.setTextSize(18f);
-        tvTitulo.setTextColor(Color.parseColor("#333333"));
+        tvTitulo.setTextColor(androidx.core.content.ContextCompat.getColor(this, R.color.texto_principal));
         tvTitulo.setTypeface(null, android.graphics.Typeface.BOLD);
         tvTitulo.setGravity(android.view.Gravity.CENTER);
         tvTitulo.setPadding(30, 40, 30, 40);
-        tvTitulo.setBackgroundColor(Color.parseColor("#AB5A7D8E")); // Barra superior cinza
+        tvTitulo.setBackgroundColor(androidx.core.content.ContextCompat.getColor(this, R.color.barra_popup)); // Barra superior cinza
         layoutDialog.addView(tvTitulo);
 
         // 2. MEIO - ÁREA DOS MINI-TABULEIROS (Fundo geral invisível para destacar os quadrinhos)
@@ -1466,7 +1557,7 @@ public class MainActivity extends AppCompatActivity {
             LinearLayout cardJogo = new LinearLayout(this);
             cardJogo.setOrientation(LinearLayout.VERTICAL);
             cardJogo.setPadding(25, 15, 25, 15);
-            cardJogo.setBackgroundColor(Color.parseColor("#A6F5F5F5"));
+            cardJogo.setBackgroundColor(androidx.core.content.ContextCompat.getColor(this, R.color.fundo_card_popup));
 
             // Mantemos WRAP_CONTENT para abraçar tudo dinamicamente
             LinearLayout.LayoutParams cardParams = new LinearLayout.LayoutParams(
@@ -1522,7 +1613,7 @@ public class MainActivity extends AppCompatActivity {
                     "Repet.: " + cRepetidos + " (" + textoConcurso + ")\n" +
                     "Ciclo: " + textoCiclo);
             txtStats.setTextSize(13f);
-            txtStats.setTextColor(Color.parseColor("#333333")); // Letras escuras
+            txtStats.setTextColor(androidx.core.content.ContextCompat.getColor(this, R.color.texto_principal)); // Letras escuras
             txtStats.setPadding(15, 15, 15, 15);
             txtStats.setTypeface(null, android.graphics.Typeface.BOLD);
 
@@ -1543,14 +1634,14 @@ public class MainActivity extends AppCompatActivity {
         // 3. BARRA INFERIOR (Envelopa o Turbo 3x na esquerda e o Fechar na direita)
         LinearLayout barraInferior = new LinearLayout(this);
         barraInferior.setOrientation(LinearLayout.HORIZONTAL);
-        barraInferior.setBackgroundColor(Color.parseColor("#AB5A7D8E")); // Mantém a sua cor original da barra
+        barraInferior.setBackgroundColor(androidx.core.content.ContextCompat.getColor(this, R.color.barra_popup)); // Mantém a sua cor original da barra
         barraInferior.setPadding(50, 35, 50, 35); // Respiro igual para as duas pontas
 
         // Novo Texto Clicável: TURBO 3x (Alinhado à Esquerda)
         TextView btnNovoTurbo = new TextView(this);
         btnNovoTurbo.setText("⚡ TURBO 3x");
         btnNovoTurbo.setTextSize(16f);
-        btnNovoTurbo.setTextColor(Color.parseColor("#333333")); // Mantém o cinza escuro original
+        btnNovoTurbo.setTextColor(androidx.core.content.ContextCompat.getColor(this, R.color.texto_principal)); // Mantém o cinza escuro original
         btnNovoTurbo.setTypeface(null, android.graphics.Typeface.BOLD);
         LinearLayout.LayoutParams paramsTurbo = new LinearLayout.LayoutParams(0, LinearLayout.LayoutParams.WRAP_CONTENT, 1.0f);
         btnNovoTurbo.setLayoutParams(paramsTurbo);
@@ -1560,7 +1651,7 @@ public class MainActivity extends AppCompatActivity {
         TextView btnFecharCustom = new TextView(this);
         btnFecharCustom.setText("FECHAR JOGOS ✅");
         btnFecharCustom.setTextSize(16f);
-        btnFecharCustom.setTextColor(Color.parseColor("#333333"));
+        btnFecharCustom.setTextColor(androidx.core.content.ContextCompat.getColor(this, R.color.texto_principal));
         btnFecharCustom.setTypeface(null, android.graphics.Typeface.BOLD);
         LinearLayout.LayoutParams paramsFechar = new LinearLayout.LayoutParams(0, LinearLayout.LayoutParams.WRAP_CONTENT, 1.0f);
         btnFecharCustom.setLayoutParams(paramsFechar);
@@ -1643,5 +1734,207 @@ public class MainActivity extends AppCompatActivity {
             grid.addView(bola);
         }
         return grid;
+    }
+
+    // 🌟 VARIÁVEIS DE CONTROLE DOS ARQUIVOS
+    private static final int REQ_COD_BACKUP = 888;
+    private static final int REQ_COD_RESTORE = 999;
+
+    private void abrirMenuBackupRestaurar() {
+        String[] opcoes = {"Criar Arquivo de Backup 📤", "Restaurar Dados de um Arquivo 📥"};
+        new AlertDialog.Builder(this)
+                .setTitle("💾 Cópia de Segurança")
+                .setItems(opcoes, (dialog, which) -> {
+                    if (which == 0) {
+                        // Dispara a tela do sistema para criar um arquivo .json
+                        Intent intent = new Intent(Intent.ACTION_CREATE_DOCUMENT);
+                        intent.addCategory(Intent.CATEGORY_OPENABLE);
+                        intent.setType("application/json");
+                        intent.putExtra(Intent.EXTRA_TITLE, "backup_sniper_lotofacil.json");
+                        startActivityForResult(intent, REQ_COD_BACKUP);
+                    } else {
+                        // Dispara a tela do sistema para selecionar um arquivo
+                        Intent intent = new Intent(Intent.ACTION_OPEN_DOCUMENT);
+                        intent.addCategory(Intent.CATEGORY_OPENABLE);
+                        intent.setType("*/*"); // Permite escolher qualquer formato para evitar travas de gerenciadores
+                        startActivityForResult(intent, REQ_COD_RESTORE);
+                    }
+                })
+                .setNegativeButton("Voltar", null)
+                .show();
+    }
+
+    private void realizarBackupDoSistema(android.net.Uri uri) {
+        try {
+            org.json.JSONObject jsonCompleto = new org.json.JSONObject();
+
+            // 1. Empacota o histórico pessoal e configurações
+            jsonCompleto.put("historico_ordenado", bancoDeDados.getString("historico_ordenado", ""));
+            jsonCompleto.put("tema_usuario", bancoDeDados.getInt("tema_usuario", androidx.appcompat.app.AppCompatDelegate.MODE_NIGHT_FOLLOW_SYSTEM));
+            jsonCompleto.put("ocultar_guia_inicio", bancoDeDados.getBoolean("ocultar_guia_inicio", false));
+
+            // 2. Empacota os Cadastros Oficiais Manuais
+            org.json.JSONObject jsonManuais = new org.json.JSONObject();
+            java.util.Map<String, ?> todosManuais = DadosOficiais.lerApenasManuais(this);
+            for (java.util.Map.Entry<String, ?> entry : todosManuais.entrySet()) {
+                jsonManuais.put(entry.getKey(), entry.getValue().toString());
+            }
+            jsonCompleto.put("resultados_manuais", jsonManuais);
+
+            // 3. Escreve tudo de forma organizada (com recuo de 4 espaços) dentro do arquivo
+            java.io.OutputStream outputStream = getContentResolver().openOutputStream(uri);
+            if (outputStream != null) {
+                outputStream.write(jsonCompleto.toString(4).getBytes());
+                outputStream.close();
+                Toast.makeText(this, "Backup gerado e salvo com sucesso! 🎉", Toast.LENGTH_LONG).show();
+            }
+        } catch (Exception e) {
+            Toast.makeText(this, "Erro ao exportar dados: " + e.getMessage(), Toast.LENGTH_LONG).show();
+        }
+    }
+
+    private void restaurarDadosDoSistema(android.net.Uri uri) {
+        try {
+            java.io.InputStream inputStream = getContentResolver().openInputStream(uri);
+            if (inputStream == null) return;
+
+            java.io.BufferedReader reader = new java.io.BufferedReader(new java.io.InputStreamReader(inputStream));
+            StringBuilder stringBuilder = new StringBuilder();
+            String linha;
+            while ((linha = reader.readLine()) != null) {
+                stringBuilder.append(linha);
+            }
+            inputStream.close();
+
+            org.json.JSONObject jsonCompleto = new org.json.JSONObject(stringBuilder.toString());
+
+            // Escudo de segurança: Valida se o arquivo realmente pertence ao nosso app
+            if (!jsonCompleto.has("historico_ordenado") && !jsonCompleto.has("resultados_manuais")) {
+                Toast.makeText(this, "Arquivo inválido ou não reconhecido! ❌", Toast.LENGTH_LONG).show();
+                return;
+            }
+
+            // TRAVA DE SEGURANÇA SUPREMA ANTES DE SOBRESCREVER
+            new AlertDialog.Builder(this)
+                    .setTitle("⚠️ IMPORTAÇÃO DE DADOS")
+                    .setMessage("Atenção! Isso apagará todos os seus jogos atuais do app e os substituirá pelos dados do arquivo. Deseja prosseguir?")
+                    .setPositiveButton("Sim, Restaurar Tudo", (dialog, which) -> {
+                        try {
+                            // 1. Restaura Histórico e Configurações
+                            SharedPreferences.Editor editorHistorico = bancoDeDados.edit();
+                            if (jsonCompleto.has("historico_ordenado")) editorHistorico.putString("historico_ordenado", jsonCompleto.getString("historico_ordenado"));
+                            if (jsonCompleto.has("tema_usuario")) editorHistorico.putInt("tema_usuario", jsonCompleto.getInt("tema_usuario"));
+                            if (jsonCompleto.has("ocultar_guia_inicio")) editorHistorico.putBoolean("ocultar_guia_inicio", jsonCompleto.getBoolean("ocultar_guia_inicio"));
+                            editorHistorico.apply();
+
+                            // 2. Restaura Resultados Oficiais Manuais
+                            android.content.SharedPreferences prefsManuais = getSharedPreferences("NovosResultadosOficiais", MODE_PRIVATE);
+                            android.content.SharedPreferences.Editor editorManuais = prefsManuais.edit();
+                            editorManuais.clear(); // Limpa a lousa para injetar os dados limpos
+
+                            if (jsonCompleto.has("resultados_manuais")) {
+                                org.json.JSONObject jsonManuais = jsonCompleto.getJSONObject("resultados_manuais");
+                                java.util.Iterator<String> chaves = jsonManuais.keys();
+                                while (chaves.hasNext()) {
+                                    String chave = chaves.next();
+                                    editorManuais.putString(chave, jsonManuais.getString(chave));
+                                }
+                            }
+                            editorManuais.apply();
+
+                            Toast.makeText(this, "Dados sincronizados com sucesso! 🔄", Toast.LENGTH_LONG).show();
+
+                            // Atualiza a memória global imediatamente e reinicia o visual para aplicar o tema restaurado
+                            carregarDadosParaMemoria();
+                            int temaRestaurado = bancoDeDados.getInt("tema_usuario", androidx.appcompat.app.AppCompatDelegate.MODE_NIGHT_FOLLOW_SYSTEM);
+                            androidx.appcompat.app.AppCompatDelegate.setDefaultNightMode(temaRestaurado);
+
+                            recreate(); // Recria a tela de forma elegante
+                        } catch (Exception ex) {
+                            Toast.makeText(this, "Falha na injeção de dados: " + ex.getMessage(), Toast.LENGTH_LONG).show();
+                        }
+                    })
+                    .setNegativeButton("Cancelar", null)
+                    .show();
+
+        } catch (Exception e) {
+            Toast.makeText(this, "Erro ao processar arquivo de backup: " + e.getMessage(), Toast.LENGTH_LONG).show();
+        }
+    }
+
+    // 🌟 CENTRAL DE CONFIGURAÇÃO DE LEMBRETES DE SORTEIO
+    private void abrirCentralLembretes() {
+        boolean ativo = bancoDeDados.getBoolean("lembrete_ativo", false);
+        int hora = bancoDeDados.getInt("lembrete_hora", 19);
+        int minuto = bancoDeDados.getInt("lembrete_minuto", 0);
+
+        String textoStatus = ativo ? "Status atual: ATIVADO às " + String.format("%02d:%02d", hora, minuto) : "Status atual: DESATIVADO";
+
+        AlertDialog.Builder builder = new AlertDialog.Builder(this);
+        builder.setTitle("⏰ Lembrete de Sorteio");
+        builder.setMessage("Configure um horário para o aplicativo te avisar nos dias de sorteio oficial (Segunda a Sábado).\n\n" + textoStatus);
+
+        builder.setPositiveButton("Configurar Horário 🗓️", (dialog, which) -> {
+            // Pede permissão de notificação se for Android 13 ou superior (Proteção de sistema)
+            if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.TIRAMISU) {
+                if (checkSelfPermission(android.Manifest.permission.POST_NOTIFICATIONS) != android.content.pm.PackageManager.PERMISSION_GRANTED) {
+                    requestPermissions(new String[]{android.Manifest.permission.POST_NOTIFICATIONS}, 101);
+                }
+            }
+
+            // Abre o relógio nativo do Android para o usuário escolher o horário
+            new android.app.TimePickerDialog(this, (view, hourOfDay, minuteOfHour) -> {
+                // Salva a configuração no banco de dados do app
+                bancoDeDados.edit()
+                        .putBoolean("lembrete_ativo", true)
+                        .putInt("lembrete_hora", hourOfDay)
+                        .putInt("lembrete_minuto", minuteOfHour)
+                        .apply();
+
+                // Liga o motor de agendamento do celular
+                gerenciarAlarmeDoSistema(true, hourOfDay, minuteOfHour);
+                Toast.makeText(this, "Lembrete configurado com sucesso para às " + String.format("%02d:%02d", hourOfDay, minuteOfHour) + "! 🔔", Toast.LENGTH_LONG).show();
+            }, hora, minuto, true).show();
+        });
+
+        if (ativo) {
+            builder.setNeutralButton("Desativar Lembrete 🔕", (dialog, which) -> {
+                bancoDeDados.edit().putBoolean("lembrete_ativo", false).apply();
+                gerenciarAlarmeDoSistema(false, 0, 0);
+                Toast.makeText(this, "Lembrete desativado com sucesso!", Toast.LENGTH_SHORT).show();
+            });
+        }
+
+        builder.setNegativeButton("Voltar", null);
+        builder.show();
+    }
+
+    private void gerenciarAlarmeDoSistema(boolean ativar, int hora, int minuto) {
+        android.app.AlarmManager alarmManager = (android.app.AlarmManager) getSystemService(android.content.Context.ALARM_SERVICE);
+        if (alarmManager == null) return;
+
+        android.content.Intent intent = new android.content.Intent(this, LembreteReceiver.class);
+        // FLAG_IMMUTABLE garante total compatibilidade com Android 12, 13 e superiores
+        android.app.PendingIntent pendingIntent = android.app.PendingIntent.getBroadcast(
+                this, 777, intent, android.app.PendingIntent.FLAG_UPDATE_CURRENT | android.app.PendingIntent.FLAG_IMMUTABLE);
+
+        if (ativar) {
+            java.util.Calendar calendar = java.util.Calendar.getInstance();
+            calendar.set(java.util.Calendar.HOUR_OF_DAY, hora);
+            calendar.set(java.util.Calendar.MINUTE, minuto);
+            calendar.set(java.util.Calendar.SECOND, 0);
+
+            // Se o horário escolhido já passou hoje, agenda automaticamente para o dia seguinte
+            if (calendar.getTimeInMillis() < System.currentTimeMillis()) {
+                calendar.add(java.util.Calendar.DAY_OF_YEAR, 1);
+            }
+
+            // Agenda para repetir de 24 em 24 horas (INTERVAL_DAY)
+            alarmManager.setRepeating(android.app.AlarmManager.RTC_WAKEUP, calendar.getTimeInMillis(),
+                    android.app.AlarmManager.INTERVAL_DAY, pendingIntent);
+        } else {
+            // Corta e desliga o agendamento no sistema operacional do aparelho
+            alarmManager.cancel(pendingIntent);
+        }
     }
 }

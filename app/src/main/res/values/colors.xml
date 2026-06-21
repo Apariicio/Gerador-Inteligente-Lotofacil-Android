@@ -1,5 +1,17 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <color name="black">#FF000000</color>
-    <color name="white">#FFFFFFFF</color>
+    <color name="fundo_tela_solido">#90D4E5EB</color> <color name="fundo_card_popup">#A6F5F5F5</color> <color name="barra_popup">#AB5A7D8E</color> <color name="texto_principal">#333333</color> <color name="texto_invertido">#FFFFFF</color> <color name="texto_suave">#555555</color>
+
+    <color name="rosa_principal">#B0276E</color>
+    <color name="rosa_botao_tint">#91B0276E</color>
+    <color name="laranja_turbo">#96ED8F05</color>
+
+    <color name="fundo_stats_soma">#55AAB9F4</color>
+    <color name="fundo_stats_pares">#7CC8E6C9</color>
+    <color name="fundo_stats_fibo">#4B878987</color>
+    <color name="fundo_stats_ciclo">#4EFFEB3B</color>
+    <color name="fundo_listas">#7AB3D4F8</color> <color name="switch_bolinha_on">#4CAF50</color>
+    <color name="switch_barra_on">#A5D6A7</color>
+    <color name="switch_bolinha_off">#ECECEC</color>
+    <color name="switch_barra_off">#9E9E9E</color>
 </resources>

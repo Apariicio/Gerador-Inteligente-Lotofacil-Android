@@ -10,8 +10,8 @@ android {
         applicationId = "com.aparicioamaral.quinzenumerosaleatorios"
         minSdk = 29
         targetSdk = 35
-        versionCode = 65
-        versionName = "4.99.01"
+        versionCode = 66
+        versionName = "4.99.56"
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
     }

@@ -15,4 +15,13 @@
         <item name="android:textStyle">bold</item>
         <item name="android:visibility">invisible</item>
     </style>
+    <style name="MeuWidgetMenu" parent="Widget.AppCompat.PopupMenu">
+        <item name="android:popupBackground">@drawable/fundo_menu</item>
+    </style>
+
+    <style name="TemaMenuPremium" parent="Theme.QuinzeNúmerosAleatórios">
+        <item name="popupMenuStyle">@style/MeuWidgetMenu</item>
+        <item name="android:textColor">@color/texto_principal</item>
+        <item name="android:colorBackground">@color/fundo_card_popup</item>
+    </style>
 </resources>
