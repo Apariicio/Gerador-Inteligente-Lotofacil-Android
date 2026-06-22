@@ -38,7 +38,8 @@ public class MainActivity extends AppCompatActivity {
     Switch switchRepetidos, switchFibonacci, switchCiclo, switchOcultas;
     LinearLayout layoutProgresso;
     ProgressBar progressBarVarredura;
-    TextView txtProgressoVarredura;
+    TextView txtProgressoVarredura, iconeTrevoLoading;
+    android.animation.ObjectAnimator animacaoTrevo;
 
     Button btnSortear, btnTurbo, btnInformacao;
     TextView btnHistorico, btnInserirManual, btnConferir, btnVarredura, btnCadastrarOficial, btnGerenciarManuais;
@@ -121,23 +122,35 @@ public class MainActivity extends AppCompatActivity {
                 op3.setSpan(new android.text.style.StyleSpan(android.graphics.Typeface.BOLD), 0, op3.length(), 0);
                 op3.setSpan(new android.text.style.RelativeSizeSpan(1.1f), 0, op3.length(), 0);
 
-                // 🌟 NOVO - Opção 4: Lembretes de Sorteios
+                // Opção 4: Lembretes
                 android.text.SpannableString op4 = new android.text.SpannableString("   Lembrete de Sorteios ⏰   ");
                 op4.setSpan(new android.text.style.StyleSpan(android.graphics.Typeface.BOLD), 0, op4.length(), 0);
                 op4.setSpan(new android.text.style.RelativeSizeSpan(1.1f), 0, op4.length(), 0);
 
-                // Adiciona as quatro opções ordenadas
+                // Opção 5: Gráfico de Frequência
+                android.text.SpannableString op5 = new android.text.SpannableString("   Gráfico de Frequência 📈   ");
+                op5.setSpan(new android.text.style.StyleSpan(android.graphics.Typeface.BOLD), 0, op5.length(), 0);
+                op5.setSpan(new android.text.style.RelativeSizeSpan(1.1f), 0, op5.length(), 0);
+
+                // Opção 6: Inteligência Artificial (Previsão)
+                android.text.SpannableString op6 = new android.text.SpannableString("   Previsão Estatística (I.A.) 🤖   ");
+                op6.setSpan(new android.text.style.StyleSpan(android.graphics.Typeface.BOLD), 0, op6.length(), 0);
+                op6.setSpan(new android.text.style.ForegroundColorSpan(Color.parseColor("#B0276E")), 0, op6.length(), 0); // Destaque em cor diferente
+                op6.setSpan(new android.text.style.RelativeSizeSpan(1.1f), 0, op6.length(), 0);
+
+                // Adiciona todas as opções
                 popup.getMenu().add(0, 1, 0, op1);
                 popup.getMenu().add(0, 2, 1, op2);
                 popup.getMenu().add(0, 3, 2, op3);
-                popup.getMenu().add(0, 4, 3, op4); // Injeta na quarta posição
+                popup.getMenu().add(0, 4, 3, op4);
+                popup.getMenu().add(0, 5, 4, op5);
+                popup.getMenu().add(0, 6, 5, op6);
 
                 popup.setOnMenuItemClickListener(item -> {
                     if (item.getItemId() == 1) {
                         mostrarInformacoesApp(false);
                         return true;
                     } else if (item.getItemId() == 2) {
-                        // ... (Sua lógica existente de escolha de tema permanece idêntica)
                         String[] opcoesTema = {"Tema Claro ☀️", "Tema Escuro 🌙", "Padrão do Sistema ⚙️"};
                         int atual = bancoDeDados.getInt("tema_usuario", androidx.appcompat.app.AppCompatDelegate.MODE_NIGHT_FOLLOW_SYSTEM);
                         int itemMarcado = 2;
@@ -161,15 +174,22 @@ public class MainActivity extends AppCompatActivity {
                         abrirMenuBackupRestaurar();
                         return true;
                     } else if (item.getItemId() == 4) {
-                        // 🌟 NOVO: Abre a central de configuração do alarme
                         abrirCentralLembretes();
+                        return true;
+                    } else if (item.getItemId() == 5) {
+                        // Abre o painel do Gráfico
+                        abrirGraficoFrequencia();
+                        return true;
+                    } else if (item.getItemId() == 6) {
+                        // GATILHO DA I.A.
+                        abrirPainelPrevisaoIA();
                         return true;
                     }
                     return false;
                 });
-
                 popup.show();
             });
+
             btnInserirManual = findViewById(R.id.btnInserirManual);
             btnInserirManual.setOnClickListener(v -> abrirInserirJogoManual());
 
@@ -182,6 +202,7 @@ public class MainActivity extends AppCompatActivity {
             layoutProgresso = findViewById(R.id.layoutProgresso);
             progressBarVarredura = findViewById(R.id.progressBarVarredura);
             txtProgressoVarredura = findViewById(R.id.txtProgressoVarredura);
+            iconeTrevoLoading = findViewById(R.id.iconeTrevoLoading);
 
             txtAssinatura = findViewById(R.id.txtAssinatura);
             /*if (txtAssinatura != null) {
@@ -204,6 +225,23 @@ public class MainActivity extends AppCompatActivity {
             btnVarredura.setOnClickListener(v -> fazerVarreduraRelampago());
             btnCadastrarOficial.setOnClickListener(v -> abrirCadastroOficial());
             btnGerenciarManuais.setOnClickListener(v -> startActivity(new Intent(MainActivity.this, HistoricoManualActivity.class)));
+
+            // 🌟 Ativa a animação do Trevo antes de carregar os dados
+            layoutProgresso.setVisibility(View.VISIBLE);
+            progressBarVarredura.setVisibility(View.GONE); // Esconde a barra reta
+            iconeTrevoLoading.setVisibility(View.VISIBLE); // Mostra o trevo gigante
+
+            txtProgressoVarredura.setText("Sincronizando a sorte...");
+
+            // Faz o trevo girar 360 graus infinitamente
+            animacaoTrevo = android.animation.ObjectAnimator.ofFloat(iconeTrevoLoading, "rotation", 0f, 360f);
+            animacaoTrevo.setDuration(1000);
+            animacaoTrevo.setRepeatCount(android.animation.ObjectAnimator.INFINITE);
+            animacaoTrevo.setInterpolator(new android.view.animation.LinearInterpolator());
+            animacaoTrevo.start();
+
+            btnSortear.setEnabled(false); // Tranca o botão
+            btnTurbo.setEnabled(false);   // Tranca o Turbo
 
             atualizarContadorTela();
             carregarDadosParaMemoria();
@@ -396,11 +434,15 @@ public class MainActivity extends AppCompatActivity {
             this.nomeConcurso = nome;
         }
     }
-
+    // 🌟 CORREÇÃO DEFINITIVA DO BUG "2482" (FIM DO CONFLITO DE THREADS)
     private void carregarDadosParaMemoria() {
         new Thread(() -> {
             try {
-                cacheMeusJogos.clear();
+                // 1. Cria listas TEMPORÁRIAS (Sala de espera) para não bagunçar a memória principal
+                List<int[]> memoriaTemporariaMeusJogos = new ArrayList<>();
+                List<DadosConcurso> memoriaTemporariaOficiais = new ArrayList<>();
+
+                // Carrega os Jogos Gerados
                 String historico = bancoDeDados.getString("historico_ordenado", "");
                 if (!historico.isEmpty()) {
                     String[] jogos = historico.split(SEPARADOR);
@@ -408,30 +450,41 @@ public class MainActivity extends AppCompatActivity {
                         if (!j.trim().isEmpty()) {
                             String numerosParaMemoria = j;
                             if (j.contains("&DATA&")) {
-                                numerosParaMemoria = j.split("&DATA&")[0]; // Arranca a data
+                                numerosParaMemoria = j.split("&DATA&")[0];
                             }
-                            cacheMeusJogos.add(converterStringParaArrayInt(numerosParaMemoria));
+                            memoriaTemporariaMeusJogos.add(converterStringParaArrayInt(numerosParaMemoria));
                         }
                     }
                 }
-                cacheOficiais.clear();
+
+                // Carrega e Mistura os Oficiais + Manuais
                 Map<String, String> oficiaisMap = DadosOficiais.carregarResultadosOficiais(this);
                 if (oficiaisMap != null) {
                     for (Map.Entry<String, String> entry : oficiaisMap.entrySet()) {
                         int[] nums = converterStringParaArrayInt(entry.getKey());
                         if (nums.length == 15) {
-                            cacheOficiais.add(new DadosConcurso(nums, entry.getValue()));
+                            memoriaTemporariaOficiais.add(new DadosConcurso(nums, entry.getValue()));
                         }
                     }
                 }
-                Collections.sort(cacheOficiais, (o1, o2) -> {
-                    int n1 = 0, n2 = 0;
-                    try { n1 = Integer.parseInt(o1.nomeConcurso.split(" ")[1]); } catch(Exception e){}
-                    try { n2 = Integer.parseInt(o2.nomeConcurso.split(" ")[1]); } catch(Exception e){}
+
+                // 🌟 ORDENA TUDO NA SALA DE ESPERA (Antes de entregar para o App)
+                Collections.sort(memoriaTemporariaOficiais, (o1, o2) -> {
+                    int n1 = extrairNumeroConcurso(o1.nomeConcurso);
+                    int n2 = extrairNumeroConcurso(o2.nomeConcurso);
                     return Integer.compare(n1, n2);
                 });
+
+                // 2. Transfere a lista PERFEITA e ORDENADA para a interface do usuário (Sem falhas!)
                 runOnUiThread(() -> {
                     try {
+                        cacheMeusJogos.clear();
+                        cacheMeusJogos.addAll(memoriaTemporariaMeusJogos);
+
+                        cacheOficiais.clear();
+                        cacheOficiais.addAll(memoriaTemporariaOficiais);
+
+                        // Atualiza os textos da tela
                         List<Integer> faltantes = calcularDezenasDoCiclo();
                         String textoCiclo = "";
                         int corCiclo = Color.GRAY;
@@ -452,8 +505,17 @@ public class MainActivity extends AppCompatActivity {
                         lblCiclo.setTextColor(Color.parseColor("#333333"));
 
                         if (jogoAtualParaCompartilhar.isEmpty()) {
-                            limparTabuleiro(); // Aciona as cores assim que os concursos oficiais carregam
+                            limparTabuleiro();
                         }
+                        // O banco terminou! Para de girar o trevo e libera o app
+                        if (animacaoTrevo != null) animacaoTrevo.cancel(); // Freia o trevo
+                        layoutProgresso.setVisibility(View.GONE); // Esconde a caixa amarela inteira
+                        iconeTrevoLoading.setVisibility(View.GONE); // Esconde o trevo
+                        progressBarVarredura.setVisibility(View.VISIBLE); // Devolve a barra para a Varredura usar depois
+
+                        btnSortear.setEnabled(true); // Destranca botão
+                        btnTurbo.setEnabled(true); // Destranca botão
+
                     } catch (Exception e) {}
                 });
             } catch (Exception e) { e.printStackTrace(); }
@@ -498,70 +560,102 @@ public class MainActivity extends AppCompatActivity {
                         "————————————————————<br>" +
                         "🎯 <b>Gerar Jogo Inteligente:</b> Cria combinações aplicando os filtros ativos (Switches). <b>Ele nunca repete</b> jogos que você já fez ou que já saíram na história oficial.<br><br>" +
 
-                        "🔒 <b>Fixar Números (Campo de Entrada):</b> Digite dezenas obrigatórias que você quer jogar (ex: 01 13 25) e o sistema garantirá que elas sempre entrem no jogo gerado.<br><br>" +
+                        "🚀 <b>Turbo 3x (Geração Rápida):</b> Gera <b>3 jogos instantaneamente</b> em um popup dedicado com mini tabuleiros! Dentro do popup, o botão <b>\"Turbo 3x\"</b> permite gerar mais 3 jogos sem fechar a janela, acumulando quantos jogos quiser. Cada jogo é automaticamente salvo no histórico.<br><br>" +
 
-                        "📜 <b>Histórico Geral:</b> Veja todos os jogos que você gerou. <b>Toque no jogo</b> para compartilhar, ou <b>segure</b> para selecionar e apagar vários de uma vez.<br><br>" +
+                        "🔒 <b>Fixar Números (Campo de Entrada):</b> Digite dezenas obrigatórias (ex: 01 13 25) que sempre entrarão no jogo gerado.<br><br>" +
 
-                        "🛡️ <b>Proteger Jogo Manual (Inserir Manual):</b> Salve um jogo que você já fez na lotérica. O app JAMAIS o gerará novamente, evitando que você jogue o mesmo jogo duas vezes.<br><br>" +
+                        "📜 <b>Histórico Geral:</b> Veja todos os jogos gerados com <b>data e hora de criação</b>. Toque para compartilhar ou segure para selecionar e apagar vários de uma vez.<br><br>" +
 
-                        "🔍 <b>Conferidor de Histórico:</b> Digite 15 números para descobrir se você já gerou esse jogo antes e se ele já foi sorteado pela Caixa.<br><br>" +
+                        "🛡️ <b>Proteger Jogo Manual (Inserir Manual):</b> Salve jogos que você já fez na lotérica. O app JAMAIS os gerará novamente.<br><br>" +
 
-                        "⚡ <b>Varredura Relâmpago (Validação):</b> Cruza automaticamente todos os seus jogos salvos contra os concursos oficiais. Você descobre quais jogos teriam feito de <b>11 a 15 pontos</b> em sorteios passados, medindo a eficiência do seu método.<br><br>" +
+                        "🔍 <b>Conferidor de Histórico:</b> Digite 15 números para descobrir se você já gerou esse jogo ou se ele já foi sorteado oficialmente.<br><br>" +
 
-                        "📥 <b>Cadastrar Oficial / Gerenciar Manuais:</b> Mantenha o banco de dados do app atualizado inserindo novos resultados oficiais da Lotofácil. <b>Toque e segure</b> na lista para deletar cadastros manuais.<br><br>" +
+                        "⚡ <b>Varredura Relâmpago (Backtesting):</b> Cruza todos os seus jogos contra os concursos oficiais. Descubra quais jogos teriam feito de <b>11 a 15 pontos</b> em sorteios passados. <b>Nova barra de progresso</b> mostra o andamento em tempo real!<br><br>" +
 
-                        "📤 <b>Compartilhar:</b> Toque no tabuleiro de bolas (com um jogo gerado) ou em qualquer jogo no histórico para enviar a combinação por WhatsApp, redes sociais, ou SMS.<br><br>" +
+                        "📥 <b>Cadastrar Oficial / Gerenciar Manuais:</b> Mantenha o banco de dados atualizado inserindo novos resultados oficiais. Toque e segure para deletar cadastros.<br><br>" +
+
+                        "📤 <b>Compartilhar:</b> Toque no tabuleiro ou em qualquer jogo do histórico para enviar por WhatsApp ou redes sociais.<br><br>" +
+
+                        "🧠 <b>Previsão Estatística (I.A. Leve):</b> A \"joia da coroa\" do app! Um motor matemático que analisa <b>5 fatores</b> (Frequência, Defasagem, Tendência, Correlação e Sazonalidade) para gerar um <b>Top 15</b> de números recomendados. Você pode aplicar como Fixas ou gerar um jogo diretamente!<br><br>" +
+
+                        "📊 <b>Gráfico de Frequência:</b> Painel visual com barras coloridas mostrando os números mais quentes (🔴) e mais frios (🔵) nos últimos 30 concursos. Perfeito para análises rápidas!<br><br>" +
+
+                        "💾 <b>Backup e Restauração:</b> Exporte todos os seus dados (histórico, configurações, cadastros manuais) em um arquivo <b>.json</b> seguro. Importe para restaurar em outro dispositivo ou após uma limpeza.<br><br>" +
+
+                        "⏰ <b>Lembrete de Sorteios:</b> Configure um horário e receba <b>notificações push</b> nos dias de sorteio (Segunda a Sábado). Blindado contra economia de bateria!<br><br>" +
+
+                        "📊 <b>Contador de Filtros Ativos:</b> Na tela principal, veja em tempo real quantos dos 7 filtros estão ativos. <b>0/7</b> = modo livre, <b>7/7</b> = modo sniper.<br><br>" +
+
+                        "🎓 <b>Guia Interativo de Boas-Vindas:</b> Exibido automaticamente na primeira execução. Marque <b>\"Não mostrar novamente\"</b> para silenciá-lo. Disponível a qualquer momento pelo menu ☰.<br><br>" +
+
+                        "🎨 <b>Controle de Tema:</b> Alterne entre <b>Tema Claro ☀️</b>, <b>Tema Escuro 🌙</b> ou <b>Padrão do Sistema ⚙️</b> instantaneamente pelo menu.<br><br>" +
+
+                        "🧹 <b>Manutenção de Dados:</b> Opções de <b>Limpar Cache</b> e <b>Reset de Fábrica</b> (com trava de segurança) para manter o app sempre leve e funcionando.<br><br>" +
+
+                        "🍀 <b>Tela de Carregamento Imersiva:</b> Animação de trevo giratório com bloqueio dos botões até que os dados estejam totalmente carregados.<br><br>" +
 
                         "📊 <b>FILTROS OPCIONAIS (SWITCHES) - A LÓGICA POR TRÁS</b><br>" +
                         "————————————————————<br>" +
-                        "🧮 <b>Soma:</b> Mantém a soma dos 15 números entre <b>165 e 230</b>, evitando somas muito baixas ou altas.<br>" +
-                        "🔢 <b>Par / Ímpar:</b> Equilíbrio de gênero! Exige de <b>6 a 9 pares</b> (e, portanto, 6 a 9 ímpares).<br>" +
+                        "🧮 <b>Soma:</b> Mantém a soma dos 15 números entre <b>165 e 230</b>.<br>" +
+                        "🔢 <b>Par / Ímpar:</b> Equilíbrio! Exige de <b>6 a 9 pares</b> (e 6 a 9 ímpares).<br>" +
                         "🔴 <b>Primos:</b> Exige entre <b>4 e 7 números primos</b> (2,3,5,7,11,13,17,19,23).<br>" +
-                        "🌀 <b>Fibonacci:</b> Exige entre <b>3 e 5 números</b> da famosa sequência (1,2,3,5,8,13,21).<br>" +
-                        "🔥 <b>Repetidos (Hot Numbers):</b> Exige que <b>7 a 10 números</b> sejam do ÚLTIMO sorteio oficial cadastrado. (Estratégia de números quentes).<br>" +
-                        "❄️ <b>Ciclo (Cold Numbers):</b> Dá prioridade (70% de chance) para as dezenas que <b>ainda não saíram no ciclo atual</b> (dezenas atrasadas).<br><br>" +
+                        "🌀 <b>Fibonacci:</b> Exige entre <b>3 e 5 números</b> da sequência (1,2,3,5,8,13,21).<br>" +
+                        "🔥 <b>Repetidos (Hot Numbers):</b> Exige que <b>7 a 10 números</b> sejam do ÚLTIMO sorteio oficial. (Estratégia de números quentes).<br>" +
+                        "❄️ <b>Ciclo (Cold Numbers):</b> Dá prioridade (70%) para dezenas <b>ainda não sorteadas</b> no ciclo atual (dezenas atrasadas).<br>" +
+                        "🛡️ <b>Travas Ocultas (Switch Mestre):</b> Controla todas as regras abaixo. Desative para gerar jogos sem restrições extras.<br><br>" +
 
-                        "🛡️ <b>TRAVAS OCULTAS (SEMPRE ATIVAS OU CONTROLADAS PELO ÚLTIMO SWITCH)</b><br>" +
+                        "🛡️ <b>TRAVAS OCULTAS (CONTROLADAS PELO SWITCH MESTRE)</b><br>" +
                         "————————————————————<br>" +
-                        "🟩 <b>Moldura (Borda):</b> Exige entre <b>8 e 11 números</b> da borda do tabuleiro (1,2,3,4,5,6,10,11,15,16,20,21,22,23,24,25).<br>" +
+                        "🟩 <b>Moldura (Borda):</b> Exige entre <b>8 e 11 números</b> da borda (1,2,3,4,5,6,10,11,15,16,20,21,22,23,24,25).<br>" +
                         "✖️ <b>Múltiplos de 3:</b> Exige entre <b>3 e 6 números</b> múltiplos de três (3,6,9,12,15,18,21,24).<br>" +
-                        "📐 <b>Equilíbrio de Grade:</b> Impede que qualquer linha ou coluna do tabuleiro fique completamente vazia (0) ou completamente cheia (5), forçando uma distribuição uniforme.<br>" +
-                        "📏 <b>Trava de Sequência:</b> Bloqueia jogos com <b>8 ou mais números colados</b> em sequência (ex: 1,2,3,4,5,6,7,8). O limite máximo é 7, aumentando a imprevisibilidade.<br>" +
-                        "🥶 <b>Dezena Fria:</b> Obriga que o jogo contenha <b>pelo menos 1 número</b> que saiu apenas 3 vezes ou menos nos últimos 10 concursos (equilibrando o jogo).<br>" +
-                        "🚫 <b>Anti-Duplicidade Suprema:</b> É a trava mais forte! O gerador DESCARTA imediatamente qualquer jogo que <b>já exista no seu histórico pessoal</b> ou nos <b>+3.000 concursos oficiais</b> da Caixa.<br><br>" +
+                        "📐 <b>Equilíbrio de Grade:</b> Impede linhas ou colunas vazias (0) ou cheias (5).<br>" +
+                        "📏 <b>Trava de Sequência:</b> Bloqueia jogos com <b>8 ou mais números colados</b> (limite máximo 7).<br>" +
+                        "🥶 <b>Dezena Fria:</b> Obriga <b>pelo menos 1 número</b> com baixa frequência nos últimos 10 concursos.<br>" +
+                        "🚫 <b>Anti-Duplicidade Suprema:</b> Descarta jogos que <b>já existem</b> no seu histórico ou nos +3.000 concursos oficiais.<br><br>" +
 
                         "🧠 <b>O EFEITO 'SNIPER' (A MATEMÁTICA DO FUNIL)</b><br>" +
                         "————————————————————<br>" +
                         "O universo da Lotofácil tem <b>3.268.760 combinações</b>.<br><br>" +
-                        "⚙️ Com <b>TODOS OS SWITCHES DESLIGADOS</b> (apenas as travas ocultas e anti-duplicidade ativas), o app já elimina o 'lixo matemático', cortando o universo para <b>cerca de 1.200.000 jogos</b>.<br><br>" +
-                        "🎯 Com <b>TODAS AS CHAVES ATIVADAS</b>, o funil fica extremo! Cada filtro sobrepõe o outro, reduzindo drasticamente o mar de combinações para um núcleo de elite de aproximadamente <b>80.000 a 150.000 jogos</b>.<br><br>" +
-                        "📈 <b>Conclusão:</b> Quanto mais chaves ligadas, mais 'inteligente' e filtrado é o jogo, aumentando as chances de você estar dentro do grupo de combinações com maior potencial estatístico!" +
+                        "⚙️ Com <b>TODOS OS SWITCHES DESLIGADOS</b> (apenas travas ocultas e anti-duplicidade), o app reduz para <b>~1.200.000 jogos</b>.<br><br>" +
+                        "🎯 Com <b>TODAS AS CHAVES ATIVADAS</b>, o funil reduz para apenas <b>80.000 a 150.000 jogos</b> altamente prováveis!<br><br>" +
+                        "📈 <b>Conclusão:</b> Quanto mais chaves ligadas, mais 'inteligente' e filtrado é o jogo!" +
 
                         // ═══════════════════════════════════════════════════════════════
-                        // ║         NOVIDADES ADICIONADAS NAS ÚLTIMAS VERSÕES         ║
+                        // ║            NOVIDADES - VERSÃO ATUAL                     ║
                         // ═══════════════════════════════════════════════════════════════
 
-                        "<br><br>🆕 <b>NOVAS FUNCIONALIDADES!</b><br>" +
+                        "<br><br>🆕 <b>NOVIDADES DA VERSÃO ATUAL!</b><br>" +
                         "————————————————————<br>" +
 
-                        "🚀 <b>MODO TURBO (GERAÇÃO RÁPIDA DE MÚLTIPLOS JOGOS):</b> Ative o Modo Turbo para gerar <b>3 jogos instantaneamente</b> em um popup dedicado! " +
-                        "Dentro do popup, você encontra um <b>botão \"Gerar Turbo\"</b> que permite gerar <b>mais 3 jogos</b> sem fechar a janela, " +
-                        "acumulando quantos jogos quiser rapidamente. Perfeito para quem quer várias opções de aposta sem sair da tela principal! " +
-                        "Cada jogo gerado no Turbo é automaticamente salvo no histórico.<br><br>" +
+                        "☰ <b>Menu Suspenso Premium:</b> O antigo botão de informação evoluiu para um menu elegante com cantos arredondados, reunindo todas as funcionalidades avançadas em um só lugar!<br><br>" +
 
-                        "📊 <b>Contador de Filtros Ativos:</b> Na tela principal, você vê em tempo real quantos dos 7 filtros estão ativos. " +
-                        "Quanto mais filtros, mais restritivo e inteligente é o jogo gerado! <b>0/7</b> = modo livre, <b>7/7</b> = modo sniper.<br><br>" +
+                        "🎨 <b>Controle Dinâmico de Tema:</b> Alternância instantânea entre <b>Tema Claro ☀️</b>, <b>Tema Escuro 🌙</b> ou <b>Padrão do Sistema ⚙️</b>. A preferência é salva automaticamente.<br><br>" +
 
-                        "🎓 <b>Guia Interativo de Boas-Vindas:</b> Ao abrir o app pela primeira vez, um guia completo é exibido automaticamente. " +
-                        "Você pode marcar a opção <b>\"Não mostrar este Guia na próxima vez\"</b> para silenciá-lo. " +
-                        "Mas não se preocupe: o guia está sempre disponível no botão ℹ️.<br><br>" +
+                        "💾 <b>Sistema de Backup Nativo (SAF):</b> Exporte e importe todos os seus dados (Histórico + Resultados Manuais) em um arquivo <b>.json</b> seguro, integrado ao gerenciador de arquivos do celular.<br><br>" +
 
-                        "⏳ <b>Barra de Progresso na Varredura:</b> Agora a Varredura Relâmpago tem uma barra de progresso que mostra em tempo real " +
-                        "quantos jogos já foram analisados. Você acompanha o andamento enquanto o app cruza seus jogos com a história oficial.<br><br>" +
+                        "⏰ <b>Lembrete Inteligente (AlarmManager):</b> Sistema de notificações push com alarme agendado (\"Hora do Sorteio\"). Configurável pelo usuário e blindado contra o modo de economia de bateria. Ignora automaticamente os domingos!<br><br>" +
 
-                        "🎨 <b>Mapa de Calor das Bolas (Em breve):</b> As bolas do tabuleiro podem ser coloridas com base na frequência de cada número " +
-                        "nos últimos 20 concursos, ajudando você a identificar visualmente os números mais quentes (vermelho) e mais frios (azul). " +
-                        "Esta funcionalidade está em desenvolvimento e será ativada em breve!";
+                        "📊 <b>Gráfico de Frequência de Dezenas:</b> Painel visual em barras (criado do zero, sem bibliotecas pesadas) que analisa os últimos <b>30 concursos</b> e exibe as dezenas mais quentes (🔴 Vermelho) e mais frias (🔵 Azul/Verde), ordenadas da maior para a menor frequência.<br><br>" +
+
+                        "🔧 <b>Correção do Bug do Concurso \"2482\":</b> O app agora utiliza uma <b>\"sala de espera\"</b> (variáveis temporárias) na inicialização. O cálculo do último concurso oficial é sempre 100% preciso!<br><br>" +
+
+                        "🍀 <b>Tela de Carregamento Imersiva:</b> Animação de <b>Trevo Giratório</b> com texto sombreado na inicialização, bloqueando os botões até que os dados estatísticos estejam totalmente carregados.<br><br>" +
+
+                        "🧠 <b>Painel de Previsão Estatística (IA Leve):</b> A <b>\"joia da coroa\"</b>! Motor matemático que analisa <b>5 pesos estatísticos</b>:<br>" +
+                        "• <b>Frequência (30%):</b> Números que mais saíram<br>" +
+                        "• <b>Defasagem (25%):</b> Números há mais tempo sem sair<br>" +
+                        "• <b>Tendência (20%):</b> Números em alta ou baixa<br>" +
+                        "• <b>Correlação (15%):</b> Números que combinam com suas fixas<br>" +
+                        "• <b>Sazonalidade (10%):</b> Padrões do mês atual<br>" +
+                        "Gera um <b>Top 15</b> de números recomendados com botão direto para <b>\"Usar como Fixas\"</b> ou <b>\"Gerar Jogo I.A.\"</b>.<br><br>" +
+
+                        "🧹 <b>Limpeza de Cache e Reset de Fábrica:</b> Duas novas opções de manutenção no menu de Backup. A primeira esvazia arquivos temporários, a segunda (com <b>trava de segurança rigorosa</b>) zera completamente o aplicativo.<br><br>" +
+
+                        "🔒 <b>Trava de Segurança nas Exclusões:</b> Todas as operações destrutivas (limpar histórico, reset de fábrica, etc.) agora exigem <b>dupla confirmação</b> para evitar exclusões acidentais.<br><br>" +
+
+                        "⚡ <b>Barra de Progresso na Varredura:</b> Acompanhe em tempo real o andamento da análise de todos os seus jogos contra a história oficial.<br><br>" +
+
+                        "📱 <b>Interface Otimizada:</b> Ajustes visuais em todos os componentes para melhor experiência em diferentes tamanhos de tela e temas.";
 
         LinearLayout layoutPrincipal = new LinearLayout(this);
         layoutPrincipal.setOrientation(LinearLayout.VERTICAL);
@@ -1740,28 +1834,121 @@ public class MainActivity extends AppCompatActivity {
     private static final int REQ_COD_BACKUP = 888;
     private static final int REQ_COD_RESTORE = 999;
 
+    // 🌟 MENU DE GERENCIAMENTO DE DADOS (EXPANDIDO)
     private void abrirMenuBackupRestaurar() {
-        String[] opcoes = {"Criar Arquivo de Backup 📤", "Restaurar Dados de um Arquivo 📥"};
+        String[] opcoes = {
+                "Criar Arquivo de Backup 📤",
+                "Restaurar Dados de um Arquivo 📥",
+                "Limpar Arquivos de Cache 🧹",
+                "Reset de Fábrica (Apagar Tudo) ⚠️"
+        };
+
         new AlertDialog.Builder(this)
-                .setTitle("💾 Cópia de Segurança")
+                .setTitle("💾 Sistema e Dados")
                 .setItems(opcoes, (dialog, which) -> {
                     if (which == 0) {
-                        // Dispara a tela do sistema para criar um arquivo .json
                         Intent intent = new Intent(Intent.ACTION_CREATE_DOCUMENT);
                         intent.addCategory(Intent.CATEGORY_OPENABLE);
                         intent.setType("application/json");
                         intent.putExtra(Intent.EXTRA_TITLE, "backup_sniper_lotofacil.json");
                         startActivityForResult(intent, REQ_COD_BACKUP);
-                    } else {
-                        // Dispara a tela do sistema para selecionar um arquivo
+                    } else if (which == 1) {
                         Intent intent = new Intent(Intent.ACTION_OPEN_DOCUMENT);
                         intent.addCategory(Intent.CATEGORY_OPENABLE);
-                        intent.setType("*/*"); // Permite escolher qualquer formato para evitar travas de gerenciadores
+                        intent.setType("*/*");
                         startActivityForResult(intent, REQ_COD_RESTORE);
+                    } else if (which == 2) {
+                        limparCacheDoApp();
+                    } else if (which == 3) {
+                        abrirLimpezaDeDados();
                     }
                 })
                 .setNegativeButton("Voltar", null)
                 .show();
+    }
+
+    // ====================================================================
+    // 🧹 MOTOR DE LIMPEZA DE CACHE
+    // ====================================================================
+    private void limparCacheDoApp() {
+        try {
+            java.io.File dirCache = getCacheDir();
+            if (dirCache != null && dirCache.isDirectory()) {
+                apagarArquivos(dirCache);
+            }
+            Toast.makeText(this, "🧹 Cache e arquivos temporários limpos com sucesso! Seu app está mais leve.", Toast.LENGTH_LONG).show();
+        } catch (Exception e) {
+            Toast.makeText(this, "Erro ao limpar cache.", Toast.LENGTH_SHORT).show();
+        }
+    }
+
+    // Função auxiliar para varrer a pasta de cache do Android
+    private boolean apagarArquivos(java.io.File dir) {
+        if (dir != null && dir.isDirectory()) {
+            String[] filhos = dir.list();
+            if (filhos != null) {
+                for (String filho : filhos) {
+                    boolean sucesso = apagarArquivos(new java.io.File(dir, filho));
+                    if (!sucesso) return false;
+                }
+            }
+            return dir.delete();
+        } else if (dir != null && dir.isFile()) {
+            return dir.delete();
+        }
+        return false;
+    }
+
+    // ====================================================================
+    // ⚠️ MOTOR DE RESET DE FÁBRICA (COM TRAVA DE SEGURANÇA SUPREMA)
+    // ====================================================================
+    private void abrirLimpezaDeDados() {
+        AlertDialog.Builder builder = new AlertDialog.Builder(this);
+        builder.setTitle("⚠️ RESET DE FÁBRICA");
+
+        // Montando o visual do pop-up de alerta
+        LinearLayout layout = new LinearLayout(this);
+        layout.setOrientation(LinearLayout.VERTICAL);
+        layout.setPadding(50, 40, 50, 40);
+
+        TextView mensagem = new TextView(this);
+        mensagem.setText("Isso apagará TODO o seu histórico de jogos, resultados oficiais cadastrados manualmente, configurações e alarmes.\n\nO aplicativo voltará ao estado original de quando foi instalado. Esta ação NÃO pode ser desfeita.");
+        mensagem.setTextColor(Color.parseColor("#D32F2F")); // Vermelho perigo
+        mensagem.setTextSize(15f);
+        mensagem.setTypeface(null, android.graphics.Typeface.BOLD);
+        layout.addView(mensagem);
+
+        // A Trava de Segurança (Checkbox)
+        android.widget.CheckBox chkConfirmar = new android.widget.CheckBox(this);
+        chkConfirmar.setText("Tenho certeza absoluta. Quero apagar tudo.");
+        chkConfirmar.setTextColor(androidx.core.content.ContextCompat.getColor(this, R.color.texto_principal));
+        chkConfirmar.setPadding(10, 40, 0, 0);
+        layout.addView(chkConfirmar);
+
+        builder.setView(layout);
+
+        builder.setPositiveButton("Apagar Tudo", (dialog, which) -> {
+            if (chkConfirmar.isChecked()) {
+                // 1. Apaga o banco de dados principal (Histórico, Temas, Guias, etc)
+                bancoDeDados.edit().clear().apply();
+
+                // 2. Apaga o banco de dados dos resultados manuais
+                getSharedPreferences("NovosResultadosOficiais", MODE_PRIVATE).edit().clear().apply();
+
+                // 3. Desliga o alarme de lembrete no sistema do celular
+                gerenciarAlarmeDoSistema(false, 0, 0);
+
+                Toast.makeText(this, "♻️ Aplicativo resetado com sucesso!", Toast.LENGTH_LONG).show();
+
+                // 4. Reinicia a tela bruscamente para limpar a memória RAM e recarregar do zero
+                recreate();
+            } else {
+                Toast.makeText(this, "Ação cancelada. Você não marcou a caixa de confirmação.", Toast.LENGTH_LONG).show();
+            }
+        });
+
+        builder.setNegativeButton("Cancelar", null);
+        builder.show();
     }
 
     private void realizarBackupDoSistema(android.net.Uri uri) {
@@ -1914,7 +2101,6 @@ public class MainActivity extends AppCompatActivity {
         if (alarmManager == null) return;
 
         android.content.Intent intent = new android.content.Intent(this, LembreteReceiver.class);
-        // FLAG_IMMUTABLE garante total compatibilidade com Android 12, 13 e superiores
         android.app.PendingIntent pendingIntent = android.app.PendingIntent.getBroadcast(
                 this, 777, intent, android.app.PendingIntent.FLAG_UPDATE_CURRENT | android.app.PendingIntent.FLAG_IMMUTABLE);
 
@@ -1924,17 +2110,412 @@ public class MainActivity extends AppCompatActivity {
             calendar.set(java.util.Calendar.MINUTE, minuto);
             calendar.set(java.util.Calendar.SECOND, 0);
 
-            // Se o horário escolhido já passou hoje, agenda automaticamente para o dia seguinte
             if (calendar.getTimeInMillis() < System.currentTimeMillis()) {
                 calendar.add(java.util.Calendar.DAY_OF_YEAR, 1);
             }
 
-            // Agenda para repetir de 24 em 24 horas (INTERVAL_DAY)
-            alarmManager.setRepeating(android.app.AlarmManager.RTC_WAKEUP, calendar.getTimeInMillis(),
-                    android.app.AlarmManager.INTERVAL_DAY, pendingIntent);
+            // 🌟 CÓDIGO BLINDADO CONTRA ECONOMIA DE BATERIA
+            if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.M) {
+                alarmManager.setExactAndAllowWhileIdle(android.app.AlarmManager.RTC_WAKEUP, calendar.getTimeInMillis(), pendingIntent);
+            } else {
+                alarmManager.setExact(android.app.AlarmManager.RTC_WAKEUP, calendar.getTimeInMillis(), pendingIntent);
+            }
         } else {
-            // Corta e desliga o agendamento no sistema operacional do aparelho
             alarmManager.cancel(pendingIntent);
+        }
+    }
+
+    // ====================================================================
+    // 🌟 MOTOR DO GRÁFICO DE FREQUÊNCIA (COM BARRA DE CARREGAMENTO)
+    // ====================================================================
+    private void abrirGraficoFrequencia() {
+        if (cacheOficiais == null || cacheOficiais.isEmpty()) {
+            Toast.makeText(this, "Aguarde o carregamento dos dados rápidos...", Toast.LENGTH_SHORT).show();
+            return;
+        }
+
+        // 1. Exibe a Barra de Progresso na tela principal imediatamente
+        layoutProgresso.setVisibility(View.VISIBLE);
+        progressBarVarredura.setMax(100);
+        progressBarVarredura.setProgress(20);
+        txtProgressoVarredura.setText("Calculando frequências...");
+
+        // 2. Joga o processamento pesado para um Trabalhador Invisível (Thread)
+        new Thread(() -> {
+            try {
+                // Matemática pura em segundo plano (não trava a tela)
+                int limite = Math.min(30, cacheOficiais.size());
+                int[] frequencia = new int[26];
+
+                for (int i = cacheOficiais.size() - 1; i >= cacheOficiais.size() - limite; i--) {
+                    for (int num : cacheOficiais.get(i).numeros) {
+                        if (num >= 1 && num <= 25) frequencia[num]++;
+                    }
+                }
+
+                List<int[]> listaOrdenadaDeBolas = new ArrayList<>();
+                for (int i = 1; i <= 25; i++) {
+                    listaOrdenadaDeBolas.add(new int[]{i, frequencia[i]});
+                }
+                Collections.sort(listaOrdenadaDeBolas, (bola1, bola2) -> Integer.compare(bola2[1], bola1[1]));
+
+                int maxFreq = listaOrdenadaDeBolas.get(0)[1];
+
+                // Atualiza o texto da barra de progresso antes de começar a desenhar a tela
+                runOnUiThread(() -> {
+                    progressBarVarredura.setProgress(70);
+                    txtProgressoVarredura.setText("Montando painel visual...");
+                });
+
+                // Pequeno truque de UX (pausa de 150 milissegundos) para a barra fluir na tela
+                Thread.sleep(150);
+
+                // 3. Volta para a Tela Principal para desenhar os componentes (Isso exige a UI Thread)
+                runOnUiThread(() -> {
+                    try {
+                        android.widget.ScrollView scrollView = new android.widget.ScrollView(MainActivity.this);
+                        LinearLayout painelGrafico = new LinearLayout(MainActivity.this);
+                        painelGrafico.setOrientation(LinearLayout.VERTICAL);
+                        painelGrafico.setPadding(50, 30, 50, 30);
+
+                        TextView legenda = new TextView(MainActivity.this);
+                        legenda.setText("🔴 Quentes (20+)  |  🟢 Normais (17 a 19)  |  🔵 Frias (16-)");
+                        legenda.setTextSize(12);
+                        legenda.setGravity(android.view.Gravity.CENTER);
+                        legenda.setPadding(0, 0, 0, 30);
+                        painelGrafico.addView(legenda);
+
+                        // Desenha as 25 barras
+                        for (int[] item : listaOrdenadaDeBolas) {
+                            int numeroDaBola = item[0];
+                            int quantidadeSaiu = item[1];
+
+                            LinearLayout linha = new LinearLayout(MainActivity.this);
+                            linha.setOrientation(LinearLayout.HORIZONTAL);
+                            linha.setGravity(android.view.Gravity.CENTER_VERTICAL);
+                            linha.setPadding(0, 8, 0, 8);
+
+                            TextView txtNum = new TextView(MainActivity.this);
+                            txtNum.setText(String.format("%02d", numeroDaBola));
+                            txtNum.setTextSize(16);
+                            txtNum.setTypeface(null, android.graphics.Typeface.BOLD);
+                            txtNum.setTextColor(androidx.core.content.ContextCompat.getColor(MainActivity.this, R.color.texto_principal));
+                            txtNum.setPadding(0, 0, 20, 0);
+
+                            ProgressBar barra = new ProgressBar(MainActivity.this, null, android.R.attr.progressBarStyleHorizontal);
+                            LinearLayout.LayoutParams params = new LinearLayout.LayoutParams(0, 45, 1.0f);
+                            barra.setLayoutParams(params);
+                            barra.setMax(maxFreq > 0 ? maxFreq : 1);
+                            barra.setProgress(quantidadeSaiu);
+
+                            int corBarra;
+                            if (quantidadeSaiu >= 20) {
+                                corBarra = Color.parseColor("#E53935");
+                            } else if (quantidadeSaiu <= 16) {
+                                corBarra = Color.parseColor("#1E88E5");
+                            } else {
+                                corBarra = Color.parseColor("#43A047");
+                            }
+
+                            if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.LOLLIPOP) {
+                                barra.setProgressTintList(android.content.res.ColorStateList.valueOf(corBarra));
+                            } else {
+                                barra.getProgressDrawable().setColorFilter(corBarra, android.graphics.PorterDuff.Mode.SRC_IN);
+                            }
+
+                            TextView txtCount = new TextView(MainActivity.this);
+                            txtCount.setText(quantidadeSaiu + "x");
+                            txtCount.setTextSize(14);
+                            txtCount.setTypeface(null, android.graphics.Typeface.BOLD);
+                            txtCount.setTextColor(androidx.core.content.ContextCompat.getColor(MainActivity.this, R.color.texto_suave));
+                            txtCount.setPadding(20, 0, 0, 0);
+
+                            linha.addView(txtNum);
+                            linha.addView(barra);
+                            linha.addView(txtCount);
+                            painelGrafico.addView(linha);
+                        }
+
+                        scrollView.addView(painelGrafico);
+
+                        // 4. Esconde a barra de progresso e exibe o gráfico final
+                        layoutProgresso.setVisibility(View.GONE);
+
+                        new AlertDialog.Builder(MainActivity.this)
+                                .setTitle("📈 Frequência (Últimos " + limite + " concursos)")
+                                .setView(scrollView)
+                                .setPositiveButton("Fechar", null)
+                                .show();
+
+                    } catch (Exception e) {
+                        layoutProgresso.setVisibility(View.GONE);
+                        Toast.makeText(MainActivity.this, "Erro visual: " + e.getMessage(), Toast.LENGTH_SHORT).show();
+                    }
+                });
+
+            } catch (Exception e) {
+                runOnUiThread(() -> {
+                    layoutProgresso.setVisibility(View.GONE);
+                    Toast.makeText(MainActivity.this, "Erro no processamento: " + e.getMessage(), Toast.LENGTH_SHORT).show();
+                });
+            }
+        }).start();
+    }
+
+    // Ferramenta auxiliar para extrair só o número do concurso do banco de dados (ex: "Concurso 3714" -> 3714)
+    private int extrairNumeroConcurso(String valor) {
+        try {
+            String apenasNumeros = valor.replaceAll("[^0-9]", " ");
+            String[] partes = apenasNumeros.trim().split("\\s+");
+            return Integer.parseInt(partes[0]);
+        } catch (Exception e) {
+            return 0;
+        }
+    }
+
+    // ====================================================================
+    // 🤖 MOTOR DE PREVISÃO ESTATÍSTICA (MACHINE LEARNING LEVE)
+    // ====================================================================
+    private void abrirPainelPrevisaoIA() {
+        if (cacheOficiais == null || cacheOficiais.isEmpty()) {
+            Toast.makeText(this, "Aguarde o carregamento do banco de dados...", Toast.LENGTH_SHORT).show();
+            return;
+        }
+
+        // 1. Inicia o Carregamento Visual
+        layoutProgresso.setVisibility(View.VISIBLE);
+        progressBarVarredura.setVisibility(View.VISIBLE);
+        if (iconeTrevoLoading != null) iconeTrevoLoading.setVisibility(View.GONE);
+        progressBarVarredura.setMax(100);
+        progressBarVarredura.setProgress(10);
+        txtProgressoVarredura.setText("Iniciando varredura neural...");
+
+        new Thread(() -> {
+            try {
+                int totalConcursos = cacheOficiais.size();
+
+                // Variáveis de Análise para cada uma das 25 dezenas (Index 1 a 25)
+                int[] freq30 = new int[26];
+                int[] freqAnterior30 = new int[26];
+                int[] defasagem = new int[26];
+                Arrays.fill(defasagem, 999); // Começa com defasagem alta
+                int[] correlacao = new int[26];
+                int[] sazonalidade = new int[26];
+
+                // Pega as fixas do usuário para a Correlação
+                List<Integer> fixasAtuais = new ArrayList<>();
+                if (inputFixas != null && !inputFixas.getText().toString().isEmpty()) {
+                    fixasAtuais = converterStringParaLista(inputFixas.getText().toString());
+                }
+
+                // Mês atual para Sazonalidade
+                int mesAtual = java.util.Calendar.getInstance().get(java.util.Calendar.MONTH) + 1;
+
+                runOnUiThread(() -> { progressBarVarredura.setProgress(30); txtProgressoVarredura.setText("Analisando Frequência e Defasagem..."); });
+
+                // LÓGICA 1 e 2: Frequência e Defasagem
+                int limiteFreq = Math.min(30, totalConcursos);
+                for (int i = 0; i < limiteFreq; i++) {
+                    int idxReal = totalConcursos - 1 - i;
+                    for (int num : cacheOficiais.get(idxReal).numeros) {
+                        if (num >= 1 && num <= 25) {
+                            freq30[num]++;
+                            // Se for a primeira vez que acha o número vindo de trás pra frente, essa é a defasagem exata
+                            if (defasagem[num] == 999) defasagem[num] = i;
+                        }
+                    }
+                }
+                // Preenche quem não saiu nos últimos 30 com o limite
+                for (int i = 1; i <= 25; i++) if (defasagem[i] == 999) defasagem[i] = limiteFreq;
+
+                runOnUiThread(() -> { progressBarVarredura.setProgress(50); txtProgressoVarredura.setText("Calculando Tendências..."); });
+
+                // LÓGICA 3: Tendência (Compara os últimos 15 com os 15 anteriores)
+                int limiteTendencia = Math.min(60, totalConcursos);
+                for (int i = 30; i < limiteTendencia; i++) {
+                    int idxReal = totalConcursos - 1 - i;
+                    for (int num : cacheOficiais.get(idxReal).numeros) {
+                        if (num >= 1 && num <= 25) freqAnterior30[num]++;
+                    }
+                }
+
+                runOnUiThread(() -> { progressBarVarredura.setProgress(70); txtProgressoVarredura.setText("Cruzando Correlações e Sazonalidade..."); });
+
+                // LÓGICA 4 e 5: Correlação e Sazonalidade (Varre TODO o histórico)
+                for (DadosConcurso concurso : cacheOficiais) {
+                    List<Integer> numsDoConcurso = new ArrayList<>();
+                    for (int n : concurso.numeros) numsDoConcurso.add(n);
+
+                    // Correlação: Se as fixas do usuário saíram nesse concurso, pontua os outros números que saíram junto
+                    boolean temFixas = false;
+                    for (int f : fixasAtuais) {
+                        if (numsDoConcurso.contains(f)) { temFixas = true; break; }
+                    }
+                    if (temFixas) {
+                        for (int n : numsDoConcurso) if (n >= 1 && n <= 25 && !fixasAtuais.contains(n)) correlacao[n]++;
+                    }
+
+                    // Sazonalidade: Extrai o mês do concurso (ex: "Concurso 1234 (10/05/2015)")
+                    try {
+                        String nome = concurso.nomeConcurso;
+                        if (nome.contains("/")) {
+                            String[] partesData = nome.split("/");
+                            if (partesData.length >= 2) {
+                                int mesSorteio = Integer.parseInt(partesData[1].replaceAll("[^0-9]", ""));
+                                if (mesSorteio == mesAtual) {
+                                    for (int n : numsDoConcurso) if (n >= 1 && n <= 25) sazonalidade[n]++;
+                                }
+                            }
+                        }
+                    } catch (Exception ignored) {}
+                }
+
+                // NORMALIZAÇÃO E NOTA FINAL
+                float[] notasFinais = new float[26];
+                int maxFreq = 1, maxDefasagem = 1, maxCorrelacao = 1, maxSazonalidade = 1;
+
+                // Encontra os maiores valores para criar o teto (100%) de cada fator
+                for (int i = 1; i <= 25; i++) {
+                    if (freq30[i] > maxFreq) maxFreq = freq30[i];
+                    if (defasagem[i] > maxDefasagem) maxDefasagem = defasagem[i];
+                    if (correlacao[i] > maxCorrelacao) maxCorrelacao = correlacao[i];
+                    if (sazonalidade[i] > maxSazonalidade) maxSazonalidade = sazonalidade[i];
+                }
+
+                // Lista de objetos para ordenar o ranking
+                List<PrevisaoItem> ranking = new ArrayList<>();
+
+                for (int i = 1; i <= 25; i++) {
+                    // Normaliza os pesos (0.0 a 1.0)
+                    float nFreq = (float) freq30[i] / maxFreq;
+                    float nDefa = (float) defasagem[i] / maxDefasagem;
+
+                    // Tendência: (Atual - Anterior) / Anterior. Se for positivo, tá quente.
+                    float nTend = 0;
+                    if (freqAnterior30[i] > 0) {
+                        nTend = (float) (freq30[i] - freqAnterior30[i]) / freqAnterior30[i];
+                        if (nTend > 1) nTend = 1; // Trava em 100% de bônus
+                        if (nTend < -1) nTend = -1;
+                    }
+
+                    float nCorr = maxCorrelacao > 1 ? (float) correlacao[i] / maxCorrelacao : 0;
+                    float nSazo = maxSazonalidade > 1 ? (float) sazonalidade[i] / maxSazonalidade : 0;
+
+                    // O ALGORITMO FINAL:
+                    // Freq(30%) + Defasagem(25%) + Tendência(20%) + Correlação(15%) + Sazonalidade(10%)
+                    float nota = (nFreq * 30f) + (nDefa * 25f) + (nTend * 20f) + (nCorr * 15f) + (nSazo * 10f);
+
+                    // Escala para ficar num formato amigável de 0 a 100
+                    nota = Math.max(1, Math.min(99, nota * 1.5f + 40)); // Ajuste de curva matemática para espalhar as notas
+
+                    notasFinais[i] = nota;
+                    ranking.add(new PrevisaoItem(i, (int) nota, freq30[i], defasagem[i], nTend));
+                }
+
+                // Ordena os melhores
+                Collections.sort(ranking, (r1, r2) -> Integer.compare(r2.notaFinal, r1.notaFinal));
+
+                runOnUiThread(() -> { progressBarVarredura.setProgress(100); txtProgressoVarredura.setText("Gerando Painel..."); });
+                Thread.sleep(200); // Pausa dramática para UX
+
+                // CONSTRUÇÃO DO PAINEL VISUAL
+                runOnUiThread(() -> {
+                    layoutProgresso.setVisibility(View.GONE);
+
+                    android.widget.ScrollView scrollView = new android.widget.ScrollView(this);
+                    LinearLayout painelUI = new LinearLayout(this);
+                    painelUI.setOrientation(LinearLayout.VERTICAL);
+                    painelUI.setPadding(40, 20, 40, 40);
+
+                    // AVISO LEGAL DE RESPONSABILIDADE
+                    TextView aviso = new TextView(this);
+                    aviso.setText("⚠️ AVISO IMPORTANTE:\nEsta é uma análise estatística baseada em padrões históricos, não uma garantia mágica. Use como auxílio à sua estratégia.");
+                    aviso.setTextSize(12);
+                    aviso.setTextColor(Color.parseColor("#E53935"));
+                    aviso.setTypeface(null, android.graphics.Typeface.BOLD);
+                    aviso.setPadding(0, 0, 0, 30);
+                    painelUI.addView(aviso);
+
+                    // TÍTULO DO TOP 15
+                    TextView tituloTop = new TextView(this);
+                    tituloTop.setText("🏆 TOP 15 NÚMEROS SUGERIDOS");
+                    tituloTop.setTextSize(16);
+                    tituloTop.setTextColor(androidx.core.content.ContextCompat.getColor(this, R.color.texto_principal));
+                    tituloTop.setTypeface(null, android.graphics.Typeface.BOLD);
+                    tituloTop.setPadding(0, 10, 0, 20);
+                    painelUI.addView(tituloTop);
+
+                    // GERA A LISTA DO RANKING
+                    StringBuilder sbTop15 = new StringBuilder(); // Para salvar no input depois
+                    for (int i = 0; i < 15; i++) {
+                        PrevisaoItem item = ranking.get(i);
+                        sbTop15.append(String.format("%02d ", item.numero));
+
+                        LinearLayout linha = new LinearLayout(this);
+                        linha.setOrientation(LinearLayout.HORIZONTAL);
+                        linha.setPadding(0, 5, 0, 5);
+
+                        TextView txtNum = new TextView(this);
+                        txtNum.setText(String.format("%02d", item.numero));
+                        txtNum.setTextSize(18);
+                        txtNum.setTypeface(null, android.graphics.Typeface.BOLD);
+                        txtNum.setTextColor(Color.parseColor("#1976D2"));
+                        txtNum.setPadding(0, 0, 20, 0);
+
+                        TextView txtStats = new TextView(this);
+                        String tendenciaSinal = item.tendencia > 0 ? "📈" : (item.tendencia < 0 ? "📉" : "➖");
+                        String alertaAtraso = item.atraso >= 10 ? " ⏳(Atrasado!)" : "";
+                        txtStats.setText("Nota: " + item.notaFinal + "% | Saiu: " + item.freq + "x | Atraso: " + item.atraso + alertaAtraso + " " + tendenciaSinal);
+                        txtStats.setTextSize(13);
+                        txtStats.setTextColor(androidx.core.content.ContextCompat.getColor(this, R.color.texto_suave));
+
+                        linha.addView(txtNum);
+                        linha.addView(txtStats);
+                        painelUI.addView(linha);
+                    }
+
+                    scrollView.addView(painelUI);
+
+                    // OS BOTÕES DE AÇÃO
+                    AlertDialog dialogIA = new AlertDialog.Builder(this)
+                            .setTitle("🧠 Previsão Estatística (I.A.)")
+                            .setView(scrollView)
+                            .setNeutralButton("Fechar", null)
+                            .setNegativeButton("Usar como Fixas", (dialog, which) -> {
+                                if (inputFixas != null) {
+                                    inputFixas.setText(sbTop15.toString().trim());
+                                    Toast.makeText(this, "Top 15 aplicados como Fixas!", Toast.LENGTH_SHORT).show();
+                                }
+                            })
+                            .setPositiveButton("🤖 GERAR JOGO I.A.", (dialog, which) -> {
+                                if (inputFixas != null) {
+                                    inputFixas.setText(sbTop15.toString().trim());
+                                    buscarJogoEquilibrado(); // Roda a máquina com as fixas da IA!
+                                }
+                            })
+                            .create();
+
+                    dialogIA.show();
+                });
+
+            } catch (Exception e) {
+                runOnUiThread(() -> {
+                    layoutProgresso.setVisibility(View.GONE);
+                    Toast.makeText(this, "Erro na I.A.: " + e.getMessage(), Toast.LENGTH_LONG).show();
+                });
+            }
+        }).start();
+    }
+
+    // Classe auxiliar para organizar o ranking da I.A.
+    private static class PrevisaoItem {
+        int numero;
+        int notaFinal;
+        int freq;
+        int atraso;
+        float tendencia;
+        public PrevisaoItem(int num, int nota, int f, int a, float t) {
+            this.numero = num; this.notaFinal = nota; this.freq = f; this.atraso = a; this.tendencia = t;
         }
     }
 }

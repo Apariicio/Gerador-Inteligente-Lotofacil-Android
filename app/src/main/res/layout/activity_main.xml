@@ -450,21 +450,30 @@
         android:layout_width="280dp"
         android:layout_height="wrap_content"
         android:layout_centerInParent="true"
-        android:background="#FAFAFA"
-        android:elevation="15dp"
+        android:background="@android:color/transparent" android:elevation="15dp"
         android:gravity="center"
         android:orientation="vertical"
         android:padding="20dp"
         android:visibility="gone">
 
         <TextView
+            android:id="@+id/iconeTrevoLoading"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="🍀"
+            android:textSize="60sp"
+            android:visibility="gone" />
+
+        <TextView
             android:id="@+id/txtProgressoVarredura"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:text="Analisando jogos..."
-            android:textColor="#333333"
-            android:textSize="14sp"
+            android:textColor="@color/texto_principal"
+            android:textSize="20sp"
             android:textStyle="bold"
+            android:shadowColor="#99000000" android:shadowDx="1" android:shadowDy="1"
+            android:shadowRadius="4"
             android:layout_marginBottom="10dp"/>
 
         <ProgressBar

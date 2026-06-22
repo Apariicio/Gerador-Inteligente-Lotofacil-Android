@@ -11,6 +11,7 @@ import androidx.core.app.NotificationCompat;
 import java.util.Calendar;
 
 public class LembreteReceiver extends BroadcastReceiver {
+
     @Override
     public void onReceive(Context context, Intent intent) {
         // 🌟 MATEMÁTICA DO FILTRO: Verifica o dia da semana atual no celular
@@ -51,5 +52,32 @@ public class LembreteReceiver extends BroadcastReceiver {
             // Dispara a notificação na barra de tarefas do usuário
             nm.notify(777, builder.build());
         }
+
+        // =========================================================================
+        // 🌟 REAGENDAR ALARME EXATO PARA O DIA SEGUINTE (AGORA NO LUGAR CERTO)
+        // =========================================================================
+        android.content.SharedPreferences prefs = context.getSharedPreferences("HistoricoJogos", Context.MODE_PRIVATE);
+        if (prefs.getBoolean("lembrete_ativo", false)) {
+            int hora = prefs.getInt("lembrete_hora", 19);
+            int minuto = prefs.getInt("lembrete_minuto", 0);
+
+            java.util.Calendar amanha = java.util.Calendar.getInstance();
+            amanha.add(java.util.Calendar.DAY_OF_YEAR, 1);
+            amanha.set(java.util.Calendar.HOUR_OF_DAY, hora);
+            amanha.set(java.util.Calendar.MINUTE, minuto);
+            amanha.set(java.util.Calendar.SECOND, 0);
+
+            android.app.AlarmManager am = (android.app.AlarmManager) context.getSystemService(Context.ALARM_SERVICE);
+            android.content.Intent novoIntent = new android.content.Intent(context, LembreteReceiver.class);
+            android.app.PendingIntent novoPi = android.app.PendingIntent.getBroadcast(
+                    context, 777, novoIntent, android.app.PendingIntent.FLAG_UPDATE_CURRENT | android.app.PendingIntent.FLAG_IMMUTABLE);
+
+            if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.M) {
+                if (am != null) am.setExactAndAllowWhileIdle(android.app.AlarmManager.RTC_WAKEUP, amanha.getTimeInMillis(), novoPi);
+            } else {
+                if (am != null) am.setExact(android.app.AlarmManager.RTC_WAKEUP, amanha.getTimeInMillis(), novoPi);
+            }
+        }
+
     }
 }
