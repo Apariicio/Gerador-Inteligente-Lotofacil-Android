@@ -1,3 +1,9 @@
+/*
+ * Copyright (c) 2026 [Aparício (Liu)]. Todos os direitos reservados.
+ * Este arquivo é parte do aplicativo [Quinze Números Aleatórios].
+ * A cópia não autorizada deste arquivo, via qualquer meio, é estritamente proibida.
+ * Desenvolvido por: [Aparício] - [www.linkedin.com/in/aparício-amaral-b53451304]
+ */
 package com.aparicioamaral.quinzenumerosaleatorios;
 
 import android.content.Intent;

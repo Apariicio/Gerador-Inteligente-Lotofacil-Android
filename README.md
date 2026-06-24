@@ -130,4 +130,11 @@ Este projeto é de uso pessoal e educacional. Todos os direitos reservados.
 
 ## 👨‍💻 Desenvolvedor
 
-Desenvolvido por Liu Amaral
+Desenvolvido por Aparício Amaral
+
+## ©️ Autoria e Direitos Autorais
+
+Criado, arquitetado e desenvolvido por **Aparício**.
+O algoritmo de Inteligência Artificial, os motores lógicos (Plano B) e a arquitetura de análise estatística presentes neste repositório são propriedades intelectuais exclusivas.
+
+**Nenhuma parte deste projeto pode ser comercializada, clonada ou republicada sem autorização.**
