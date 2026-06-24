@@ -12,6 +12,8 @@ import android.widget.EditText;
 import android.widget.GridLayout;
 import android.widget.LinearLayout;
 import android.widget.ProgressBar;
+import android.widget.RadioButton;
+import android.widget.RadioGroup;
 import android.widget.Switch;
 import android.widget.TextView;
 import android.widget.Toast;
@@ -182,7 +184,7 @@ public class MainActivity extends AppCompatActivity {
                         return true;
                     } else if (item.getItemId() == 6) {
                         // GATILHO DA I.A.
-                        abrirPainelPrevisaoIA();
+                        abrirMenuSuperIA();
                         return true;
                     }
                     return false;
@@ -232,6 +234,7 @@ public class MainActivity extends AppCompatActivity {
             iconeTrevoLoading.setVisibility(View.VISIBLE); // Mostra o trevo gigante
 
             txtProgressoVarredura.setText("Sincronizando a sorte...");
+            aplicarFundoLegivel(txtProgressoVarredura);
 
             // Faz o trevo girar 360 graus infinitamente
             animacaoTrevo = android.animation.ObjectAnimator.ofFloat(iconeTrevoLoading, "rotation", 0f, 360f);
@@ -655,7 +658,16 @@ public class MainActivity extends AppCompatActivity {
 
                         "⚡ <b>Barra de Progresso na Varredura:</b> Acompanhe em tempo real o andamento da análise de todos os seus jogos contra a história oficial.<br><br>" +
 
-                        "📱 <b>Interface Otimizada:</b> Ajustes visuais em todos os componentes para melhor experiência em diferentes tamanhos de tela e temas.";
+                        "📱 <b>Interface Otimizada:</b> Ajustes visuais em todos os componentes para melhor experiência em diferentes tamanhos de tela e temas." +
+
+                        "🧠 <b>Super Jogo I.A. (Data Science):</b> A evolução máxima do nosso algoritmo! Agora a I.A. possui um cérebro independente com <b>3 perfis de ação</b>:<br>" +
+                        "• 🛡️ <b>Conservador:</b> Foca nas dezenas mais quentes (Padrão Ouro).<br>" +
+                        "• ⚔️ <b>Arrojado:</b> Caçador de 'zebras' e dezenas muito atrasadas.<br>" +
+                        "• 🎯 <b>Sniper:</b> Usa a <i>Lei da Compensação</i> (analisa o desvio do último sorteio para equilibrar o próximo).<br><br>" +
+                        "📖 <b>Manual de Bordo da I.A.:</b> Novo botão <b>\"ℹ️ Como Funciona?\"</b> que explica de forma transparente toda a matemática por trás da inteligência artificial.<br><br>" +
+                        "🛡️ <b>Motor de Resgate (Plano B):</b> O app ficou à prova de falhas! Se as suas dezenas Fixas (ou a I.A.) entrarem em conflito impossível com os filtros ligados, o 'Plano B' é ativado automaticamente, garantindo que o seu jogo seja gerado e estampado no tabuleiro sem travamentos.<br><br>" +
+                        "🎨 <b>Design Premium e Legibilidade:</b> Novo <b>Tabuleiro Exclusivo I.A.</b> com relatório de justificativa detalhado. Além disso, as mensagens de carregamento ganharam <b>fundos inteligentes (pílula)</b> que se adaptam perfeitamente ao Tema Claro ☀️ e ao Tema Escuro 🌙 para máxima leitura visual.<br><br>";
+
 
         LinearLayout layoutPrincipal = new LinearLayout(this);
         layoutPrincipal.setOrientation(LinearLayout.VERTICAL);
@@ -784,9 +796,38 @@ public class MainActivity extends AppCompatActivity {
 
         while (true) {
             tentativasLoop++;
+            // "PLANO B": SE OS FILTROS FOREM IMPOSSÍVEIS, PASSA O TRATOR E GERA MESMO ASSIM
             if (tentativasLoop > 50000) {
-                Toast.makeText(this, "Difícil! Desative as 'Travas Ocultas' ou outras chaves.", Toast.LENGTH_LONG).show();
-                return;
+                runOnUiThread(() -> {
+                    String msg = "⚠️ Conflito de Filtros! Ativando Plano B para forçar suas Fixas no tabuleiro...";
+                    // Exibe a primeira vez (dura ~3.5 segundos)
+                    Toast.makeText(this, msg,Toast.LENGTH_LONG).show();
+                    new android.os.Handler(android.os.Looper.getMainLooper()).postDelayed(() -> {
+                        Toast.makeText(this, msg, Toast.LENGTH_LONG).show();
+                    }, 3000);
+                });
+
+                ArrayList<Integer> planoB = new ArrayList<>(numerosFixosUsuario); // Pega as fixas da IA
+
+                // Preenche o que falta ignorando os switches, só para garantir que o jogo exista!
+                while (planoB.size() < 15) {
+                    int num = gerador.nextInt(25) + 1;
+                    if (!planoB.contains(num)) planoB.add(num);
+                }
+                Collections.sort(planoB);
+
+                listaDefinitiva = planoB;
+
+                // Recalcula as estatísticas reais desse novo jogo rebelde para mostrar na tela
+                somaFinal = 0; paresFinal = 0; primosFinal = 0; fibonacciFinal = 0; repetidosFinal = 0;
+                for (int n : planoB) {
+                    somaFinal += n;
+                    if (n % 2 == 0) paresFinal++;
+                    if (numerosPrimos.contains(n)) primosFinal++;
+                    if (numerosFibonacci.contains(n)) fibonacciFinal++;
+                    if (!numerosDoUltimoConcurso.isEmpty() && numerosDoUltimoConcurso.contains(n)) repetidosFinal++;
+                }
+                break; // Quebra o loop infinito e vai direto pintar o tabuleiro!
             }
 
             ArrayList<Integer> tentativa = new ArrayList<>();
@@ -1370,13 +1411,21 @@ public class MainActivity extends AppCompatActivity {
         public PacoteJogo(int c, ArrayList<Integer> n) { this.concurso = c; this.numeros = n; }
     }
 
+    // LEITOR DE FIXAS BLINDADO
     private ArrayList<Integer> converterStringParaLista(String numerosStr) {
         ArrayList<Integer> lista = new ArrayList<>();
         try {
-            String limpa = numerosStr.replace("[", "").replace("]", "").replace(",", " ");
+            // Arranca vírgulas, colchetes e letras. Deixa SÓ números e espaços!
+            String limpa = numerosStr.replaceAll("[^0-9 ]", " ");
             String[] partes = limpa.trim().split("\\s+");
             for (String p : partes) {
-                if (!p.isEmpty()) lista.add(Integer.parseInt(p.trim()));
+                if (!p.isEmpty()) {
+                    int num = Integer.parseInt(p.trim());
+                    // Garante que é uma bola válida de 1 a 25 e que não está repetida
+                    if (num >= 1 && num <= 25 && !lista.contains(num)) {
+                        lista.add(num);
+                    }
+                }
             }
         } catch (Exception e) {}
         return lista;
@@ -2476,21 +2525,31 @@ public class MainActivity extends AppCompatActivity {
 
                     scrollView.addView(painelUI);
 
-                    // OS BOTÕES DE AÇÃO
+                    // ==========================================================
+                    // BOTÕES DE AÇÃO INTELIGENTES
+                    // ==========================================================
                     AlertDialog dialogIA = new AlertDialog.Builder(this)
                             .setTitle("🧠 Previsão Estatística (I.A.)")
                             .setView(scrollView)
                             .setNeutralButton("Fechar", null)
-                            .setNegativeButton("Usar como Fixas", (dialog, which) -> {
+
+                            // BOTÃO 1: Usa apenas os 8 melhores para o app conseguir equilibrar o resto!
+                            .setNegativeButton("Top 8 como Fixas", (dialog, which) -> {
+                                StringBuilder sbTop8 = new StringBuilder();
+                                for (int i = 0; i < 8; i++) {
+                                    sbTop8.append(String.format("%02d ", ranking.get(i).numero));
+                                }
                                 if (inputFixas != null) {
-                                    inputFixas.setText(sbTop15.toString().trim());
-                                    Toast.makeText(this, "Top 15 aplicados como Fixas!", Toast.LENGTH_SHORT).show();
+                                    inputFixas.setText(sbTop8.toString().trim());
+                                    Toast.makeText(this, "Top 8 aplicado! Agora clique em Gerar para o app equilibrar o resto do jogo.", Toast.LENGTH_LONG).show();
                                 }
                             })
-                            .setPositiveButton("🤖 GERAR JOGO I.A.", (dialog, which) -> {
+
+                            // BOTÃO 2: Força o Top 15 exato
+                            .setPositiveButton("Forçar Top 15", (dialog, which) -> {
                                 if (inputFixas != null) {
                                     inputFixas.setText(sbTop15.toString().trim());
-                                    buscarJogoEquilibrado(); // Roda a máquina com as fixas da IA!
+                                    Toast.makeText(this, "Top 15 colado nos fixos! Lembre-se: os filtros principais precisam estar desligados para aceitar esse jogo.", Toast.LENGTH_LONG).show();
                                 }
                             })
                             .create();
@@ -2505,6 +2564,397 @@ public class MainActivity extends AppCompatActivity {
                 });
             }
         }).start();
+    }
+
+    // ====================================================================
+    // 🤖 FASE 1: PORTA DE ENTRADA DA SUPER I.A. (TERMOS E PERFIS)
+    // ====================================================================
+    private void abrirMenuSuperIA() {
+        // Cria o layout da janela
+        LinearLayout layout = new LinearLayout(this);
+        layout.setOrientation(LinearLayout.VERTICAL);
+        layout.setPadding(50, 40, 50, 40);
+
+        // 1. O Aviso Legal
+        TextView aviso = new TextView(this);
+        aviso.setText("⚠️ TERMO DE RESPONSABILIDADE\n\nA Lotofácil é um jogo de azar imprevisível. Esta Inteligência Artificial utiliza data science avançado para encontrar os melhores padrões matemáticos (Frequência, Defasagem e Compensação), mas NÃO garante vitórias.\n\nEscolha a estratégia do algoritmo abaixo:");
+        aviso.setTextColor(Color.parseColor("#D32F2F")); // Vermelho suave
+        aviso.setTextSize(14f);
+        layout.addView(aviso);
+
+        // 2. O Grupo de Opções (Perfis da I.A.)
+        RadioGroup grupoPerfis = new RadioGroup(this);
+        grupoPerfis.setPadding(0, 40, 0, 0);
+
+        RadioButton rbConservador = new RadioButton(this);
+        rbConservador.setId(View.generateViewId());
+        rbConservador.setText("🛡️ I.A. Conservadora (Padrão Ouro)");
+        rbConservador.setTextColor(androidx.core.content.ContextCompat.getColor(this, R.color.texto_principal));
+        rbConservador.setPadding(0, 10, 0, 10);
+
+        RadioButton rbArrojado = new RadioButton(this);
+        rbArrojado.setId(View.generateViewId());
+        rbArrojado.setText("⚔️ I.A. Arrojada (Caçadora de Zebras)");
+        rbArrojado.setTextColor(androidx.core.content.ContextCompat.getColor(this, R.color.texto_principal));
+        rbArrojado.setPadding(0, 10, 0, 10);
+
+        RadioButton rbSniper = new RadioButton(this);
+        rbSniper.setId(View.generateViewId());
+        rbSniper.setText("🎯 I.A. Sniper (Mista / Recomendado)");
+        rbSniper.setTextColor(androidx.core.content.ContextCompat.getColor(this, R.color.texto_principal));
+        rbSniper.setPadding(0, 10, 0, 10);
+
+        // Deixa o Sniper marcado por padrão
+        rbSniper.setChecked(true);
+
+        grupoPerfis.addView(rbConservador);
+        grupoPerfis.addView(rbArrojado);
+        grupoPerfis.addView(rbSniper);
+        layout.addView(grupoPerfis);
+
+        // 3. Monta e exibe a Janela
+        new AlertDialog.Builder(this)
+                .setTitle("🧠 Super Gerador I.A.")
+                .setView(layout)
+                .setCancelable(false)
+                .setNegativeButton("Cancelar", null)
+
+                // 🌟 NOVO BOTÃO: O Manual da I.A.
+                .setNeutralButton("ℹ️ Como Funciona?", (dialog, which) -> {
+                    mostrarExplicacaoIA(); // Abre o manual
+                })
+
+                .setPositiveButton("Aceitar e Iniciar", (dialog, which) -> {
+                    int perfilEscolhido = 3;
+                    if (rbConservador.isChecked()) perfilEscolhido = 1;
+                    else if (rbArrojado.isChecked()) perfilEscolhido = 2;
+
+                    Toast.makeText(this, "Iniciando processamento neural...", Toast.LENGTH_SHORT).show();
+                    processarSuperJogoIA(perfilEscolhido);
+                })
+                .show();
+    }
+
+    // ====================================================================
+    // 🤖 FASE 2: O CÉREBRO INDEPENDENTE (DATA SCIENCE)
+    // ====================================================================
+    private void processarSuperJogoIA(int perfil) {
+        if (cacheOficiais == null || cacheOficiais.isEmpty()) {
+            Toast.makeText(this, "Aguarde o banco de dados carregar...", Toast.LENGTH_SHORT).show();
+            return;
+        }
+
+        // Inicia a animação de varredura para dar um visual de processamento
+        layoutProgresso.setVisibility(View.VISIBLE);
+        progressBarVarredura.setVisibility(View.VISIBLE);
+        txtProgressoVarredura.setText("I.A. analisando algoritmos de compensação...");
+
+        new Thread(() -> {
+            try {
+                // 1. ANÁLISE DO ÚLTIMO CONCURSO (LEI DA COMPENSAÇÃO)
+                int[] ultimoSorteio = cacheOficiais.get(cacheOficiais.size() - 1).numeros;
+                int imparesUltimo = 0;
+                for (int num : ultimoSorteio) {
+                    if (num % 2 != 0) imparesUltimo++;
+                }
+
+                // Se ontem vieram MUITOS ímpares (>8), a tendência (regressão à média) é cair para 7 hoje.
+                int metaImpares = (imparesUltimo > 8) ? 7 : 8;
+                if (perfil == 2) metaImpares = (imparesUltimo > 8) ? 6 : 9; // O Arrojado vai aos extremos
+
+                // 2. CÁLCULO DE FREQUÊNCIA E ATRASO (Últimos 30 concursos)
+                int[] freq30 = new int[26];
+                int[] atraso = new int[26];
+                Arrays.fill(atraso, 30); // Padrão máximo de atraso
+
+                int totalConcursos = cacheOficiais.size();
+                int limiteBusca = Math.min(30, totalConcursos);
+
+                for (int i = 0; i < limiteBusca; i++) {
+                    int idx = totalConcursos - 1 - i;
+                    for (int num : cacheOficiais.get(idx).numeros) {
+                        if (num >= 1 && num <= 25) {
+                            freq30[num]++;
+                            if (atraso[num] == 30) atraso[num] = i; // Registra há quantos jogos não sai
+                        }
+                    }
+                }
+
+                // 3. SEPARAÇÃO EM GRUPOS DE PODER
+                List<Integer> quentes = new ArrayList<>();
+                List<Integer> frias = new ArrayList<>();
+                for (int i = 1; i <= 25; i++) {
+                    // Se saiu mais de 16 vezes ou saiu nos últimos 2 jogos, é Quente. Senão, é Fria (Zebra).
+                    if (freq30[i] >= 16 || atraso[i] <= 2) quentes.add(i);
+                    else frias.add(i);
+                }
+
+                // Embaralha para não pegar sempre as mesmas
+                Collections.shuffle(quentes);
+                Collections.shuffle(frias);
+
+                // 4. O FUNIL DE ESCOLHA BASEADO NO PERFIL
+                List<Integer> jogoFinal = new ArrayList<>();
+                String justificativa = "";
+
+                if (perfil == 1) { // CONSERVADOR (11 Quentes, 4 Frias)
+                    justificativa = "🛡️ Estratégia Conservadora: Foquei nas dezenas mais quentes do momento e apliquei o Padrão Ouro estatístico. Ideal para manter um jogo seguro e consistente.";
+                    montarJogoPorPerfil(jogoFinal, quentes, frias, 11, 4, metaImpares);
+                }
+                else if (perfil == 2) { // ARROJADO (6 Quentes, 9 Frias)
+                    justificativa = "⚔️ Estratégia Arrojada: Algumas dezenas estão muito atrasadas! Forcei a entrada de 'Zebras' para quebrar o padrão. Ideal para buscar prêmios acumulados onde a maioria erra.";
+                    montarJogoPorPerfil(jogoFinal, quentes, frias, 6, 9, metaImpares);
+                }
+                else { // SNIPER (8 Quentes, 7 Frias + Compensação)
+                    String textoComp = (imparesUltimo > 8) ? "reduzir os ímpares" : "aumentar os ímpares";
+                    justificativa = "🎯 Estratégia Sniper: O último sorteio teve " + imparesUltimo + " ímpares. Usei a Lei da Compensação para " + textoComp + " neste jogo, mesclando perfeitamente dezenas quentes e atrasadas.";
+                    montarJogoPorPerfil(jogoFinal, quentes, frias, 8, 7, metaImpares);
+                }
+
+                // 5. TRAVA DE SEGURANÇA (Se a matemática falhar, completa até 15)
+                Random gerador = new Random();
+                while (jogoFinal.size() < 15) {
+                    int num = gerador.nextInt(25) + 1;
+                    if (!jogoFinal.contains(num)) jogoFinal.add(num);
+                }
+                Collections.sort(jogoFinal);
+
+                // Simula um "tempo de pensamento" para a I.A. (1.5 segundos)
+                Thread.sleep(1500);
+
+                // 6. ENVIANDO PARA A FASE 3 (O Tabuleiro)
+                final String justificativaBlindada = justificativa;
+                runOnUiThread(() -> {
+                    layoutProgresso.setVisibility(View.GONE);
+                    abrirSuperTabuleiroIA(jogoFinal, justificativaBlindada, perfil);
+                });
+
+            } catch (Exception e) {
+                runOnUiThread(() -> {
+                    layoutProgresso.setVisibility(View.GONE);
+                    Toast.makeText(this, "Erro no motor da I.A.", Toast.LENGTH_SHORT).show();
+                });
+            }
+        }).start();
+    }
+
+    // Função matemática auxiliar para equilibrar a mescla de bolas
+    private void montarJogoPorPerfil(List<Integer> jogo, List<Integer> quentes, List<Integer> frias, int qtdQuentes, int qtdFrias, int metaImpares) {
+        int imparesAtuais = 0;
+        // Puxa as Quentes
+        for (int q : quentes) {
+            if (jogo.size() < qtdQuentes) {
+                boolean isImpar = (q % 2 != 0);
+                if (isImpar && imparesAtuais >= metaImpares) continue;
+                jogo.add(q);
+                if (isImpar) imparesAtuais++;
+            }
+        }
+        // Puxa as Frias
+        for (int f : frias) {
+            if (jogo.size() < (qtdQuentes + qtdFrias)) {
+                boolean isImpar = (f % 2 != 0);
+                if (isImpar && imparesAtuais >= metaImpares && jogo.size() < 14) continue;
+                if (!jogo.contains(f)) {
+                    jogo.add(f);
+                    if (isImpar) imparesAtuais++;
+                }
+            }
+        }
+    }
+
+    // ====================================================================
+    // 🤖 FASE 3: O TABULEIRO FUTURISTA DA SUPER I.A.
+    // ====================================================================
+    private void abrirSuperTabuleiroIA(List<Integer> jogoGerado, String justificativa, int perfil) {
+        // Criamos uma tela rolável caso o celular seja pequeno
+        android.widget.ScrollView scrollView = new android.widget.ScrollView(this);
+        LinearLayout layout = new LinearLayout(this);
+        layout.setOrientation(LinearLayout.VERTICAL);
+        layout.setPadding(50, 40, 50, 40);
+
+        // 1. Título Estilizado
+        TextView titulo = new TextView(this);
+        titulo.setText("🧠 SUPER JOGO I.A.");
+        titulo.setTextSize(20f);
+        titulo.setTypeface(null, android.graphics.Typeface.BOLD);
+        titulo.setTextColor(Color.parseColor("#9C27B0")); // Roxo "Neon" futurista
+        titulo.setGravity(android.view.Gravity.CENTER);
+        titulo.setPadding(0, 0, 0, 30);
+        layout.addView(titulo);
+
+        // 2. O Tabuleiro de Números (A Sequência Gerada)
+        TextView txtNumeros = new TextView(this);
+        StringBuilder sbNumeros = new StringBuilder();
+        for (int num : jogoGerado) {
+            sbNumeros.append(String.format("%02d  ", num)); // Formata com zero (ex: 01, 05)
+        }
+        txtNumeros.setText(sbNumeros.toString().trim());
+        txtNumeros.setTextSize(24f);
+        txtNumeros.setTypeface(null, android.graphics.Typeface.BOLD);
+        txtNumeros.setTextColor(androidx.core.content.ContextCompat.getColor(this, R.color.texto_principal));
+        txtNumeros.setGravity(android.view.Gravity.CENTER);
+        // Colocamos um fundo suave para destacar os números
+        txtNumeros.setBackgroundColor(Color.parseColor("#1A9C27B0"));
+        txtNumeros.setPadding(20, 30, 20, 30);
+        layout.addView(txtNumeros);
+
+        // 3. O Relatório de Justificativa
+        TextView txtJustificativa = new TextView(this);
+        txtJustificativa.setText("\n📊 Relatório de Processamento:\n" + justificativa);
+        txtJustificativa.setTextSize(14f);
+        txtJustificativa.setTextColor(androidx.core.content.ContextCompat.getColor(this, R.color.texto_suave));
+        txtJustificativa.setPadding(0, 30, 0, 20);
+        layout.addView(txtJustificativa);
+
+        scrollView.addView(layout);
+
+        // 4. A Janela Pop-up com as Opções
+        AlertDialog dialog = new AlertDialog.Builder(this)
+                .setView(scrollView)
+                .setCancelable(false)
+                .setNegativeButton("❌ Fechar", null)
+                .setNeutralButton("🔄 Refazer I.A.", (d, which) -> {
+                    // Clica aqui e ele roda o cérebro de novo sem fechar a experiência!
+                    processarSuperJogoIA(perfil);
+                })
+                .setPositiveButton("✅ JOGAR ESSA SEQUÊNCIA", (d, which) -> {
+                    aplicarSuperJogoNaTela(jogoGerado);
+                })
+                .create();
+
+        dialog.show();
+    }
+
+    // ====================================================================
+    // 🎨 DESIGN: FUNDO LEGÍVEL PARA TEXTOS DE CARREGAMENTO
+    // ====================================================================
+    private void aplicarFundoLegivel(TextView txt) {
+        if (txt == null) return;
+
+        android.graphics.drawable.GradientDrawable shape = new android.graphics.drawable.GradientDrawable();
+        shape.setShape(android.graphics.drawable.GradientDrawable.RECTANGLE);
+        shape.setCornerRadius(40f); // Cantos bem arredondados (estilo pílula)
+
+        // Verifica qual é o tema atual do aparelho (Claro ou Escuro)
+        int currentNightMode = getResources().getConfiguration().uiMode & android.content.res.Configuration.UI_MODE_NIGHT_MASK;
+
+        if (currentNightMode == android.content.res.Configuration.UI_MODE_NIGHT_YES) {
+            // 🌙 TEMA DARK: Fundo escuro/cinza com 85% de opacidade
+            shape.setColor(Color.parseColor("#D91E1E1E"));
+            txt.setTextColor(Color.parseColor("#FFFFFF")); // Texto branco
+        } else {
+            // ☀️ TEMA CLARO: Fundo esbranquiçado com 85% de opacidade
+            shape.setColor(Color.parseColor("#D9FFFFFF"));
+            txt.setTextColor(Color.parseColor("#121212")); // Texto preto/escuro
+        }
+
+        txt.setBackground(shape);
+        // Adiciona um respiro (margem interna) para o texto não ficar colado nas bordas da pílula
+        txt.setPadding(10, 20, 10, 20);
+    }
+
+    // ====================================================================
+    // 📖 O MANUAL DE INSTRUÇÕES DA I.A. (COMO FUNCIONA)
+    // ====================================================================
+    private void mostrarExplicacaoIA() {
+        android.widget.ScrollView scrollView = new android.widget.ScrollView(this);
+        LinearLayout layout = new LinearLayout(this);
+        layout.setOrientation(LinearLayout.VERTICAL);
+        layout.setPadding(50, 40, 50, 40);
+
+        TextView titulo = new TextView(this);
+        titulo.setText("Como a I.A. pensa?");
+        titulo.setTextSize(18f);
+        titulo.setTypeface(null, android.graphics.Typeface.BOLD);
+        titulo.setTextColor(Color.parseColor("#1976D2")); // Azul para dar cara de informação
+        titulo.setPadding(0, 0, 0, 20);
+        layout.addView(titulo);
+
+        TextView texto = new TextView(this);
+        texto.setText("Nosso algoritmo analisa os últimos 30 concursos para separar os números em dois grupos: os QUENTES (que saem muito) e as FRIAS/ZEBRAS (que estão atrasados).\n\nA partir daí, você escolhe como ela deve agir:");
+        texto.setTextSize(14f);
+        texto.setTextColor(androidx.core.content.ContextCompat.getColor(this, R.color.texto_principal));
+        texto.setPadding(0, 0, 0, 30);
+        layout.addView(texto);
+
+        // Bloco Conservador
+        TextView txtCons = new TextView(this);
+        txtCons.setText("🛡️ I.A. Conservadora");
+        txtCons.setTypeface(null, android.graphics.Typeface.BOLD);
+        txtCons.setTextColor(Color.parseColor("#388E3C")); // Verde
+        layout.addView(txtCons);
+
+        TextView descCons = new TextView(this);
+        descCons.setText("Joga na zona de conforto estatística. O algoritmo escolhe a maioria das dezenas (11 bolas) entre as mais Quentes do momento e completa com algumas poucas Frias. Excelente para manter a segurança.\n");
+        descCons.setTextSize(13f);
+        layout.addView(descCons);
+
+        // Bloco Arrojado
+        TextView txtArr = new TextView(this);
+        txtArr.setText("⚔️ I.A. Arrojada");
+        txtArr.setTypeface(null, android.graphics.Typeface.BOLD);
+        txtArr.setTextColor(Color.parseColor("#D32F2F")); // Vermelho
+        layout.addView(txtArr);
+
+        TextView descArr = new TextView(this);
+        descArr.setText("Estratégia de alto risco para quebrar padrões. A I.A. foca nas 'Zebras' (9 bolas), forçando a entrada de dezenas muito atrasadas. Feita para tentar pegar aquele prêmio onde a maioria das pessoas erra as dezenas.\n");
+        descArr.setTextSize(13f);
+        layout.addView(descArr);
+
+        // Bloco Sniper
+        TextView txtSni = new TextView(this);
+        txtSni.setText("🎯 I.A. Sniper (Recomendado)");
+        txtSni.setTypeface(null, android.graphics.Typeface.BOLD);
+        txtSni.setTextColor(Color.parseColor("#9C27B0")); // Roxo
+        layout.addView(txtSni);
+
+        TextView descSni = new TextView(this);
+        descSni.setText("O equilíbrio absoluto. Além de misturar 8 Quentes e 7 Frias, ela usa a poderosa 'Lei da Compensação'. A I.A. olha para o sorteio de ontem: se ontem saíram Ímpares demais (algo raro), hoje ela força a máquina a escolher mais Pares para compensar o desvio matemático.");
+        descSni.setTextSize(13f);
+        layout.addView(descSni);
+
+        scrollView.addView(layout);
+
+        new AlertDialog.Builder(this)
+                .setView(scrollView)
+                .setCancelable(false)
+                .setPositiveButton("Entendi", (dialog, which) -> {
+                    // Quando o usuário terminar de ler, reabre a tela da I.A. para ele poder jogar!
+                    abrirMenuSuperIA();
+                })
+                .show();
+    }
+
+    // ====================================================================
+    // ⚙️ O MOTOR QUE INJETA O JOGO DA I.A. NO SEU TABULEIRO PRINCIPAL
+    // ====================================================================
+    private void aplicarSuperJogoNaTela(List<Integer> jogoIA) {
+        ArrayList<Integer> jogoPronto = new ArrayList<>(jogoIA);
+        String assinaturaDoJogo = jogoPronto.toString();
+
+        // 1. Salva no seu histórico oficial
+        String historicoGeral = bancoDeDados.getString("historico_ordenado", "");
+        salvarJogo(historicoGeral, assinaturaDoJogo);
+
+        // 2. Acende as bolinhas visuais do seu aplicativo
+        atualizarTabuleiro(jogoPronto);
+
+        // 3. Calcula as estatísticas desse jogo único para exibir na tela principal
+        int pares = 0, soma = 0;
+        for (int n : jogoPronto) {
+            soma += n;
+            if (n % 2 == 0) pares++;
+        }
+
+        // 4. Atualiza os textos da sua interface avisando que a I.A. assumiu o controle
+        lblSomaPrimos.setText("Soma: " + soma + " (Gerado por I.A.)");
+        lblParesImpares.setText("Pares: " + pares + " / Ímpares: " + (15 - pares) + " (I.A.)");
+        lblFibRepetidos.setText("Estatísticas Mistas (Data Science)");
+        lblFibRepetidos.setTextColor(Color.parseColor("#9C27B0")); // Roxo na interface também!
+
+        atualizarContadorTela();
+        Toast.makeText(this, "🚀 Super Jogo I.A. fixado no tabuleiro e salvo no histórico!", Toast.LENGTH_LONG).show();
     }
 
     // Classe auxiliar para organizar o ranking da I.A.
