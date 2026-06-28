@@ -214,6 +214,7 @@
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:orientation="horizontal"
+            android:weightSum="3"
             android:paddingStart="10dp"
             android:paddingEnd="10dp"
             android:layout_marginBottom="10dp">
@@ -222,7 +223,7 @@
                 android:id="@+id/btnSortear"
                 android:layout_width="0dp"
                 android:layout_height="wrap_content"
-                android:layout_marginEnd="8dp"
+                android:layout_marginEnd="1dp"
                 android:layout_weight="1"
                 android:backgroundTint="#91B0276E"
                 android:padding="10dp"
@@ -236,6 +237,7 @@
                 android:id="@+id/btnTurbo"
                 android:layout_width="0dp"
                 android:layout_height="wrap_content"
+                android:layout_marginEnd="1dp"
                 android:layout_weight="1"
                 android:backgroundTint="#96ED8F05"
                 android:padding="10dp"
@@ -244,6 +246,16 @@
                 android:textColor="#FFFFFF"
                 android:textSize="14sp"
                 android:textStyle="bold" />
+
+            <Button
+                android:id="@+id/btnSuperIA"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_marginEnd="1dp"
+                android:layout_weight="1"
+                android:text="I.A."
+                android:backgroundTint="#9C27B0"
+                android:textColor="#FFFFFF" />
         </LinearLayout>
 
         <LinearLayout
@@ -450,7 +462,8 @@
         android:layout_width="280dp"
         android:layout_height="wrap_content"
         android:layout_centerInParent="true"
-        android:background="@android:color/transparent" android:elevation="15dp"
+        android:background="@android:color/transparent"
+        android:elevation="15dp"
         android:gravity="center"
         android:orientation="vertical"
         android:padding="20dp"
@@ -472,7 +485,9 @@
             android:textColor="@color/texto_principal"
             android:textSize="20sp"
             android:textStyle="bold"
-            android:shadowColor="#99000000" android:shadowDx="1" android:shadowDy="1"
+            android:shadowColor="#99000000"
+            android:shadowDx="1"
+            android:shadowDy="1"
             android:shadowRadius="4"
             android:layout_marginBottom="10dp"/>
 

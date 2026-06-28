@@ -14,47 +14,46 @@ public class LembreteReceiver extends BroadcastReceiver {
 
     @Override
     public void onReceive(Context context, Intent intent) {
-        // 🌟 MATEMÁTICA DO FILTRO: Verifica o dia da semana atual no celular
+        // 1. Verifica o dia da semana atual no celular
         Calendar calendar = Calendar.getInstance();
         int diaDaSemana = calendar.get(Calendar.DAY_OF_WEEK);
 
-        // Se for Domingo (SUNDAY), encerra o processo sem criar notificação
-        if (diaDaSemana == Calendar.SUNDAY) {
-            return;
-        }
+        // 2. SÓ CRIA A NOTIFICAÇÃO SE NÃO FOR DOMINGO
+        if (diaDaSemana != Calendar.SUNDAY) {
 
-        NotificationManager nm = (NotificationManager) context.getSystemService(Context.NOTIFICATION_SERVICE);
-        String channelId = "lembretes_sorteio_sniper";
+            NotificationManager nm = (NotificationManager) context.getSystemService(Context.NOTIFICATION_SERVICE);
+            String channelId = "lembretes_sorteio_sniper";
 
-        // Cria o canal de notificações obrigatório para Android 8.0 ou superior
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
-            NotificationChannel channel = new NotificationChannel(
-                    channelId, "Lembretes de Sorteio Lotofácil", NotificationManager.IMPORTANCE_HIGH);
-            channel.setDescription("Avisos diários para lembrar o horário de conferência e sorteios");
-            if (nm != null) nm.createNotificationChannel(channel);
-        }
+            // Cria o canal de notificações obrigatório para Android 8.0 ou superior
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+                NotificationChannel channel = new NotificationChannel(
+                        channelId, "Lembretes de Sorteio Lotofácil", NotificationManager.IMPORTANCE_HIGH);
+                channel.setDescription("Avisos diários para lembrar o horário de conferência e sorteios");
+                if (nm != null) nm.createNotificationChannel(channel);
+            }
 
-        // Configura a ação de clique da notificação (Abre a tela inicial do seu app)
-        Intent abrirApp = new Intent(context, MainActivity.class);
-        PendingIntent pi = PendingIntent.getActivity(
-                context, 0, abrirApp, PendingIntent.FLAG_UPDATE_CURRENT | PendingIntent.FLAG_IMMUTABLE);
+            // Configura a ação de clique da notificação
+            Intent abrirApp = new Intent(context, MainActivity.class);
+            PendingIntent pi = PendingIntent.getActivity(
+                    context, 0, abrirApp, PendingIntent.FLAG_UPDATE_CURRENT | PendingIntent.FLAG_IMMUTABLE);
 
-        // Monta o design visual da Notificação Push nativa
-        NotificationCompat.Builder builder = new NotificationCompat.Builder(context, channelId)
-                .setSmallIcon(android.R.drawable.ic_lock_idle_alarm) // Ícone clássico de alarme nativo
-                .setContentTitle("⏰ Hora do Sorteio Lotofácil!")
-                .setContentText("Não se esqueça de gerar e conferir suas sequências Sniper hoje no app!")
-                .setAutoCancel(true) // Desaparece da barra ao ser clicada
-                .setContentIntent(pi)
-                .setPriority(NotificationCompat.PRIORITY_HIGH);
+            // Monta o design visual da Notificação Push nativa
+            NotificationCompat.Builder builder = new NotificationCompat.Builder(context, channelId)
+                    .setSmallIcon(android.R.drawable.ic_lock_idle_alarm)
+                    .setContentTitle("⏰ Hora do Sorteio Lotofácil!")
+                    .setContentText("Não se esqueça de gerar e conferir suas sequências Sniper hoje no app!")
+                    .setAutoCancel(true)
+                    .setContentIntent(pi)
+                    .setPriority(NotificationCompat.PRIORITY_HIGH);
 
-        if (nm != null) {
-            // Dispara a notificação na barra de tarefas do usuário
-            nm.notify(777, builder.build());
+            if (nm != null) {
+                // Dispara a notificação
+                nm.notify(777, builder.build());
+            }
         }
 
         // =========================================================================
-        // 🌟 REAGENDAR ALARME EXATO PARA O DIA SEGUINTE (AGORA NO LUGAR CERTO)
+        // 3. REAGENDAR ALARME EXATO PARA O DIA SEGUINTE (SEMPRE EXECUTA!)
         // =========================================================================
         android.content.SharedPreferences prefs = context.getSharedPreferences("HistoricoJogos", Context.MODE_PRIVATE);
         if (prefs.getBoolean("lembrete_ativo", false)) {
@@ -78,6 +77,5 @@ public class LembreteReceiver extends BroadcastReceiver {
                 if (am != null) am.setExact(android.app.AlarmManager.RTC_WAKEUP, amanha.getTimeInMillis(), novoPi);
             }
         }
-
     }
 }

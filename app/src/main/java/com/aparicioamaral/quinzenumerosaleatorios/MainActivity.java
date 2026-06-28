@@ -104,6 +104,8 @@ public class MainActivity extends AppCompatActivity {
             btnSortear = findViewById(R.id.btnSortear);
             btnTurbo = findViewById(R.id.btnTurbo);
             btnTurbo.setOnClickListener(v -> abrirPopupTurbo3x());
+            Button btnSuperIA = findViewById(R.id.btnSuperIA);
+            btnSuperIA.setOnClickListener(v -> abrirMenuSuperIA());
             btnHistorico = findViewById(R.id.btnHistorico);
             btnConferir = findViewById(R.id.btnConferir);
             btnVarredura = findViewById(R.id.btnVarredura);
@@ -261,11 +263,15 @@ public class MainActivity extends AppCompatActivity {
             if (!ocultarGuia) {
                 mostrarInformacoesApp(true); // Chama o modo demo marcando que é abertura automática
             }
+            // 🌟 LIGA O ROBÔ CURANDEIRO (Verifica faltas na Nuvem em 2º plano)
+            iniciarRoboCurandeiro();
 
         } catch (Exception e) {
             e.printStackTrace();
             Toast.makeText(this, "Erro: " + e.getMessage(), Toast.LENGTH_LONG).show();
         }
+
+
     }
 
     // Função auxiliar para configurar a pintura inicial e o clique
@@ -565,62 +571,70 @@ public class MainActivity extends AppCompatActivity {
 
         // Mensagem HTML revisada e expandida
         String mensagemHTML =
-                "📱 <b>FUNCIONALIDADES PRINCIPAIS</b><br>" +
+
+                "🎯 <b>BEM-VINDO AO SEU GERADOR INTELIGENTE!</b><br>" +
                         "————————————————————<br>" +
-                        "🎯 <b>Gerar Jogo Inteligente:</b> Cria combinações aplicando os filtros ativos (Switches). <b>Ele nunca repete</b> jogos que você já fez ou que já saíram na história oficial.<br><br>" +
+                        "Este aplicativo foi projetado para transformar a forma como você joga na Lotofácil. Ele não é apenas um gerador de números: é um <b>verdadeiro funil estatístico</b> que filtra, analisa e entrega combinações com alto potencial, eliminando o 'lixo matemático'.<br><br>" +
 
-                        "🚀 <b>Turbo 3x (Geração Rápida):</b> Gera <b>3 jogos instantaneamente</b> em um popup dedicado com mini tabuleiros! Dentro do popup, o botão <b>\"Turbo 3x\"</b> permite gerar mais 3 jogos sem fechar a janela, acumulando quantos jogos quiser. Cada jogo é automaticamente salvo no histórico.<br><br>" +
+                        "📱 <b>O QUE VOCÊ PODE FAZER</b><br>" +
+                        "————————————————————<br>" +
 
-                        "🔒 <b>Fixar Números (Campo de Entrada):</b> Digite dezenas obrigatórias (ex: 01 13 25) que sempre entrarão no jogo gerado.<br><br>" +
+                        "🎯 <b>Gerar Jogo Inteligente:</b> Crie combinações únicas aplicando os filtros que você escolher. <b>O app nunca repete</b> jogos que você já fez ou que já saíram na história oficial.<br><br>" +
 
-                        "📜 <b>Histórico Geral:</b> Veja todos os jogos gerados com <b>data e hora de criação</b>. Toque para compartilhar ou segure para selecionar e apagar vários de uma vez.<br><br>" +
+                        "🚀 <b>Modo Turbo 3x:</b> Gere <b>3 jogos instantaneamente</b> em um popup com mini tabuleiros. Dentro do popup, clique em <b>\"Turbo 3x\"</b> para gerar mais 3 jogos sem fechar a janela. Cada jogo é salvo automaticamente no histórico.<br><br>" +
 
-                        "🛡️ <b>Proteger Jogo Manual (Inserir Manual):</b> Salve jogos que você já fez na lotérica. O app JAMAIS os gerará novamente.<br><br>" +
+                        "🔒 <b>Fixar Números:</b> Digite dezenas obrigatórias (ex: 01 13 25) que sempre estarão presentes em todos os jogos gerados.<br><br>" +
+
+                        "📜 <b>Histórico Geral:</b> Consulte todos os jogos gerados com <b>data e hora de criação</b>. Toque para compartilhar ou segure para selecionar e apagar vários de uma vez.<br><br>" +
+
+                        "🛡️ <b>Proteger Jogo Manual:</b> Salve jogos que você já fez na lotérica. O app JAMAIS os gerará novamente, evitando duplicidade.<br><br>" +
 
                         "🔍 <b>Conferidor de Histórico:</b> Digite 15 números para descobrir se você já gerou esse jogo ou se ele já foi sorteado oficialmente.<br><br>" +
 
-                        "⚡ <b>Varredura Relâmpago (Backtesting):</b> Cruza todos os seus jogos contra os concursos oficiais. Descubra quais jogos teriam feito de <b>11 a 15 pontos</b> em sorteios passados. <b>Nova barra de progresso</b> mostra o andamento em tempo real!<br><br>" +
+                        "⚡ <b>Varredura Relâmpago:</b> Cruza todos os seus jogos contra os concursos oficiais e revela quais teriam feito de <b>11 a 15 pontos</b> em sorteios passados. Você acompanha o progresso em tempo real com a <b>barra de progresso</b>.<br><br>" +
 
-                        "📥 <b>Cadastrar Oficial / Gerenciar Manuais:</b> Mantenha o banco de dados atualizado inserindo novos resultados oficiais. Toque e segure para deletar cadastros.<br><br>" +
+                        "📥 <b>Cadastrar Oficial / Gerenciar Manuais:</b> Mantenha a base de dados atualizada inserindo novos resultados oficiais. Toque e segure para deletar cadastros.<br><br>" +
 
                         "📤 <b>Compartilhar:</b> Toque no tabuleiro ou em qualquer jogo do histórico para enviar por WhatsApp ou redes sociais.<br><br>" +
 
-                        "🧠 <b>Previsão Estatística (I.A. Leve):</b> A \"joia da coroa\" do app! Um motor matemático que analisa <b>5 fatores</b> (Frequência, Defasagem, Tendência, Correlação e Sazonalidade) para gerar um <b>Top 15</b> de números recomendados. Você pode aplicar como Fixas ou gerar um jogo diretamente!<br><br>" +
+                        "🧠 <b>Inteligência Artificial (I.A.):</b> A \"joia da coroa\" do app! Um motor matemático avançado que analisa <b>5 fatores</b> para recomendar os melhores números. Você pode aplicar como Fixas ou gerar um jogo diretamente!<br><br>" +
 
-                        "📊 <b>Gráfico de Frequência:</b> Painel visual com barras coloridas mostrando os números mais quentes (🔴) e mais frios (🔵) nos últimos 30 concursos. Perfeito para análises rápidas!<br><br>" +
+                        "📊 <b>Gráfico de Frequência:</b> Visualize em barras coloridas os números mais quentes (🔴) e mais frios (🔵) nos últimos 30 concursos.<br><br>" +
 
-                        "💾 <b>Backup e Restauração:</b> Exporte todos os seus dados (histórico, configurações, cadastros manuais) em um arquivo <b>.json</b> seguro. Importe para restaurar em outro dispositivo ou após uma limpeza.<br><br>" +
+                        "💾 <b>Backup e Restauração:</b> Exporte todos os seus dados (histórico, configurações, cadastros manuais) em um arquivo <b>.json</b> seguro. Importe para restaurar em outro dispositivo.<br><br>" +
 
-                        "⏰ <b>Lembrete de Sorteios:</b> Configure um horário e receba <b>notificações push</b> nos dias de sorteio (Segunda a Sábado). Blindado contra economia de bateria!<br><br>" +
+                        "⏰ <b>Lembrete de Sorteios:</b> Configure um horário e receba <b>notificações push</b> nos dias de sorteio (Segunda a Sábado). O sistema é inteligente e ignora automaticamente os domingos!<br><br>" +
 
-                        "📊 <b>Contador de Filtros Ativos:</b> Na tela principal, veja em tempo real quantos dos 7 filtros estão ativos. <b>0/7</b> = modo livre, <b>7/7</b> = modo sniper.<br><br>" +
-
-                        "🎓 <b>Guia Interativo de Boas-Vindas:</b> Exibido automaticamente na primeira execução. Marque <b>\"Não mostrar novamente\"</b> para silenciá-lo. Disponível a qualquer momento pelo menu ☰.<br><br>" +
-
-                        "🎨 <b>Controle de Tema:</b> Alterne entre <b>Tema Claro ☀️</b>, <b>Tema Escuro 🌙</b> ou <b>Padrão do Sistema ⚙️</b> instantaneamente pelo menu.<br><br>" +
+                        "🎨 <b>Controle de Tema:</b> Alterne entre <b>Tema Claro ☀️</b>, <b>Tema Escuro 🌙</b> ou <b>Padrão do Sistema ⚙️</b> instantaneamente. Sua preferência é salva automaticamente.<br><br>" +
 
                         "🧹 <b>Manutenção de Dados:</b> Opções de <b>Limpar Cache</b> e <b>Reset de Fábrica</b> (com trava de segurança) para manter o app sempre leve e funcionando.<br><br>" +
 
-                        "🍀 <b>Tela de Carregamento Imersiva:</b> Animação de trevo giratório com bloqueio dos botões até que os dados estejam totalmente carregados.<br><br>" +
+                        "📊 <b>Contador de Filtros Ativos:</b> Veja em tempo real quantos dos 7 filtros estão ativos. <b>0/7</b> = modo livre, <b>7/7</b> = modo sniper.<br><br>" +
 
-                        "📊 <b>FILTROS OPCIONAIS (SWITCHES) - A LÓGICA POR TRÁS</b><br>" +
+                        "🎓 <b>Guia de Boas-Vindas:</b> Exibido automaticamente na primeira execução. Marque <b>\"Não mostrar novamente\"</b> para silenciá-lo. Disponível a qualquer momento pelo menu ☰.<br><br>" +
+
+                        "🍀 <b>Tela de Carregamento Imersiva:</b> Animação de <b>trevo giratório</b> com texto sombreado, bloqueando os botões até que os dados estejam totalmente carregados.<br><br>" +
+
+                        "🔄 <b>Atualização Automática de Concursos:</b> Agora o próprio aplicativo <b>busca e baixa automaticamente</b> os concursos faltantes diretamente da fonte oficial, mantendo sua base de dados sempre atualizada sem esforço! Você não precisa mais se preocupar em cadastrar manualmente cada novo resultado.<br><br>" +
+
+                        "📊 <b>FILTROS OPCIONAIS (SWITCHES) - COMO ELES FUNCIONAM</b><br>" +
                         "————————————————————<br>" +
                         "🧮 <b>Soma:</b> Mantém a soma dos 15 números entre <b>165 e 230</b>.<br>" +
                         "🔢 <b>Par / Ímpar:</b> Equilíbrio! Exige de <b>6 a 9 pares</b> (e 6 a 9 ímpares).<br>" +
                         "🔴 <b>Primos:</b> Exige entre <b>4 e 7 números primos</b> (2,3,5,7,11,13,17,19,23).<br>" +
                         "🌀 <b>Fibonacci:</b> Exige entre <b>3 e 5 números</b> da sequência (1,2,3,5,8,13,21).<br>" +
-                        "🔥 <b>Repetidos (Hot Numbers):</b> Exige que <b>7 a 10 números</b> sejam do ÚLTIMO sorteio oficial. (Estratégia de números quentes).<br>" +
-                        "❄️ <b>Ciclo (Cold Numbers):</b> Dá prioridade (70%) para dezenas <b>ainda não sorteadas</b> no ciclo atual (dezenas atrasadas).<br>" +
-                        "🛡️ <b>Travas Ocultas (Switch Mestre):</b> Controla todas as regras abaixo. Desative para gerar jogos sem restrições extras.<br><br>" +
+                        "🔥 <b>Repetidos (Hot Numbers):</b> Exige que <b>7 a 10 números</b> sejam do ÚLTIMO sorteio oficial.<br>" +
+                        "❄️ <b>Ciclo (Cold Numbers):</b> Dá prioridade (70%) para dezenas <b>ainda não sorteadas</b> no ciclo atual.<br>" +
+                        "🛡️ <b>Travas Ocultas:</b> Controla todas as regras de filtro fixo. Desative para gerar jogos sem restrições extras.<br><br>" +
 
-                        "🛡️ <b>TRAVAS OCULTAS (CONTROLADAS PELO SWITCH MESTRE)</b><br>" +
+                        "🛡️ <b>REGRAS DE FILTRO FIXO (CONTROLADAS PELO SWITCH MESTRE)</b><br>" +
                         "————————————————————<br>" +
-                        "🟩 <b>Moldura (Borda):</b> Exige entre <b>8 e 11 números</b> da borda (1,2,3,4,5,6,10,11,15,16,20,21,22,23,24,25).<br>" +
-                        "✖️ <b>Múltiplos de 3:</b> Exige entre <b>3 e 6 números</b> múltiplos de três (3,6,9,12,15,18,21,24).<br>" +
+                        "🟩 <b>Moldura (Borda):</b> Exige entre <b>8 e 11 números</b> da borda do tabuleiro.<br>" +
+                        "✖️ <b>Múltiplos de 3:</b> Exige entre <b>3 e 6 números</b> múltiplos de três.<br>" +
                         "📐 <b>Equilíbrio de Grade:</b> Impede linhas ou colunas vazias (0) ou cheias (5).<br>" +
                         "📏 <b>Trava de Sequência:</b> Bloqueia jogos com <b>8 ou mais números colados</b> (limite máximo 7).<br>" +
                         "🥶 <b>Dezena Fria:</b> Obriga <b>pelo menos 1 número</b> com baixa frequência nos últimos 10 concursos.<br>" +
-                        "🚫 <b>Anti-Duplicidade Suprema:</b> Descarta jogos que <b>já existem</b> no seu histórico ou nos +3.000 concursos oficiais.<br><br>" +
+                        "🚫 <b>Anti-Duplicidade Suprema:</b> Descarta jogos que <b>já existem</b> no seu histórico ou nos concursos oficiais.<br><br>" +
 
                         "🧠 <b>O EFEITO 'SNIPER' (A MATEMÁTICA DO FUNIL)</b><br>" +
                         "————————————————————<br>" +
@@ -636,7 +650,7 @@ public class MainActivity extends AppCompatActivity {
                         "<br><br>🆕 <b>NOVIDADES DA VERSÃO ATUAL!</b><br>" +
                         "————————————————————<br>" +
 
-                        "☰ <b>Menu Suspenso Premium:</b> O antigo botão de informação evoluiu para um menu elegante com cantos arredondados, reunindo todas as funcionalidades avançadas em um só lugar!<br><br>" +
+                        "☰ <b>Menu Suspenso Premium:</b> O antigo botão de informação evoluiu para um menu elegante com cantos arredondados, reunindo todas as funcionalidades avançadas em um só lugar.<br><br>" +
 
                         "🎨 <b>Controle Dinâmico de Tema:</b> Alternância instantânea entre <b>Tema Claro ☀️</b>, <b>Tema Escuro 🌙</b> ou <b>Padrão do Sistema ⚙️</b>. A preferência é salva automaticamente.<br><br>" +
 
@@ -670,10 +684,16 @@ public class MainActivity extends AppCompatActivity {
                         "• 🛡️ <b>Conservador:</b> Foca nas dezenas mais quentes (Padrão Ouro).<br>" +
                         "• ⚔️ <b>Arrojado:</b> Caçador de 'zebras' e dezenas muito atrasadas.<br>" +
                         "• 🎯 <b>Sniper:</b> Usa a <i>Lei da Compensação</i> (analisa o desvio do último sorteio para equilibrar o próximo).<br><br>" +
-                        "📖 <b>Manual de Bordo da I.A.:</b> Novo botão <b>\"ℹ️ Como Funciona?\"</b> que explica de forma transparente toda a matemática por trás da inteligência artificial.<br><br>" +
-                        "🛡️ <b>Motor de Resgate (Plano B):</b> O app ficou à prova de falhas! Se as suas dezenas Fixas (ou a I.A.) entrarem em conflito impossível com os filtros ligados, o 'Plano B' é ativado automaticamente, garantindo que o seu jogo seja gerado e estampado no tabuleiro sem travamentos.<br><br>" +
-                        "🎨 <b>Design Premium e Legibilidade:</b> Novo <b>Tabuleiro Exclusivo I.A.</b> com relatório de justificativa detalhado. Além disso, as mensagens de carregamento ganharam <b>fundos inteligentes (pílula)</b> que se adaptam perfeitamente ao Tema Claro ☀️ e ao Tema Escuro 🌙 para máxima leitura visual.<br><br>";
 
+                        "📖 <b>Manual de Bordo da I.A.:</b> Novo botão <b>\"ℹ️ Como Funciona?\"</b> que explica de forma transparente toda a matemática por trás da inteligência artificial.<br><br>" +
+
+                        "🛡️ <b>Motor de Resgate (Plano B):</b> O app ficou à prova de falhas! Se as suas dezenas Fixas (ou a I.A.) entrarem em conflito impossível com os filtros ligados, o 'Plano B' é ativado automaticamente, garantindo que o seu jogo seja gerado e estampado no tabuleiro sem travamentos.<br><br>" +
+
+                        "🎨 <b>Design Premium e Legibilidade:</b> Novo <b>Tabuleiro Exclusivo I.A.</b> com relatório de justificativa detalhado. Além disso, as mensagens de carregamento ganharam <b>fundos inteligentes (pílula)</b> que se adaptam perfeitamente ao Tema Claro ☀️ e ao Tema Escuro 🌙 para máxima leitura visual.<br><br>" +
+
+                        "🌐 <b>Busca Automática de Concursos Faltantes:</b> O app agora possui um <b>robô inteligente</b> que verifica e baixa automaticamente os concursos oficiais que estão faltando no seu banco de dados. Tudo em segundo plano, sem que você precise fazer nada. Sua base estatística estará sempre completa e atualizada! 🔄<br><br>" +
+
+                        "🤖 <b>Robô Curador de Dados (Self-Healing):</b> Um sistema inteligente que monitora a integridade do banco de dados e corrige automaticamente qualquer inconsistência, garantindo que você sempre tenha os resultados mais precisos para suas análises.<br><br>";
 
         LinearLayout layoutPrincipal = new LinearLayout(this);
         layoutPrincipal.setOrientation(LinearLayout.VERTICAL);
@@ -1131,26 +1151,77 @@ public class MainActivity extends AppCompatActivity {
         builder.show();
     }
 
+    // ====================================================================
+    // 🛡️ MOTOR DE CADASTRO OFICIAL (COM ESCUDO DE VALIDAÇÃO)
+    // ====================================================================
     public void processarECadastrar(String concurso, String data, String numerosBrutos) {
         try {
-            if (concurso.isEmpty() || data.isEmpty() || numerosBrutos.isEmpty()) return;
-            if (DadosOficiais.verificarSeConcursoJaExiste(this, concurso)) {
-                new AlertDialog.Builder(this).setTitle("Duplicidade!").setMessage("Concurso " + concurso + " já existe.").setPositiveButton("OK", null).show();
+            // 1. VALIDAÇÃO DE CAMPOS VAZIOS
+            if (concurso.trim().isEmpty() || data.trim().isEmpty() || numerosBrutos.trim().isEmpty()) {
+                Toast.makeText(this, "⚠️ Erro: Preencha todos os 3 campos!", Toast.LENGTH_LONG).show();
                 return;
             }
+
+            // 2. VALIDAÇÃO RIGOROSA DA DATA
+            java.text.SimpleDateFormat formatadorData = new java.text.SimpleDateFormat("dd/MM/yyyy", java.util.Locale.getDefault());
+            formatadorData.setLenient(false); // O 'false' proíbe datas impossíveis (ex: 32/13/2026)
+            try {
+                formatadorData.parse(data.trim());
+            } catch (Exception e) {
+                Toast.makeText(this, "📅 Erro: Digite uma data válida no formato dd/mm/aaaa", Toast.LENGTH_LONG).show();
+                return; // Bloqueia o salvamento
+            }
+
+            // 3. VALIDAÇÃO DE DUPLICIDADE (Concurso já existe?)
+            if (DadosOficiais.verificarSeConcursoJaExiste(this, concurso.trim())) {
+                new AlertDialog.Builder(this)
+                        .setTitle("Duplicidade!")
+                        .setMessage("O Concurso " + concurso.trim() + " já está cadastrado no sistema.")
+                        .setPositiveButton("OK", null)
+                        .show();
+                return;
+            }
+
+            // 4. VALIDAÇÃO DAS 15 DEZENAS
             String[] partes = numerosBrutos.replace(",", " ").replace("-", " ").trim().split("\\s+");
+
+            // Verifica a quantidade exata
             if (partes.length != 15) {
-                Toast.makeText(this, "Erro: Digite exatamente 15 números.", Toast.LENGTH_LONG).show();
+                Toast.makeText(this, "🔢 Erro: Você digitou " + partes.length + " números. Digite exatamente 15.", Toast.LENGTH_LONG).show();
                 return;
             }
+
             ArrayList<Integer> lista = new ArrayList<>();
-            for (String p : partes) lista.add(Integer.parseInt(p));
+            for (String p : partes) {
+                int n = Integer.parseInt(p);
+
+                // Verifica se a bola existe na Lotofácil (1 a 25)
+                if (n < 1 || n > 25) {
+                    Toast.makeText(this, "❌ Erro: O número " + n + " é inválido (apenas 01 a 25).", Toast.LENGTH_LONG).show();
+                    return;
+                }
+
+                // Verifica se o usuário digitou o mesmo número duas vezes sem querer
+                if (lista.contains(n)) {
+                    Toast.makeText(this, "♻️ Erro: O número " + n + " está repetido na sua lista.", Toast.LENGTH_LONG).show();
+                    return;
+                }
+
+                lista.add(n);
+            }
+
+            // Tudo perfeito! Ordena os números e salva no banco de dados
             Collections.sort(lista);
-            DadosOficiais.salvarNovoResultado(this, lista.toString(), concurso, data);
-            Toast.makeText(this, "Salvo com sucesso!", Toast.LENGTH_SHORT).show();
-            carregarDadosParaMemoria();
+            DadosOficiais.salvarNovoResultado(this, lista.toString(), concurso.trim(), data.trim());
+
+            Toast.makeText(this, "✅ Concurso " + concurso + " salvo com sucesso!", Toast.LENGTH_SHORT).show();
+            carregarDadosParaMemoria(); // Sincroniza o cérebro do app com o novo concurso
+
+        } catch (NumberFormatException e) {
+            // Cai aqui se o usuário digitar letras no lugar dos números
+            Toast.makeText(this, "🔤 Erro: Digite apenas NÚMEROS nas dezenas.", Toast.LENGTH_LONG).show();
         } catch (Exception e) {
-            Toast.makeText(this, "Erro nos dados.", Toast.LENGTH_SHORT).show();
+            Toast.makeText(this, "⚠️ Erro inesperado ao salvar os dados.", Toast.LENGTH_SHORT).show();
         }
     }
 
@@ -2651,8 +2722,9 @@ public class MainActivity extends AppCompatActivity {
         }
 
         // Inicia a animação de varredura para dar um visual de processamento
+        // Liga o trevo giratório!
+        controlarLoadingDoTrevo(true);
         layoutProgresso.setVisibility(View.VISIBLE);
-        progressBarVarredura.setVisibility(View.VISIBLE);
         txtProgressoVarredura.setText("I.A. analisando algoritmos de compensação...");
 
         new Thread(() -> {
@@ -2732,6 +2804,7 @@ public class MainActivity extends AppCompatActivity {
                 final String justificativaBlindada = justificativa;
                 runOnUiThread(() -> {
                     layoutProgresso.setVisibility(View.GONE);
+                    controlarLoadingDoTrevo(false); // Desliga o giro
                     abrirSuperTabuleiroIA(jogoFinal, justificativaBlindada, perfil);
                 });
 
@@ -2789,21 +2862,53 @@ public class MainActivity extends AppCompatActivity {
         titulo.setPadding(0, 0, 0, 30);
         layout.addView(titulo);
 
-        // 2. O Tabuleiro de Números (A Sequência Gerada)
-        TextView txtNumeros = new TextView(this);
-        StringBuilder sbNumeros = new StringBuilder();
-        for (int num : jogoGerado) {
-            sbNumeros.append(String.format("%02d  ", num)); // Formata com zero (ex: 01, 05)
+        // 2. O Tabuleiro Visual da I.A.
+        android.widget.GridLayout gridBoard = new android.widget.GridLayout(this);
+        gridBoard.setColumnCount(5);
+        gridBoard.setRowCount(5);
+        gridBoard.setAlignmentMode(android.widget.GridLayout.ALIGN_BOUNDS);
+        gridBoard.setUseDefaultMargins(true);
+
+        // Centraliza o grid na tela
+        LinearLayout.LayoutParams params = new LinearLayout.LayoutParams(
+                LinearLayout.LayoutParams.WRAP_CONTENT,
+                LinearLayout.LayoutParams.WRAP_CONTENT
+        );
+        params.gravity = android.view.Gravity.CENTER;
+        gridBoard.setLayoutParams(params);
+
+        // Gera as 25 bolinhas
+        for (int i = 1; i <= 25; i++) {
+            TextView bola = new TextView(this);
+            bola.setText(String.format("%02d", i));
+            bola.setGravity(android.view.Gravity.CENTER);
+            bola.setTextSize(16f);
+            bola.setTypeface(null, android.graphics.Typeface.BOLD);
+
+            // Tamanho fixo para ficarem redondinhas
+            android.widget.GridLayout.LayoutParams bolaParams = new android.widget.GridLayout.LayoutParams();
+            bolaParams.width = 100;
+            bolaParams.height = 100;
+            bolaParams.setMargins(8, 8, 8, 8);
+            bola.setLayoutParams(bolaParams);
+
+            android.graphics.drawable.GradientDrawable shape = new android.graphics.drawable.GradientDrawable();
+            shape.setShape(android.graphics.drawable.GradientDrawable.OVAL);
+
+            // Se o número faz parte do jogo da I.A., pinta de roxo. Se não, pinta de cinza claro.
+            if (jogoGerado.contains(i)) {
+                shape.setColor(Color.parseColor("#9C27B0")); // Roxo I.A.
+                bola.setTextColor(Color.WHITE);
+            } else {
+                shape.setColor(Color.parseColor("#E0E0E0")); // Cinza inativo
+                bola.setTextColor(Color.parseColor("#9E9E9E"));
+            }
+
+            bola.setBackground(shape);
+            gridBoard.addView(bola);
         }
-        txtNumeros.setText(sbNumeros.toString().trim());
-        txtNumeros.setTextSize(24f);
-        txtNumeros.setTypeface(null, android.graphics.Typeface.BOLD);
-        txtNumeros.setTextColor(androidx.core.content.ContextCompat.getColor(this, R.color.texto_principal));
-        txtNumeros.setGravity(android.view.Gravity.CENTER);
-        // Colocamos um fundo suave para destacar os números
-        txtNumeros.setBackgroundColor(Color.parseColor("#1A9C27B0"));
-        txtNumeros.setPadding(20, 30, 20, 30);
-        layout.addView(txtNumeros);
+
+        layout.addView(gridBoard);
 
         // 3. O Relatório de Justificativa
         TextView txtJustificativa = new TextView(this);
@@ -2830,6 +2935,36 @@ public class MainActivity extends AppCompatActivity {
                 .create();
 
         dialog.show();
+    }
+
+    // ====================================================================
+    // 🍀 ANIMAÇÃO DO TREVO GIRATÓRIO (VERSÃO TEXTVIEW/EMOJI)
+    // ====================================================================
+    private void controlarLoadingDoTrevo(boolean mostrar) {
+        // Agora procuramos um TextView com o ID exato do seu XML!
+        TextView txtTrevo = findViewById(R.id.iconeTrevoLoading);
+
+        if (txtTrevo == null) return;
+
+        if (mostrar) {
+            txtTrevo.setVisibility(View.VISIBLE);
+
+            // Cria a animação de giro infinito
+            android.view.animation.RotateAnimation rotate = new android.view.animation.RotateAnimation(
+                    0, 360,
+                    android.view.animation.Animation.RELATIVE_TO_SELF, 0.5f,
+                    android.view.animation.Animation.RELATIVE_TO_SELF, 0.5f
+            );
+            rotate.setDuration(1000); // 1 segundo para dar uma volta completa
+            rotate.setRepeatCount(android.view.animation.Animation.INFINITE);
+            rotate.setInterpolator(new android.view.animation.LinearInterpolator());
+
+            txtTrevo.startAnimation(rotate);
+        } else {
+            // Para a animação e esconde
+            txtTrevo.clearAnimation();
+            txtTrevo.setVisibility(View.GONE);
+        }
     }
 
     // ====================================================================
@@ -2973,5 +3108,126 @@ public class MainActivity extends AppCompatActivity {
         public PrevisaoItem(int num, int nota, int f, int a, float t) {
             this.numero = num; this.notaFinal = nota; this.freq = f; this.atraso = a; this.tendencia = t;
         }
+    }
+
+    // ====================================================================
+    // 🌐 MOTOR DE CURA DO BANCO DE DADOS (SELF-HEALING DATABASE)
+    // ====================================================================
+    private void iniciarRoboCurandeiro() {
+        new Thread(() -> {
+            try {
+                // 1. O BATEDOR: Descobre qual é o concurso oficial mais recente hoje
+                java.net.URL urlBase = new java.net.URL("https://servicebus2.caixa.gov.br/portaldeloterias/api/lotofacil/");
+                java.net.HttpURLConnection conexao = (java.net.HttpURLConnection) urlBase.openConnection();
+                conexao.setRequestMethod("GET");
+                conexao.setRequestProperty("User-Agent", "Mozilla/5.0");
+                conexao.setConnectTimeout(5000);
+                conexao.setReadTimeout(5000);
+
+                // Se o servidor da Caixa estiver fora do ar ou sem internet, morre em silêncio
+                if (conexao.getResponseCode() != 200) return;
+
+                java.io.BufferedReader leitor = new java.io.BufferedReader(new java.io.InputStreamReader(conexao.getInputStream(), "UTF-8"));
+                StringBuilder respostaStr = new StringBuilder();
+                String linha;
+                while ((linha = leitor.readLine()) != null) respostaStr.append(linha);
+                leitor.close();
+                conexao.disconnect();
+
+                org.json.JSONObject jsonUltimo = new org.json.JSONObject(respostaStr.toString());
+                int ultimoConcursoOficial = jsonUltimo.getInt("numero");
+
+                // 2. O AUDITOR: Faz o inventário do que o aplicativo já tem salvo
+                java.util.Map<String, String> oficiaisMap = DadosOficiais.carregarResultadosOficiais(this);
+                java.util.List<Integer> concursosQueEuTenho = new java.util.ArrayList<>();
+
+                if (oficiaisMap != null) {
+                    for (String info : oficiaisMap.values()) {
+                        // info vem formatado como "Concurso 3050 (10/06/2026)"
+                        try {
+                            String numStr = info.split(" ")[1]; // Pega apenas o número "3050"
+                            concursosQueEuTenho.add(Integer.parseInt(numStr));
+                        } catch (Exception e) {}
+                    }
+                }
+
+                // 3. O DETETIVE: Descobre as falhas (varrendo do mais recente para o mais antigo)
+                java.util.List<Integer> faltando = new java.util.ArrayList<>();
+                for (int i = ultimoConcursoOficial; i >= 1; i--) {
+                    if (!concursosQueEuTenho.contains(i)) {
+                        faltando.add(i);
+                    }
+                }
+
+                // Se não falta nada, a base de dados está perfeita. O robô vai dormir.
+                if (faltando.isEmpty()) return;
+
+                // 4. O RESGATE CUIDADOSO: Baixa os perdidos (Limite de 3 por sessão)
+                int concursosResgatados = 0;
+                int limiteDeResgatePorSessao = 3;
+
+                for (int numeroFaltante : faltando) {
+                    if (concursosResgatados >= limiteDeResgatePorSessao) break;
+
+                    try {
+                        java.net.URL urlEspecifica = new java.net.URL("https://servicebus2.caixa.gov.br/portaldeloterias/api/lotofacil/" + numeroFaltante);
+                        java.net.HttpURLConnection conn = (java.net.HttpURLConnection) urlEspecifica.openConnection();
+                        conn.setRequestMethod("GET");
+                        conn.setRequestProperty("User-Agent", "Mozilla/5.0");
+                        conn.setConnectTimeout(5000);
+                        conn.setReadTimeout(5000);
+
+                        if (conn.getResponseCode() == 200) {
+                            java.io.BufferedReader readerEspecifico = new java.io.BufferedReader(new java.io.InputStreamReader(conn.getInputStream(), "UTF-8"));
+                            StringBuilder respEspecifica = new StringBuilder();
+                            String lineEspecifica;
+                            while ((lineEspecifica = readerEspecifico.readLine()) != null) respEspecifica.append(lineEspecifica);
+                            readerEspecifico.close();
+                            conn.disconnect();
+
+                            // Extrai os dados do concurso específico
+                            org.json.JSONObject json = new org.json.JSONObject(respEspecifica.toString());
+                            String dataSorteioNuvem = json.getString("dataApuracao");
+                            org.json.JSONArray arrayDezenas = json.getJSONArray("listaDezenas");
+
+                            java.util.ArrayList<Integer> bolasNovas = new java.util.ArrayList<>();
+                            for (int i = 0; i < arrayDezenas.length(); i++) {
+                                bolasNovas.add(Integer.parseInt(arrayDezenas.getString(i)));
+                            }
+                            java.util.Collections.sort(bolasNovas);
+
+                            // Injeta a vacina no banco de dados local
+                            String concursoFormatado = String.valueOf(numeroFaltante);
+                            DadosOficiais.salvarNovoResultado(this, bolasNovas.toString(), concursoFormatado, dataSorteioNuvem);
+
+                            concursosResgatados++;
+
+                            // 🌟 O SEGREDO: Pausa 2.5 segundos para o servidor não achar que é um ataque DDoS
+                            Thread.sleep(2500);
+                        }
+                    } catch (Exception e) {
+                        // Se falhar o download de 1 específico, apenas ignora e tenta o próximo
+                    }
+                }
+
+                // 5. ATUALIZAR A INTERFACE (Se curou alguma coisa, avisa e injeta no Cérebro da I.A.)
+                if (concursosResgatados > 0) {
+                    final int resgatadosFinal = concursosResgatados;
+                    runOnUiThread(() -> {
+                        Toast.makeText(this, "🔄 Robô de Cura: " + resgatadosFinal + " concursos faltantes foram resgatados e salvos!", Toast.LENGTH_LONG).show();
+                        carregarDadosParaMemoria(); // Re-sincroniza as telas
+                    });
+                }
+
+            } catch (Exception e) {
+                // Morre em silêncio absoluto. O usuário não percebe nada.
+                // 🛡️ MEGAFONE TEMPORÁRIO PARA TESTES
+                // Se algo der errado (falta de internet, bloqueio da Caixa, etc), ele vai gritar o erro na tela.
+                final String erroFato = e.getMessage();
+                runOnUiThread(() -> {
+                    Toast.makeText(this, "Robô interceptado: " + erroFato, Toast.LENGTH_LONG).show();
+                });
+            }
+        }).start();
     }
 }
