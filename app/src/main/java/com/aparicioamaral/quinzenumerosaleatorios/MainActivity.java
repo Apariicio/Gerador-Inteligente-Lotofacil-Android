@@ -49,7 +49,7 @@ public class MainActivity extends AppCompatActivity {
     TextView txtProgressoVarredura, iconeTrevoLoading;
     android.animation.ObjectAnimator animacaoTrevo;
 
-    Button btnSortear, btnTurbo, btnInformacao;
+    Button btnSortear, btnTurbo, btnInformacao, btnAtualizarGlobal;
     TextView btnHistorico, btnInserirManual, btnConferir, btnVarredura, btnCadastrarOficial, btnGerenciarManuais;
     GridLayout gridTabuleiro;
     TextView[] bolasTabuleiro = new TextView[26];
@@ -191,14 +191,17 @@ public class MainActivity extends AppCompatActivity {
                         abrirGraficoFrequencia();
                         return true;
                     } else if (item.getItemId() == 6) {
-                        // GATILHO DA I.A.
-                        abrirMenuSuperIA();
+                        // GATILHO DO PAINEL DE PREVISÃO (TOP 15)
+                        abrirPainelPrevisaoIA();
                         return true;
                     }
                     return false;
                 });
                 popup.show();
             });
+
+            btnAtualizarGlobal = findViewById(R.id.btnAtualizarGlobal);
+            btnAtualizarGlobal.setOnClickListener(v -> forcarSincronizacaoGlobal());
 
             btnInserirManual = findViewById(R.id.btnInserirManual);
             btnInserirManual.setOnClickListener(v -> abrirInserirJogoManual());
@@ -244,12 +247,14 @@ public class MainActivity extends AppCompatActivity {
             txtProgressoVarredura.setText("Sincronizando a sorte...");
             aplicarFundoLegivel(txtProgressoVarredura);
 
-            // Faz o trevo girar 360 graus infinitamente
+            // 🌟 Prepara a animação do Trevo
             animacaoTrevo = android.animation.ObjectAnimator.ofFloat(iconeTrevoLoading, "rotation", 0f, 360f);
             animacaoTrevo.setDuration(1000);
             animacaoTrevo.setRepeatCount(android.animation.ObjectAnimator.INFINITE);
             animacaoTrevo.setInterpolator(new android.view.animation.LinearInterpolator());
-            animacaoTrevo.start();
+
+            // Chama nosso novo Motor Universal!
+            exibirCarregamento(true, "Sincronizando a sorte...", true);
 
             btnSortear.setEnabled(false); // Tranca o botão
             btnTurbo.setEnabled(false);   // Tranca o Turbo
@@ -522,11 +527,8 @@ public class MainActivity extends AppCompatActivity {
                         if (jogoAtualParaCompartilhar.isEmpty()) {
                             limparTabuleiro();
                         }
-                        // O banco terminou! Para de girar o trevo e libera o app
-                        if (animacaoTrevo != null) animacaoTrevo.cancel(); // Freia o trevo
-                        layoutProgresso.setVisibility(View.GONE); // Esconde a caixa amarela inteira
-                        iconeTrevoLoading.setVisibility(View.GONE); // Esconde o trevo
-                        progressBarVarredura.setVisibility(View.VISIBLE); // Devolve a barra para a Varredura usar depois
+                        // O banco terminou! Esconde tudo.
+                        exibirCarregamento(false, null, false);
 
                         btnSortear.setEnabled(true); // Destranca botão
                         btnTurbo.setEnabled(true); // Destranca botão
@@ -617,6 +619,8 @@ public class MainActivity extends AppCompatActivity {
 
                         "🔄 <b>Atualização Automática de Concursos:</b> Agora o próprio aplicativo <b>busca e baixa automaticamente</b> os concursos faltantes diretamente da fonte oficial, mantendo sua base de dados sempre atualizada sem esforço! Você não precisa mais se preocupar em cadastrar manualmente cada novo resultado.<br><br>" +
 
+                        "🔄 <b>Botão de Atualização Global:</b> Um novo botão <b>🔄</b> ao lado do menu permite <b>sincronizar manualmente</b> com a Caixa Econômica Federal a qualquer momento, garantindo que você tenha sempre o último resultado disponível no app.<br><br>" +
+
                         "📊 <b>FILTROS OPCIONAIS (SWITCHES) - COMO ELES FUNCIONAM</b><br>" +
                         "————————————————————<br>" +
                         "🧮 <b>Soma:</b> Mantém a soma dos 15 números entre <b>165 e 230</b>.<br>" +
@@ -652,6 +656,8 @@ public class MainActivity extends AppCompatActivity {
 
                         "☰ <b>Menu Suspenso Premium:</b> O antigo botão de informação evoluiu para um menu elegante com cantos arredondados, reunindo todas as funcionalidades avançadas em um só lugar.<br><br>" +
 
+                        "🔄 <b>Botão de Atualização Global:</b> Um novo botão ao lado do menu permite <b>sincronizar manualmente</b> com a Caixa Econômica Federal a qualquer momento, garantindo que você tenha sempre o último resultado disponível no app. Perfeito para quando o robô automático não estiver ativo!<br><br>" +
+
                         "🎨 <b>Controle Dinâmico de Tema:</b> Alternância instantânea entre <b>Tema Claro ☀️</b>, <b>Tema Escuro 🌙</b> ou <b>Padrão do Sistema ⚙️</b>. A preferência é salva automaticamente.<br><br>" +
 
                         "💾 <b>Sistema de Backup Nativo (SAF):</b> Exporte e importe todos os seus dados (Histórico + Resultados Manuais) em um arquivo <b>.json</b> seguro, integrado ao gerenciador de arquivos do celular.<br><br>" +
@@ -659,8 +665,6 @@ public class MainActivity extends AppCompatActivity {
                         "⏰ <b>Lembrete Inteligente (AlarmManager):</b> Sistema de notificações push com alarme agendado (\"Hora do Sorteio\"). Configurável pelo usuário e blindado contra o modo de economia de bateria. Ignora automaticamente os domingos!<br><br>" +
 
                         "📊 <b>Gráfico de Frequência de Dezenas:</b> Painel visual em barras (criado do zero, sem bibliotecas pesadas) que analisa os últimos <b>30 concursos</b> e exibe as dezenas mais quentes (🔴 Vermelho) e mais frias (🔵 Azul/Verde), ordenadas da maior para a menor frequência.<br><br>" +
-
-                        "🔧 <b>Correção do Bug do Concurso \"2482\":</b> O app agora utiliza uma <b>\"sala de espera\"</b> (variáveis temporárias) na inicialização. O cálculo do último concurso oficial é sempre 100% preciso!<br><br>" +
 
                         "🍀 <b>Tela de Carregamento Imersiva:</b> Animação de <b>Trevo Giratório</b> com texto sombreado na inicialização, bloqueando os botões até que os dados estatísticos estejam totalmente carregados.<br><br>" +
 
@@ -678,7 +682,7 @@ public class MainActivity extends AppCompatActivity {
 
                         "⚡ <b>Barra de Progresso na Varredura:</b> Acompanhe em tempo real o andamento da análise de todos os seus jogos contra a história oficial.<br><br>" +
 
-                        "📱 <b>Interface Otimizada:</b> Ajustes visuais em todos os componentes para melhor experiência em diferentes tamanhos de tela e temas." +
+                        "📱 <b>Interface Otimizada:</b> Ajustes visuais em todos os componentes para melhor experiência em diferentes tamanhos de tela e temas.<br><br>" +
 
                         "🧠 <b>Super Jogo I.A. (Data Science):</b> A evolução máxima do nosso algoritmo! Agora a I.A. possui um cérebro independente com <b>3 perfis de ação</b>:<br>" +
                         "• 🛡️ <b>Conservador:</b> Foca nas dezenas mais quentes (Padrão Ouro).<br>" +
@@ -693,7 +697,9 @@ public class MainActivity extends AppCompatActivity {
 
                         "🌐 <b>Busca Automática de Concursos Faltantes:</b> O app agora possui um <b>robô inteligente</b> que verifica e baixa automaticamente os concursos oficiais que estão faltando no seu banco de dados. Tudo em segundo plano, sem que você precise fazer nada. Sua base estatística estará sempre completa e atualizada! 🔄<br><br>" +
 
-                        "🤖 <b>Robô Curador de Dados (Self-Healing):</b> Um sistema inteligente que monitora a integridade do banco de dados e corrige automaticamente qualquer inconsistência, garantindo que você sempre tenha os resultados mais precisos para suas análises.<br><br>";
+                        "🤖 <b>Robô Curador de Dados (Self-Healing):</b> Um sistema inteligente que monitora a integridade do banco de dados e corrige automaticamente qualquer inconsistência, garantindo que você sempre tenha os resultados mais precisos para suas análises.<br><br>" +
+
+                        "🎨 <b>Novo Visual Escuro e Claro:</b> O aplicativo agora possui um design adaptativo com cores refinadas para ambos os temas. Os switches ganharam cores exclusivas, os cards de estatísticas estão mais integrados e a experiência visual está mais fluida do que nunca!";
 
         LinearLayout layoutPrincipal = new LinearLayout(this);
         layoutPrincipal.setOrientation(LinearLayout.VERTICAL);
@@ -1319,12 +1325,10 @@ public class MainActivity extends AppCompatActivity {
 
         int totalJogos = cacheMeusJogos.size();
 
-        // 1. MOSTRA A CAIXA DE PROGRESSO E DESATIVA O BOTÃO
-        layoutProgresso.setVisibility(View.VISIBLE);
+        // 1. MOSTRA TREVO + BARRA DETERMINADA E DESATIVA O BOTÃO
         btnVarredura.setEnabled(false);
+        exibirCarregamento(true, "Analisando " + totalJogos + " jogos...", false);
         progressBarVarredura.setMax(totalJogos);
-        progressBarVarredura.setProgress(0);
-        txtProgressoVarredura.setText("Analisando " + totalJogos + " jogos...");
 
         new Thread(() -> {
 
@@ -1400,7 +1404,7 @@ public class MainActivity extends AppCompatActivity {
 
             runOnUiThread(() -> {
                 // 3. ESCONDE A BARRA E REATIVA O BOTÃO
-                layoutProgresso.setVisibility(View.GONE);
+                exibirCarregamento(false, null, false);
                 btnVarredura.setEnabled(true);
 
                 Intent intent = new Intent(MainActivity.this, ResultadoVarreduraActivity.class);
@@ -2260,11 +2264,10 @@ public class MainActivity extends AppCompatActivity {
             return;
         }
 
-        // 1. Exibe a Barra de Progresso na tela principal imediatamente
-        layoutProgresso.setVisibility(View.VISIBLE);
+        // 1. Exibe Trevo e Barra de Progresso na tela principal
+        exibirCarregamento(true, "Calculando frequências...", false);
         progressBarVarredura.setMax(100);
         progressBarVarredura.setProgress(20);
-        txtProgressoVarredura.setText("Calculando frequências...");
 
         // 2. Joga o processamento pesado para um Trabalhador Invisível (Thread)
         new Thread(() -> {
@@ -2365,7 +2368,7 @@ public class MainActivity extends AppCompatActivity {
                         scrollView.addView(painelGrafico);
 
                         // 4. Esconde a barra de progresso e exibe o gráfico final
-                        layoutProgresso.setVisibility(View.GONE);
+                        exibirCarregamento(false, null, false);
 
                         new AlertDialog.Builder(MainActivity.this)
                                 .setTitle("📈 Frequência (Últimos " + limite + " concursos)")
@@ -2374,14 +2377,14 @@ public class MainActivity extends AppCompatActivity {
                                 .show();
 
                     } catch (Exception e) {
-                        layoutProgresso.setVisibility(View.GONE);
+                        exibirCarregamento(false, null, false);
                         Toast.makeText(MainActivity.this, "Erro visual: " + e.getMessage(), Toast.LENGTH_SHORT).show();
                     }
                 });
 
             } catch (Exception e) {
                 runOnUiThread(() -> {
-                    layoutProgresso.setVisibility(View.GONE);
+                    exibirCarregamento(false, null, false);
                     Toast.makeText(MainActivity.this, "Erro no processamento: " + e.getMessage(), Toast.LENGTH_SHORT).show();
                 });
             }
@@ -2408,9 +2411,11 @@ public class MainActivity extends AppCompatActivity {
             return;
         }
 
-        // 1. Inicia o Carregamento Visual
-        layoutProgresso.setVisibility(View.VISIBLE);
-        progressBarVarredura.setVisibility(View.VISIBLE);
+        // 1. Inicia o Carregamento Visual Completo (Trevo + Barra)
+        exibirCarregamento(true, "Iniciando varredura neural...", false);
+        progressBarVarredura.setMax(100);
+        progressBarVarredura.setProgress(10);
+
         if (iconeTrevoLoading != null) iconeTrevoLoading.setVisibility(View.GONE);
         progressBarVarredura.setMax(100);
         progressBarVarredura.setProgress(10);
@@ -2546,7 +2551,7 @@ public class MainActivity extends AppCompatActivity {
 
                 // CONSTRUÇÃO DO PAINEL VISUAL
                 runOnUiThread(() -> {
-                    layoutProgresso.setVisibility(View.GONE);
+                    exibirCarregamento(false, null, false);
 
                     android.widget.ScrollView scrollView = new android.widget.ScrollView(this);
                     LinearLayout painelUI = new LinearLayout(this);
@@ -2636,7 +2641,7 @@ public class MainActivity extends AppCompatActivity {
 
             } catch (Exception e) {
                 runOnUiThread(() -> {
-                    layoutProgresso.setVisibility(View.GONE);
+                    exibirCarregamento(false, null, false);
                     Toast.makeText(this, "Erro na I.A.: " + e.getMessage(), Toast.LENGTH_LONG).show();
                 });
             }
@@ -2721,11 +2726,8 @@ public class MainActivity extends AppCompatActivity {
             return;
         }
 
-        // Inicia a animação de varredura para dar um visual de processamento
-        // Liga o trevo giratório!
-        controlarLoadingDoTrevo(true);
-        layoutProgresso.setVisibility(View.VISIBLE);
-        txtProgressoVarredura.setText("I.A. analisando algoritmos de compensação...");
+        // Inicia a animação completa de varredura!
+        exibirCarregamento(true, "I.A. analisando algoritmos de compensação...", true);
 
         new Thread(() -> {
             try {
@@ -2803,14 +2805,13 @@ public class MainActivity extends AppCompatActivity {
                 // 6. ENVIANDO PARA A FASE 3 (O Tabuleiro)
                 final String justificativaBlindada = justificativa;
                 runOnUiThread(() -> {
-                    layoutProgresso.setVisibility(View.GONE);
-                    controlarLoadingDoTrevo(false); // Desliga o giro
+                    exibirCarregamento(false, null, false);
                     abrirSuperTabuleiroIA(jogoFinal, justificativaBlindada, perfil);
                 });
 
             } catch (Exception e) {
                 runOnUiThread(() -> {
-                    layoutProgresso.setVisibility(View.GONE);
+                    exibirCarregamento(false, null, false);
                     Toast.makeText(this, "Erro no motor da I.A.", Toast.LENGTH_SHORT).show();
                 });
             }
@@ -2938,32 +2939,33 @@ public class MainActivity extends AppCompatActivity {
     }
 
     // ====================================================================
-    // 🍀 ANIMAÇÃO DO TREVO GIRATÓRIO (VERSÃO TEXTVIEW/EMOJI)
+    // 🍀 UI: MOTOR DE CARREGAMENTO UNIFICADO (TREVO + TEXTO + BARRA)
     // ====================================================================
-    private void controlarLoadingDoTrevo(boolean mostrar) {
-        // Agora procuramos um TextView com o ID exato do seu XML!
-        TextView txtTrevo = findViewById(R.id.iconeTrevoLoading);
-
-        if (txtTrevo == null) return;
-
+    private void exibirCarregamento(boolean mostrar, String mensagem, boolean tempoIndeterminado) {
         if (mostrar) {
-            txtTrevo.setVisibility(View.VISIBLE);
+            layoutProgresso.setVisibility(View.VISIBLE);
+            iconeTrevoLoading.setVisibility(View.VISIBLE);
+            progressBarVarredura.setVisibility(View.VISIBLE);
 
-            // Cria a animação de giro infinito
-            android.view.animation.RotateAnimation rotate = new android.view.animation.RotateAnimation(
-                    0, 360,
-                    android.view.animation.Animation.RELATIVE_TO_SELF, 0.5f,
-                    android.view.animation.Animation.RELATIVE_TO_SELF, 0.5f
-            );
-            rotate.setDuration(1000); // 1 segundo para dar uma volta completa
-            rotate.setRepeatCount(android.view.animation.Animation.INFINITE);
-            rotate.setInterpolator(new android.view.animation.LinearInterpolator());
+            if (mensagem != null) {
+                txtProgressoVarredura.setText(mensagem);
+                aplicarFundoLegivel(txtProgressoVarredura); // Garante a pílula de fundo adaptativa
+            }
 
-            txtTrevo.startAnimation(rotate);
+            // Define se a barra enche de 0 a 100 (loop) ou se desliza infinitamente (internet/cálculo rápido)
+            progressBarVarredura.setIndeterminate(tempoIndeterminado);
+            if (!tempoIndeterminado) {
+                progressBarVarredura.setProgress(0);
+            }
+
+            // Gira o trevo infinitamente se já não estiver girando
+            if (animacaoTrevo != null && !animacaoTrevo.isRunning()) {
+                animacaoTrevo.start();
+            }
         } else {
-            // Para a animação e esconde
-            txtTrevo.clearAnimation();
-            txtTrevo.setVisibility(View.GONE);
+            // Esconde tudo e freia o trevo
+            layoutProgresso.setVisibility(View.GONE);
+            if (animacaoTrevo != null) animacaoTrevo.cancel();
         }
     }
 
@@ -3226,6 +3228,80 @@ public class MainActivity extends AppCompatActivity {
                 final String erroFato = e.getMessage();
                 runOnUiThread(() -> {
                     Toast.makeText(this, "Robô interceptado: " + erroFato, Toast.LENGTH_LONG).show();
+                });
+            }
+        }).start();
+    }
+
+    // ====================================================================
+    // 🔄 MOTOR DE ATUALIZAÇÃO MANUAL (BOTÃO REFRESH)
+    // ====================================================================
+    private void forcarSincronizacaoGlobal() {
+        // Liga a animação do trevo e trava os botões de gerar jogo
+        exibirCarregamento(true, "Sincronizando com a Caixa...", true);
+        btnSortear.setEnabled(false);
+        btnTurbo.setEnabled(false);
+
+        new Thread(() -> {
+            try {
+                // 1. Tenta buscar o último concurso direto da internet
+                java.net.URL url = new java.net.URL("https://servicebus2.caixa.gov.br/portaldeloterias/api/lotofacil/");
+                java.net.HttpURLConnection conexao = (java.net.HttpURLConnection) url.openConnection();
+                conexao.setRequestMethod("GET");
+                conexao.setRequestProperty("User-Agent", "Mozilla/5.0");
+                conexao.setConnectTimeout(5000);
+                conexao.setReadTimeout(5000);
+
+                boolean teveAtualizacaoNaNuvem = false;
+
+                if (conexao.getResponseCode() == 200) {
+                    java.io.BufferedReader leitor = new java.io.BufferedReader(new java.io.InputStreamReader(conexao.getInputStream(), "UTF-8"));
+                    StringBuilder respostaStr = new StringBuilder();
+                    String linha;
+                    while ((linha = leitor.readLine()) != null) respostaStr.append(linha);
+                    leitor.close();
+                    conexao.disconnect();
+
+                    org.json.JSONObject json = new org.json.JSONObject(respostaStr.toString());
+                    int numeroConcursoNuvem = json.getInt("numero");
+                    String dataSorteioNuvem = json.getString("dataApuracao");
+                    org.json.JSONArray arrayDezenas = json.getJSONArray("listaDezenas");
+
+                    String concursoFormatado = String.valueOf(numeroConcursoNuvem);
+
+                    // Verifica se já temos esse último concurso da Caixa no App
+                    if (!DadosOficiais.verificarSeConcursoJaExiste(this, "Concurso " + concursoFormatado)) {
+                        java.util.ArrayList<Integer> bolasNovas = new java.util.ArrayList<>();
+                        for (int i = 0; i < arrayDezenas.length(); i++) {
+                            bolasNovas.add(Integer.parseInt(arrayDezenas.getString(i)));
+                        }
+                        java.util.Collections.sort(bolasNovas);
+
+                        // Injeta no banco oficial do app
+                        DadosOficiais.salvarNovoResultado(this, bolasNovas.toString(), concursoFormatado, dataSorteioNuvem);
+                        teveAtualizacaoNaNuvem = true;
+                    }
+                }
+
+                final boolean baixouNovo = teveAtualizacaoNaNuvem;
+
+                // 2. Recarrega toda a memória do aplicativo (lendo também os manuais novos)
+                runOnUiThread(() -> {
+                    if (baixouNovo) {
+                        Toast.makeText(this, "✅ Banco atualizado com o último resultado da internet!", Toast.LENGTH_LONG).show();
+                    } else {
+                        Toast.makeText(this, "✅ Tudo atualizado! Listas locais recarregadas.", Toast.LENGTH_SHORT).show();
+                    }
+
+                    // A função abaixo já esconde o trevo e libera os botões quando terminar!
+                    carregarDadosParaMemoria();
+                });
+
+            } catch (Exception e) {
+                // Se falhar a internet (ou o servidor da Caixa cair), ele avisa e só recarrega os manuais locais
+                runOnUiThread(() -> {
+                    Toast.makeText(this, "⚠️ Sem internet no momento. Recarregando apenas os dados locais do celular.", Toast.LENGTH_LONG).show();
+                    carregarDadosParaMemoria();
                 });
             }
         }).start();

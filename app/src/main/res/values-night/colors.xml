@@ -1,13 +1,25 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <color name="fundo_tela_solido">#CC121212</color> <color name="fundo_card_popup">#B3222222</color> <color name="barra_popup">#FF1F2937</color> <color name="texto_principal">#E0E0E0</color> <color name="texto_invertido">#121212</color> <color name="texto_suave">#AAAAAA</color>
-    
-    <color name="rosa_principal">#FF80AB</color> <color name="rosa_botao_tint">#A0FF80AB</color>
-    <color name="laranja_turbo">#D5FF9800</color>
-    
-    <color name="fundo_stats_soma">#333F51B5</color> <color name="fundo_stats_pares">#334CAF50</color> <color name="fundo_stats_fibo">#55555555</color>
-    <color name="fundo_stats_ciclo">#44FBC02D</color> <color name="fundo_listas">#261F2D3D</color> <color name="switch_bolinha_on">#81C784</color>
-    <color name="switch_barra_on">#3381C784</color>
-    <color name="switch_bolinha_off">#616161</color>
+    <color name="fundo_tela_solido">#CC121212</color>
+    <color name="fundo_card_popup">#1E1E1E</color>
+    <color name="barra_popup">#2C2C2C</color>
+
+    <color name="texto_principal">#F5F5F5</color>
+    <color name="texto_invertido">#121212</color>
+    <color name="texto_suave">#B0B0B0</color>
+
+    <color name="rosa_principal">#FF4081</color>
+    <color name="rosa_botao_tint">#D81B60</color>
+    <color name="laranja_turbo">#F57C00</color>
+
+    <color name="fundo_stats_soma">#1A3F51B5</color>
+    <color name="fundo_stats_pares">#1A4CAF50</color>
+    <color name="fundo_stats_fibo">#2A2A2A</color>
+    <color name="fundo_stats_ciclo">#1AFBC02D</color>
+    <color name="fundo_listas">#1E1E1E</color>
+
+    <color name="switch_bolinha_on">#4CAF50</color>
+    <color name="switch_barra_on">#2E7D32</color>
+    <color name="switch_bolinha_off">#757575</color>
     <color name="switch_barra_off">#424242</color>
 </resources>
