@@ -49,7 +49,7 @@ public class MainActivity extends AppCompatActivity {
     TextView txtProgressoVarredura, iconeTrevoLoading;
     android.animation.ObjectAnimator animacaoTrevo;
 
-    Button btnSortear, btnTurbo, btnInformacao, btnAtualizarGlobal;
+    Button btnSortear, btnTurbo, btnInformacao, btnAtualizarGlobal, btnNavegador, btnNavEsquerda, btnNavDireita;
     TextView btnHistorico, btnInserirManual, btnConferir, btnVarredura, btnCadastrarOficial, btnGerenciarManuais;
     GridLayout gridTabuleiro;
     TextView[] bolasTabuleiro = new TextView[26];
@@ -60,6 +60,7 @@ public class MainActivity extends AppCompatActivity {
     private int[] freqUltimos20 = new int[26];
     private List<DadosConcurso> cacheOficiais = new ArrayList<>();
     private String jogoAtualParaCompartilhar = "";
+    private int indiceHistoricoAtual = -1;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -148,6 +149,11 @@ public class MainActivity extends AppCompatActivity {
                 op6.setSpan(new android.text.style.ForegroundColorSpan(Color.parseColor("#B0276E")), 0, op6.length(), 0); // Destaque em cor diferente
                 op6.setSpan(new android.text.style.RelativeSizeSpan(1.1f), 0, op6.length(), 0);
 
+                // Opção 7: Navegador de Resultados Oficiais
+                android.text.SpannableString op7 = new android.text.SpannableString("   Navegador de Resultados 🎰   ");
+                op7.setSpan(new android.text.style.StyleSpan(android.graphics.Typeface.BOLD), 0, op7.length(), 0);
+                op7.setSpan(new android.text.style.RelativeSizeSpan(1.1f), 0, op7.length(), 0);
+
                 // Adiciona todas as opções
                 popup.getMenu().add(0, 1, 0, op1);
                 popup.getMenu().add(0, 2, 1, op2);
@@ -155,6 +161,7 @@ public class MainActivity extends AppCompatActivity {
                 popup.getMenu().add(0, 4, 3, op4);
                 popup.getMenu().add(0, 5, 4, op5);
                 popup.getMenu().add(0, 6, 5, op6);
+                popup.getMenu().add(0, 7, 6, op7);
 
                 popup.setOnMenuItemClickListener(item -> {
                     if (item.getItemId() == 1) {
@@ -194,6 +201,10 @@ public class MainActivity extends AppCompatActivity {
                         // GATILHO DO PAINEL DE PREVISÃO (TOP 15)
                         abrirPainelPrevisaoIA();
                         return true;
+                    } else if (item.getItemId() == 7) {
+                        // Abre a galeria em formato de tabuleiro
+                        abrirNavegadorResultados();
+                        return true;
                     }
                     return false;
                 });
@@ -202,6 +213,9 @@ public class MainActivity extends AppCompatActivity {
 
             btnAtualizarGlobal = findViewById(R.id.btnAtualizarGlobal);
             btnAtualizarGlobal.setOnClickListener(v -> forcarSincronizacaoGlobal());
+
+            btnNavegador = findViewById(R.id.btnNavegador);
+            btnNavegador.setOnClickListener(v -> abrirNavegadorResultados());
 
             btnInserirManual = findViewById(R.id.btnInserirManual);
             btnInserirManual.setOnClickListener(v -> abrirInserirJogoManual());
@@ -319,6 +333,13 @@ public class MainActivity extends AppCompatActivity {
     }
 
     private void inicializarBolasDoTabuleiro() {
+
+        // Ativa as Setas do Tabuleiro
+        btnNavEsquerda = findViewById(R.id.btnNavEsquerda);
+        btnNavDireita = findViewById(R.id.btnNavDireita);
+        btnNavEsquerda.setOnClickListener(v -> navegarMeusJogos(-1));
+        btnNavDireita.setOnClickListener(v -> navegarMeusJogos(1));
+
         for (int i = 1; i <= 25; i++) {
             String idName = "num" + (i < 10 ? "0" + i : i);
             int resID = getResources().getIdentifier(idName, "id", getPackageName());
@@ -500,6 +521,7 @@ public class MainActivity extends AppCompatActivity {
                     try {
                         cacheMeusJogos.clear();
                         cacheMeusJogos.addAll(memoriaTemporariaMeusJogos);
+                        indiceHistoricoAtual = cacheMeusJogos.size() - 1;
 
                         cacheOficiais.clear();
                         cacheOficiais.addAll(memoriaTemporariaOficiais);
@@ -699,7 +721,9 @@ public class MainActivity extends AppCompatActivity {
 
                         "🤖 <b>Robô Curador de Dados (Self-Healing):</b> Um sistema inteligente que monitora a integridade do banco de dados e corrige automaticamente qualquer inconsistência, garantindo que você sempre tenha os resultados mais precisos para suas análises.<br><br>" +
 
-                        "🎨 <b>Novo Visual Escuro e Claro:</b> O aplicativo agora possui um design adaptativo com cores refinadas para ambos os temas. Os switches ganharam cores exclusivas, os cards de estatísticas estão mais integrados e a experiência visual está mais fluida do que nunca!";
+                        "🎨 <b>Novo Visual Escuro e Claro:</b> O aplicativo agora possui um design adaptativo com cores refinadas para ambos os temas. Os switches ganharam cores exclusivas, os cards de estatísticas estão mais integrados e a experiência visual está mais fluida do que nunca!<br><br>" +
+
+                        "🎰 <b>Navegador de Resultados Oficiais:</b> Explore todo o histórico de sorteios da Caixa através de um mini-tabuleiro interativo! Acesse pelo novo atalho rápido (🎰) no topo da tela ou pelo menu principal. Você pode avançar e retroceder pelos concursos para analisar visualmente as dezenas e conferir o resumo estatístico exato de cada jogo (Soma, Pares/Ímpares, Primos, Fibonacci e Repetidas do sorteio anterior)!";
 
         LinearLayout layoutPrincipal = new LinearLayout(this);
         layoutPrincipal.setOrientation(LinearLayout.VERTICAL);
@@ -1085,6 +1109,7 @@ public class MainActivity extends AppCompatActivity {
         }
         editor.apply();
         cacheMeusJogos.add(converterStringParaArrayInt(novoJogo));
+        indiceHistoricoAtual = cacheMeusJogos.size() - 1;
     }
 
     public void atualizarContadorTela() {
@@ -3305,5 +3330,285 @@ public class MainActivity extends AppCompatActivity {
                 });
             }
         }).start();
+    }
+
+    // ====================================================================
+    // 🎰 MOTOR DO NAVEGADOR DE RESULTADOS OFICIAIS (COM ESTATÍSTICAS)
+    // ====================================================================
+    public void abrirNavegadorResultados() {
+        if (cacheOficiais == null || cacheOficiais.isEmpty()) {
+            Toast.makeText(this, "Aguarde o carregamento do banco de dados...", Toast.LENGTH_SHORT).show();
+            return;
+        }
+
+        final int[] indiceAtual = {cacheOficiais.size() - 1};
+
+        AlertDialog.Builder builder = new AlertDialog.Builder(this);
+        LinearLayout layoutDialog = new LinearLayout(this);
+        layoutDialog.setOrientation(LinearLayout.VERTICAL);
+        layoutDialog.setPadding(30, 40, 30, 40);
+
+        // Título fixo
+        TextView tvTitulo = new TextView(this);
+        tvTitulo.setText("🎰 Navegador Oficial");
+        tvTitulo.setTextSize(20f);
+        tvTitulo.setTypeface(null, android.graphics.Typeface.BOLD);
+        tvTitulo.setGravity(android.view.Gravity.CENTER);
+        tvTitulo.setTextColor(androidx.core.content.ContextCompat.getColor(this, R.color.texto_principal));
+        tvTitulo.setPadding(0, 0, 0, 10);
+        layoutDialog.addView(tvTitulo);
+
+        // Título que muda (Nome do Concurso)
+        TextView tvConcurso = new TextView(this);
+        tvConcurso.setTextSize(16f);
+        tvConcurso.setTypeface(null, android.graphics.Typeface.BOLD);
+        tvConcurso.setGravity(android.view.Gravity.CENTER);
+        tvConcurso.setTextColor(Color.parseColor("#B0276E"));
+        tvConcurso.setPadding(0, 0, 0, 20);
+        layoutDialog.addView(tvConcurso);
+
+        // Mini Tabuleiro 5x5
+        GridLayout gridBoard = new GridLayout(this);
+        gridBoard.setColumnCount(5);
+        gridBoard.setRowCount(5);
+        gridBoard.setAlignmentMode(GridLayout.ALIGN_BOUNDS);
+        LinearLayout.LayoutParams gridParams = new LinearLayout.LayoutParams(
+                LinearLayout.LayoutParams.WRAP_CONTENT, LinearLayout.LayoutParams.WRAP_CONTENT);
+        gridParams.gravity = android.view.Gravity.CENTER;
+        gridBoard.setLayoutParams(gridParams);
+
+        TextView[] bolasNavegador = new TextView[26];
+        for (int i = 1; i <= 25; i++) {
+            bolasNavegador[i] = new TextView(this);
+            bolasNavegador[i].setText(String.format("%02d", i));
+            bolasNavegador[i].setGravity(android.view.Gravity.CENTER);
+            bolasNavegador[i].setTextSize(14f);
+            bolasNavegador[i].setTypeface(null, android.graphics.Typeface.BOLD);
+
+            GridLayout.LayoutParams bolaParams = new GridLayout.LayoutParams();
+            bolaParams.width = 95;
+            bolaParams.height = 95;
+            bolaParams.setMargins(6, 6, 6, 6);
+            bolasNavegador[i].setLayoutParams(bolaParams);
+
+            gridBoard.addView(bolasNavegador[i]);
+        }
+        layoutDialog.addView(gridBoard);
+
+        // 🌟 NOVO: CAIXA DE ESTATÍSTICAS
+        TextView tvResumo = new TextView(this);
+        tvResumo.setTextSize(13f);
+        tvResumo.setTypeface(null, android.graphics.Typeface.BOLD);
+        tvResumo.setGravity(android.view.Gravity.CENTER);
+        tvResumo.setTextColor(androidx.core.content.ContextCompat.getColor(this, R.color.texto_suave));
+        tvResumo.setPadding(0, 30, 0, 0); // Espaço acima das estatísticas
+        layoutDialog.addView(tvResumo);
+
+        // Barra de Botões (Anterior, Fechar, Próximo)
+        LinearLayout barraInferior = new LinearLayout(this);
+        barraInferior.setOrientation(LinearLayout.HORIZONTAL);
+        barraInferior.setGravity(android.view.Gravity.CENTER);
+        barraInferior.setPadding(0, 40, 0, 0);
+        barraInferior.setWeightSum(3);
+
+        Button btnAnterior = new Button(this);
+        btnAnterior.setText("⬅️ Ant.");
+        btnAnterior.setTextColor(Color.WHITE);
+        btnAnterior.setBackgroundTintList(android.content.res.ColorStateList.valueOf(Color.parseColor("#616161")));
+        LinearLayout.LayoutParams btnParams = new LinearLayout.LayoutParams(0, LinearLayout.LayoutParams.WRAP_CONTENT, 1.0f);
+        btnParams.setMargins(5, 0, 5, 0);
+        btnAnterior.setLayoutParams(btnParams);
+
+        Button btnFechar = new Button(this);
+        btnFechar.setText("Fechar");
+        btnFechar.setTextColor(Color.WHITE);
+        btnFechar.setBackgroundTintList(android.content.res.ColorStateList.valueOf(Color.parseColor("#D32F2F")));
+        btnFechar.setLayoutParams(btnParams);
+
+        Button btnProximo = new Button(this);
+        btnProximo.setText("Próx. ➡️");
+        btnProximo.setTextColor(Color.WHITE);
+        btnProximo.setBackgroundTintList(android.content.res.ColorStateList.valueOf(Color.parseColor("#616161")));
+        btnProximo.setLayoutParams(btnParams);
+
+        barraInferior.addView(btnAnterior);
+        barraInferior.addView(btnFechar);
+        barraInferior.addView(btnProximo);
+        layoutDialog.addView(barraInferior);
+
+        builder.setView(layoutDialog);
+        AlertDialog dialogNavegador = builder.create();
+
+        // Ações de clique nos botões (passando o tvResumo junto)
+        btnAnterior.setOnClickListener(v -> {
+            if (indiceAtual[0] > 0) {
+                indiceAtual[0]--;
+                atualizarTelaNavegador(indiceAtual[0], tvConcurso, bolasNavegador, tvResumo, btnAnterior, btnProximo);
+            }
+        });
+
+        btnProximo.setOnClickListener(v -> {
+            if (indiceAtual[0] < cacheOficiais.size() - 1) {
+                indiceAtual[0]++;
+                atualizarTelaNavegador(indiceAtual[0], tvConcurso, bolasNavegador, tvResumo, btnAnterior, btnProximo);
+            }
+        });
+
+        btnFechar.setOnClickListener(v -> dialogNavegador.dismiss());
+
+        // Carrega o primeiro tabuleiro para a tela ser exibida
+        atualizarTelaNavegador(indiceAtual[0], tvConcurso, bolasNavegador, tvResumo, btnAnterior, btnProximo);
+
+        dialogNavegador.show();
+
+        // Ajusta os cantos arredondados e cor de fundo do popup
+        if (dialogNavegador.getWindow() != null) {
+            android.graphics.drawable.GradientDrawable shape = new android.graphics.drawable.GradientDrawable();
+            shape.setColor(androidx.core.content.ContextCompat.getColor(this, R.color.fundo_card_popup));
+            shape.setCornerRadius(30f);
+            dialogNavegador.getWindow().setBackgroundDrawable(shape);
+        }
+    }
+
+    // Ferramenta que atualiza as cores e calcula as estatísticas
+    private void atualizarTelaNavegador(int indice, TextView tvConcurso, TextView[] bolasNavegador, TextView tvResumo, Button btnAnterior, Button btnProximo) {
+        DadosConcurso concursoAlvo = cacheOficiais.get(indice);
+
+        tvConcurso.setText(concursoAlvo.nomeConcurso);
+
+        // 🌟 NOVO: Listas matemáticas para calcular estatísticas
+        java.util.List<Integer> listPrimos = java.util.Arrays.asList(2, 3, 5, 7, 11, 13, 17, 19, 23);
+        java.util.List<Integer> listFibo = java.util.Arrays.asList(1, 2, 3, 5, 8, 13, 21);
+
+        java.util.List<Integer> dezenasAnteriores = new java.util.ArrayList<>();
+        if (indice > 0) {
+            // Pega as dezenas do concurso anterior para saber as repetidas
+            for (int num : cacheOficiais.get(indice - 1).numeros) {
+                dezenasAnteriores.add(num);
+            }
+        }
+
+        int cSoma = 0, cPares = 0, cPrimos = 0, cFibo = 0, cRepetidos = 0;
+        java.util.List<Integer> dezenasSorteadas = new java.util.ArrayList<>();
+
+        // Processa as dezenas do concurso exibido
+        for (int num : concursoAlvo.numeros) {
+            dezenasSorteadas.add(num);
+
+            // Cálculos
+            cSoma += num;
+            if (num % 2 == 0) cPares++;
+            if (listPrimos.contains(num)) cPrimos++;
+            if (listFibo.contains(num)) cFibo++;
+            if (dezenasAnteriores.contains(num)) cRepetidos++;
+        }
+        int cImpares = 15 - cPares;
+
+        // Monta o texto de Resumo
+        String textoRepetidos = (indice > 0) ? String.valueOf(cRepetidos) : "N/D";
+        String resumoEstatisticas = "Soma: " + cSoma + "\n" +
+                "Pares: " + cPares + " / Ímpares: " + cImpares + "\n" +
+                "Primos: " + cPrimos + " | Fibo: " + cFibo + "\n" +
+                "Repetidas do Sorteio Anterior: " + textoRepetidos;
+        tvResumo.setText(resumoEstatisticas);
+
+        // Atualiza a pintura das 25 bolas
+        for (int i = 1; i <= 25; i++) {
+            if (dezenasSorteadas.contains(i)) {
+                bolasNavegador[i].setBackgroundResource(R.drawable.bola_selecionada);
+                if (bolasNavegador[i].getBackground() != null) bolasNavegador[i].getBackground().mutate().setTintList(null);
+                bolasNavegador[i].setTextColor(Color.WHITE);
+            } else {
+                bolasNavegador[i].setBackgroundResource(R.drawable.bola_apagada);
+                if (bolasNavegador[i].getBackground() != null) bolasNavegador[i].getBackground().mutate().setTintList(null);
+                bolasNavegador[i].setTextColor(Color.parseColor("#999999"));
+            }
+        }
+
+        // Trava os botões se chegar no limite para evitar erro do Android
+        btnAnterior.setEnabled(indice > 0);
+        btnProximo.setEnabled(indice < cacheOficiais.size() - 1);
+
+        btnAnterior.setAlpha(indice > 0 ? 1.0f : 0.4f);
+        btnProximo.setAlpha(indice < cacheOficiais.size() - 1 ? 1.0f : 0.4f);
+    }
+
+    // ====================================================================
+    // ◀ ▶ MOTOR DE NAVEGAÇÃO DOS JOGOS GERADOS
+    // ====================================================================
+    private void navegarMeusJogos(int direcao) {
+        if (cacheMeusJogos == null || cacheMeusJogos.isEmpty()) {
+            Toast.makeText(this, "Nenhum jogo no histórico ainda.", Toast.LENGTH_SHORT).show();
+            return;
+        }
+
+        if (indiceHistoricoAtual == -1) {
+            indiceHistoricoAtual = cacheMeusJogos.size() - 1;
+        }
+
+        indiceHistoricoAtual += direcao;
+
+        if (indiceHistoricoAtual < 0) {
+            indiceHistoricoAtual = 0;
+            Toast.makeText(this, "Você chegou no primeiro jogo do histórico.", Toast.LENGTH_SHORT).show();
+            return;
+        }
+        if (indiceHistoricoAtual >= cacheMeusJogos.size()) {
+            indiceHistoricoAtual = cacheMeusJogos.size() - 1;
+            Toast.makeText(this, "Este é o último jogo gerado.", Toast.LENGTH_SHORT).show();
+            return;
+        }
+
+        exibirJogoHistoricoNoTabuleiro(indiceHistoricoAtual);
+    }
+
+    private void exibirJogoHistoricoNoTabuleiro(int index) {
+        int[] jogo = cacheMeusJogos.get(index);
+        java.util.List<Integer> listaJogo = new java.util.ArrayList<>();
+        for (int n : jogo) listaJogo.add(n);
+
+        atualizarTabuleiro(listaJogo);
+
+        int cSoma = 0, cPares = 0, cPrimos = 0, cFibo = 0, cRepetidos = 0;
+        java.util.List<Integer> prim = java.util.Arrays.asList(2, 3, 5, 7, 11, 13, 17, 19, 23);
+        java.util.List<Integer> fib = java.util.Arrays.asList(1, 2, 3, 5, 8, 13, 21);
+
+        java.util.List<Integer> numerosUltimoOficial = new java.util.ArrayList<>();
+        if (!cacheOficiais.isEmpty()) {
+            for (int n : cacheOficiais.get(cacheOficiais.size() - 1).numeros) {
+                numerosUltimoOficial.add(n);
+            }
+        }
+
+        for (int n : listaJogo) {
+            cSoma += n;
+            if (n % 2 == 0) cPares++;
+            if (prim.contains(n)) cPrimos++;
+            if (fib.contains(n)) cFibo++;
+            if (numerosUltimoOficial.contains(n)) cRepetidos++;
+        }
+        int cImpares = 15 - cPares;
+
+        lblSomaPrimos.setText("Soma: " + cSoma + " / Primos: " + cPrimos);
+        lblParesImpares.setText("Pares: " + cPares + " / Ímpares: " + cImpares);
+
+        java.util.List<Integer> faltantes = calcularDezenasDoCiclo();
+        String textoCiclo = faltantes.isEmpty() ? "Ciclo: Fechado" : "Faltam: " + faltantes.size() + " dezenas";
+        lblFibRepetidos.setText("Fibo: " + cFibo + " / " + textoCiclo);
+        lblFibRepetidos.setTextColor(faltantes.isEmpty() ? android.graphics.Color.GRAY : android.graphics.Color.parseColor("#7C4617"));
+
+        String textoConcurso = "N/A";
+        if (!cacheOficiais.isEmpty()) {
+            String nome = cacheOficiais.get(cacheOficiais.size()-1).nomeConcurso;
+            try {
+                String[] partes = nome.split(" ");
+                if (partes.length > 1) textoConcurso = partes[1];
+                else textoConcurso = nome.replaceAll("[^0-9]", "");
+            } catch (Exception e) {}
+        }
+        lblCiclo.setText("Repe: " + cRepetidos + " (conc. " + textoConcurso + ")");
+        lblCiclo.setTextColor(android.graphics.Color.parseColor("#333333"));
+
+        Toast.makeText(this, "Mostrando Jogo nº " + (index + 1), Toast.LENGTH_SHORT).show();
     }
 }
