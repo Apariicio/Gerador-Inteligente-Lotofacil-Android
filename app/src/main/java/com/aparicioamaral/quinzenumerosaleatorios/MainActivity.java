@@ -657,7 +657,7 @@ public class MainActivity extends AppCompatActivity {
                         "————————————————————<br>" +
                         "🟩 <b>Moldura (Borda):</b> Exige entre <b>8 e 11 números</b> da borda do tabuleiro.<br>" +
                         "✖️ <b>Múltiplos de 3:</b> Exige entre <b>3 e 6 números</b> múltiplos de três.<br>" +
-                        "📐 <b>Equilíbrio de Grade:</b> Impede linhas ou colunas vazias (0) ou cheias (5).<br>" +
+                        /*"📐 <b>Equilíbrio de Grade:</b> Impede linhas ou colunas vazias (0) ou cheias (5).<br>" +*/
                         "📏 <b>Trava de Sequência:</b> Bloqueia jogos com <b>8 ou mais números colados</b> (limite máximo 7).<br>" +
                         "🥶 <b>Dezena Fria:</b> Obriga <b>pelo menos 1 número</b> com baixa frequência nos últimos 10 concursos.<br>" +
                         "🚫 <b>Anti-Duplicidade Suprema:</b> Descarta jogos que <b>já existem</b> no seu histórico ou nos concursos oficiais.<br><br>" +
@@ -773,7 +773,8 @@ public class MainActivity extends AppCompatActivity {
     }
 
     private boolean validarEquilibrioGrade(List<Integer> numeros) {
-        int[] linhas = new int[5];
+        return true;
+        /*int[] linhas = new int[5];
         int[] colunas = new int[5];
         for (int n : numeros) {
             int num = n - 1;
@@ -784,7 +785,7 @@ public class MainActivity extends AppCompatActivity {
             if (linhas[i] == 0 || linhas[i] == 5) return false;
             if (colunas[i] == 0 || colunas[i] == 5) return false;
         }
-        return true;
+        return true;*/
     }
 
     public void buscarJogoEquilibrado() {
